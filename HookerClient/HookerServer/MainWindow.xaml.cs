@@ -48,13 +48,13 @@ namespace HookerServer
         {
             //TO-DO : OTTIMIZZARE PRESTAZIONI
 
-            List<string> commands = buffer.Split(' ').ToList();
-           
+            //List<string> commands = buffer.Split(' ').ToList();
+            String[] commands = buffer.Split(' ');
             if (commands.ElementAt(0).Equals("M"))
             {
-                //16 bit è più veloce
-                int x = Convert.ToInt16(Double.Parse(commands.ElementAt(1)) * System.Windows.SystemParameters.PrimaryScreenWidth);
-                int y = Convert.ToInt16(Double.Parse(commands.ElementAt(2)) * System.Windows.SystemParameters.PrimaryScreenHeight);
+                //16 bit è più veloce di 32
+                int x = Convert.ToInt16(Double.Parse(commands[1]) * System.Windows.SystemParameters.PrimaryScreenWidth);
+                int y = Convert.ToInt16(Double.Parse(commands[2]) * System.Windows.SystemParameters.PrimaryScreenHeight);
                 //RAMO DEL MOUSE 
                 //Metodo che setta la posizione del mouse
                 NativeMethodsBiss.SetCursorPos(x,y);
@@ -149,9 +149,8 @@ namespace HookerServer
                     while (this.client.Connected ){
                         int i;
                         //read exactly 128 bytes
-                        message = "";
                         bytes = this.udpListener.Receive(ref this.remoteIPEndpoint);
-                        message += System.Text.Encoding.ASCII.GetString(bytes, 0, bytes.Length);
+                        message = System.Text.Encoding.ASCII.GetString(bytes, 0, bytes.Length);
                         // Translate data bytes to a ASCII string.
                         
                         parseMessage(message);
@@ -176,6 +175,7 @@ namespace HookerServer
             {
                 this.client.Close();
             }
+            this.remoteIPEndpoint = null;
             this.server.Server.Close();
             this.server.Stop();
             this.udpListener.Close();

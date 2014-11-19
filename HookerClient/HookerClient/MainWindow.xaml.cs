@@ -31,8 +31,16 @@ namespace HookerClient
     {
         RamGecTools.MouseHook mouseHook = new RamGecTools.MouseHook();
         RamGecTools.KeyboardHook keyboardHook = new RamGecTools.KeyboardHook();
+        
+       //METTENDO L'ASTERISCO MANDO IL MESSAGGIO A TUTTE LE MAISLOT CON QUEL NOME
+        //String keyboardMailslotName = @"\\*\mailslot\keyboardMailslot";
+        
+        //Questa lista di mailslot è la lista dei nomi della mailslot costantemente aggiornata ad ogni cambiamento di  selezione su listbox
+        public  List<String> mailslotNames = new List<String>();
+        //op
+        //Questa lista di handler verrà popolata in fase di connessione
+        private List<NativeMethods.SafeMailslotHandle> mailslotHandlers = new List<NativeMethods.SafeMailslotHandle>();
         private ServerManager serverManger;
-        public Thread ConnectionChecker;
         public MainWindow()
         {
             Console.WriteLine("Screen resolution :" + (int)System.Windows.SystemParameters.PrimaryScreenWidth + " " + (int)System.Windows.SystemParameters.FullPrimaryScreenHeight);
@@ -45,9 +53,9 @@ namespace HookerClient
 
                 Thread.CurrentThread.IsBackground = true;
                 getAvailableServers();
-                
+              
             }).Start();
-       
+
         }
 
         public void getAvailableServers()
@@ -78,7 +86,6 @@ namespace HookerClient
 
         //TODO: passare un'oggetto al server in modo che questo possa eseguire azione
         void keyboardHook_KeyPress(int op,RamGecTools.KeyboardHook.VKeys key ){
-
             try
             {
                 if (op == 0)
@@ -197,44 +204,9 @@ namespace HookerClient
                 //Questo bind vale solo mentre si è connessi
                 bindHotkeyCommands();
                 refreshGUIonConnection();
-                this.ConnectionChecker = new Thread(() =>
-                {
-                    while (true)
-                    {
-                        // Detect if client disconnected
-                        try
-                        {
-                            bool bClosed = false;
-                            if (this.serverManger.selectedServers.ElementAt(this.serverManger.serverPointer).server.Client.Poll(0, SelectMode.SelectRead))
-                            {
-                                byte[] buff = new byte[1];
-                                if (this.serverManger.selectedServers.ElementAt(this.serverManger.serverPointer).server.Client.Receive(buff, SocketFlags.Peek) == 0)
-                                {
-                                    // Client disconnected
-                                    bClosed = true;
-                                    MessageBox.Show("La connessione è stata interrotta");
-                                    closeOnException();
-                                    break;
-                                }
-                            }
-                            
-                            Thread.Sleep(2000);
-                        }
-                        catch (SocketException se)
-                        {
-                            closeOnException();
-                            MessageBox.Show("La connessione è stata interrotta");
-                            break;
-                        }
-                    }
-                }
-             );
-                this.ConnectionChecker.Start();
             }
-            
         }
 
-    
         public void refreshGUIonConnection()
         {
             //aggiorno i pulsanti
@@ -299,7 +271,7 @@ namespace HookerClient
             {
                 h.Close();
             }*/
-         
+            mailslotHandlers.Clear(); //pulisco la lista degli handlers
             unbindHotkeyCommands(); //rimuovo i vincoli sugli hotkeys
             btnContinue.IsEnabled = true; 
             
@@ -312,7 +284,20 @@ namespace HookerClient
                 tbStatus.Text = "La comunicazione è in PAUSA, premi CONTINUA per riattivarla!";
             }));
         }
-   
+        /*
+        private void continueCommunication()
+        {
+            initSelectedMailslots();
+            bindHotkeyCommands();
+            btnContinue.IsEnabled = false;
+            tbStatus.Dispatcher.Invoke(DispatcherPriority.Background, new Action(() =>
+            {
+                tbStatus.Text = "Il Client è attivo, ricordati di attivare il Server sulla/e macchina/e selezionata/e!\n"
+                               + "Per mettere in pausa la connessione premi CTRL-ALT-P\n"
+                               + "Per terminare la connessione premi CTRL-ALT-E";
+            }));
+        }
+        */
         private void btnRefreshServers_Click(object sender, RoutedEventArgs e)
         {
             lbServers.Dispatcher.Invoke(DispatcherPriority.Background, new Action(() =>
@@ -371,6 +356,7 @@ namespace HookerClient
         }
     }
 
+   
 
 
 }

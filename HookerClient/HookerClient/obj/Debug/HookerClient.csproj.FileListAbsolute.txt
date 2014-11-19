@@ -1,13 +1,26 @@
-C:\Users\GIULIO\Documents\Git\progettopds\HookerClient\HookerClient\bin\Debug\HookerClient.exe.config
-C:\Users\GIULIO\Documents\Git\progettopds\HookerClient\HookerClient\obj\Debug\HookerClient.exe
-C:\Users\GIULIO\Documents\Git\progettopds\HookerClient\HookerClient\obj\Debug\HookerClient.pdb
-C:\Users\GIULIO\Documents\Git\progettopds\HookerClient\HookerClient\bin\Debug\HookerClient.exe
-C:\Users\GIULIO\Documents\Git\progettopds\HookerClient\HookerClient\bin\Debug\HookerClient.pdb
-C:\Users\GIULIO\Documents\Git\progettopds\HookerClient\HookerClient\obj\Debug\HookerClient.csprojResolveAssemblyReference.cache
-C:\Users\GIULIO\Documents\Git\progettopds\HookerClient\HookerClient\obj\Debug\MainWindow.baml
-C:\Users\GIULIO\Documents\Git\progettopds\HookerClient\HookerClient\obj\Debug\MainWindow.g.cs
-C:\Users\GIULIO\Documents\Git\progettopds\HookerClient\HookerClient\obj\Debug\App.g.cs
-C:\Users\GIULIO\Documents\Git\progettopds\HookerClient\HookerClient\obj\Debug\HookerClient_MarkupCompile.cache
-C:\Users\GIULIO\Documents\Git\progettopds\HookerClient\HookerClient\obj\Debug\HookerClient.g.resources
-C:\Users\GIULIO\Documents\Git\progettopds\HookerClient\HookerClient\obj\Debug\HookerClient.Properties.Resources.resources
-C:\Users\GIULIO\Documents\Git\progettopds\HookerClient\HookerClient\obj\Debug\HookerClient.csproj.GenerateResource.Cache
+C:\Users\ambrulio\Documents\GIT\progettopds\HookerClient\HookerClient\bin\Debug\HookerClient.exe.config
+C:\Users\ambrulio\Documents\GIT\progettopds\HookerClient\HookerClient\obj\Debug\MainWindow.baml
+C:\Users\ambrulio\Documents\GIT\progettopds\HookerClient\HookerClient\obj\Debug\MainWindow.g.cs
+C:\Users\ambrulio\Documents\GIT\progettopds\HookerClient\HookerClient\obj\Debug\App.g.cs
+C:\Users\ambrulio\Documents\GIT\progettopds\HookerClient\HookerClient\obj\Debug\HookerClient_MarkupCompile.cache
+C:\Users\ambrulio\Documents\GIT\progettopds\HookerClient\HookerClient\obj\Debug\HookerClient.g.resources
+C:\Users\ambrulio\Documents\GIT\progettopds\HookerClient\HookerClient\obj\Debug\HookerClient.Properties.Resources.resources
+C:\Users\ambrulio\Documents\GIT\progettopds\HookerClient\HookerClient\obj\Debug\HookerClient.csproj.GenerateResource.Cache
+C:\Users\ambrulio\Documents\GIT\progettopds\HookerClient\HookerClient\bin\Debug\HookerClient.exe
+C:\Users\ambrulio\Documents\GIT\progettopds\HookerClient\HookerClient\bin\Debug\HookerClient.pdb
+C:\Users\ambrulio\Documents\GIT\progettopds\HookerClient\HookerClient\obj\Debug\HookerClient.exe
+C:\Users\ambrulio\Documents\GIT\progettopds\HookerClient\HookerClient\obj\Debug\HookerClient.pdb
+C:\Users\ambrulio\Documents\GIT\progettopds\HookerClient\HookerClient\obj\Debug\HookerClient.csprojResolveAssemblyReference.cache
+C:\Users\Babi\Desktop\GIT GIULIO\progettopds\HookerClient\HookerClient\bin\Debug\HookerClient.exe.config
+C:\Users\Babi\Desktop\GIT GIULIO\progettopds\HookerClient\HookerClient\obj\Debug\HookerClient.exe
+C:\Users\Babi\Desktop\GIT GIULIO\progettopds\HookerClient\HookerClient\obj\Debug\HookerClient.pdb
+C:\Users\Babi\Desktop\GIT GIULIO\progettopds\HookerClient\HookerClient\bin\Debug\HookerClient.exe
+C:\Users\Babi\Desktop\GIT GIULIO\progettopds\HookerClient\HookerClient\bin\Debug\HookerClient.pdb
+C:\Users\Babi\Desktop\GIT GIULIO\progettopds\HookerClient\HookerClient\obj\Debug\MainWindow.baml
+C:\Users\Babi\Desktop\GIT GIULIO\progettopds\HookerClient\HookerClient\obj\Debug\MainWindow.g.cs
+C:\Users\Babi\Desktop\GIT GIULIO\progettopds\HookerClient\HookerClient\obj\Debug\App.g.cs
+C:\Users\Babi\Desktop\GIT GIULIO\progettopds\HookerClient\HookerClient\obj\Debug\HookerClient_MarkupCompile.cache
+C:\Users\Babi\Desktop\GIT GIULIO\progettopds\HookerClient\HookerClient\obj\Debug\HookerClient.g.resources
+C:\Users\Babi\Desktop\GIT GIULIO\progettopds\HookerClient\HookerClient\obj\Debug\HookerClient.Properties.Resources.resources
+C:\Users\Babi\Desktop\GIT GIULIO\progettopds\HookerClient\HookerClient\obj\Debug\HookerClient.csproj.GenerateResource.Cache
+C:\Users\Babi\Desktop\GIT GIULIO\progettopds\HookerClient\HookerClient\obj\Debug\HookerClient.csprojResolveAssemblyReference.cache
