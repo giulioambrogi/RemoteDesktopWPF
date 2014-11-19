@@ -11,7 +11,7 @@
         <Button x:Name="btnStart" Content="Avvia Server" HorizontalAlignment="Left" Height="67" Margin="378,118,0,0" VerticalAlignment="Top" Width="129" Click="Button_Click"/>
         <TextBox x:Name="PointX" IsReadOnly="True" Margin="443,24,0,260" RenderTransformOrigin="1.574,0" HorizontalAlignment="Left" Width="54"/>
         <TextBox x:Name="PointY" IsReadOnly="True" Margin="443,65,0,219" RenderTransformOrigin="1.574,0" HorizontalAlignment="Left" Width="54"/>
-        <Button x:Name="btnClose" Content="Chiudi mailslot" HorizontalAlignment="Left" Margin="378,242,0,0" VerticalAlignment="Top" Width="129" Height="48" Click="btnClose_Click" />
+        <Button x:Name="btnClose" Content="Stop Server" HorizontalAlignment="Left" Margin="378,242,0,0" VerticalAlignment="Top" Width="129" Height="48" Click="btnClose_Click" />
         <Button Content="Pulisci Lista" HorizontalAlignment="Left" Margin="378,190,0,0" VerticalAlignment="Top" Width="129" Height="47" Click="Button_Click_2"/>
 
         <tb:TaskbarIcon IconSource="/Icons/Connected.ico" ToolTipText="Server running..." >
@@ -24,7 +24,7 @@
                 <ContextMenu Background="AliceBlue">
                     <MenuItem Header="Avvia Server" Click="Button_Click" />
                     <MenuItem Header="Pulisci lista" Click="Button_Click_2" />
-                    <MenuItem Header="Chiudi mailslot" Click="btnClose_Click" />
+                    <MenuItem Header="Stop server" Click="btnClose_Click" />
                     <MenuItem Header="Riapri finestra" Click="WindowResume" />
                     <Separator />
                     <MenuItem Header="Esci" Click="ExitButton" />

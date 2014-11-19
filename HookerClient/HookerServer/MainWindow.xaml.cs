@@ -3,6 +3,8 @@ using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Linq;
+using System.Net;
+using System.Net.Sockets;
 using System.Runtime.InteropServices;
 using System.Text;
 using System.Threading;
@@ -26,225 +28,48 @@ namespace HookerServer
     /// </summary>
     public partial class MainWindow : Window
     {
-        internal const string keyboardMailslotName = @"\\.\mailslot\keyboardMailslot";
-        NativeMethods.SafeMailslotHandle hMailslot = null;
-
+       
+        static Int32 port = 5143;
+        public IPAddress localAddr = IPAddress.Parse("127.0.0.1");
+        public TcpListener server = null;
+        public TcpClient client = null;
+        public UdpClient udpListener;
+        public IPEndPoint remoteIPEndpoint;
+        Thread runThread;
         public MainWindow()
         {
             InitializeComponent();
-            Console.WriteLine(System.Environment.MachineName);
-
+            Console.WriteLine("Nome computer :"+System.Environment.MachineName);
+            btnStart.IsEnabled = true;
+            btnClose.IsEnabled = false;
         }
-
-
-        void initKeyboardMailslot()
-        {
-            
-
-            try
-            {
-                NativeMethods.SECURITY_ATTRIBUTES sa = null;
-                sa = CreateMailslotSecurity();
-
-                // Create the mailslot.
-                hMailslot = NativeMethods.CreateMailslot(
-                    keyboardMailslotName,               // The name of the mailslot
-                    0,                          // No maximum message size
-                    NativeMethods.MAILSLOT_WAIT_FOREVER,      // Waits forever for a message
-                    sa                          // Mailslot security attributes
-                    );
-
-                if (hMailslot.IsInvalid)
-                {
-                    throw new Win32Exception();
-                }
-
-                Console.WriteLine("The mailslot ({0}) is created.",  keyboardMailslotName);
-
-                // Check messages in the mailslot.
-                //Console.Write("Press ENTER to check new messages or press Q to quit ...");
-                //string cmd = Console.ReadLine();
-                //while (!cmd.Equals("Q", StringComparison.OrdinalIgnoreCase)
-                int count = 0;
-                while (true)
-                {
-                    count++;
-                    if (!ReadMailslot(hMailslot))
-                    {
-                        Console.WriteLine("Mailslot chiusa");
-                        break;
-                    }
-                    Thread.Sleep(10);
-                    //Console.Write("Press ENTER to check new messages or press Q to quit ...");
-                    //cmd = Console.ReadLine();
-                }
-            }
-            catch (Win32Exception ex)
-            {
-                Console.WriteLine("The server throws the error: {0}", ex.Message);
-            }
-            finally
-            {
-                /*
-                if (hMailslot != null)
-                {
-                    hMailslot.Close();
-                    hMailslot = null;
-                }*/
-            }
-        }
-         NativeMethods.SECURITY_ATTRIBUTES CreateMailslotSecurity()
-        {
-            // Define the SDDL for the security descriptor.
-            string sddl = "D:" +        // Discretionary ACL
-                "(A;OICI;GRGW;;;AU)" +  // Allow read/write to authenticated users
-                "(A;OICI;GA;;;BA)";     // Allow full control to administrators
-
-            NativeMethods.SafeLocalMemHandle pSecurityDescriptor = null;
-            if (!NativeMethods.ConvertStringSecurityDescriptorToSecurityDescriptor(
-                sddl, 1, out pSecurityDescriptor, IntPtr.Zero))
-            {
-                throw new Win32Exception();
-            }
-
-            NativeMethods.SECURITY_ATTRIBUTES sa = new NativeMethods.SECURITY_ATTRIBUTES();
-            sa.nLength = Marshal.SizeOf(sa);
-            sa.lpSecurityDescriptor = pSecurityDescriptor;
-            sa.bInheritHandle = false;
-            return sa;
-        }
-
-
-        /// <summary>
-        /// Read the messages from a mailslot by using the mailslot handle in a call 
-        /// to the ReadFile function. 
-        /// </summary>
-        /// <param name="hMailslot">The handle of the mailslot</param>
-        /// <returns> 
-        /// If the function succeeds, the return value is true.
-        /// </returns>
-        bool ReadMailslot(NativeMethods.SafeMailslotHandle hMailslot)
-        {
-            try
-            {
-                int cbMessageBytes = 0;         // Size of the message in bytes
-                int cbBytesRead = 0;            // Number of bytes read from the mailslot
-                int cMessages = 0;              // Number of messages in the slot
-                int nMessageId = 0;             // Message ID
-
-                bool succeeded = false;
-
-                // Check for the number of messages in the mailslot.
-                succeeded = NativeMethods.GetMailslotInfo(
-                    hMailslot,                  // Handle of the mailslot
-                    IntPtr.Zero,                // No maximum message size 
-                    out cbMessageBytes,         // Size of next message 
-                    out cMessages,              // Number of messages 
-                    IntPtr.Zero                 // No read time-out
-                    );
-                if (!succeeded)
-                {
-                    Console.WriteLine("GetMailslotInfo failed w/err 0x{0:X}",
-                        Marshal.GetLastWin32Error());
-                    return succeeded;
-                }
-
-                if (cbMessageBytes == NativeMethods.MAILSLOT_NO_MESSAGE)
-                {
-                    // There are no new messages in the mailslot at present
-                    //Console.WriteLine("No new messages.");
-                    return succeeded;
-                }
-
-                // Retrieve the messages one by one from the mailslot.
-                while (cMessages != 0)
-                {
-                    nMessageId++;
-
-                    // Declare a byte array to fetch the data
-                    byte[] bBuffer = new byte[cbMessageBytes];
-                    succeeded = NativeMethods.ReadFile(
-                        hMailslot,              // Handle of mailslot
-                        bBuffer,                // Buffer to receive data
-                        cbMessageBytes,         // Size of buffer in bytes
-                        out cbBytesRead,        // Number of bytes read from mailslot
-                        IntPtr.Zero             // Not overlapped I/O
-                        );
-                    if (!succeeded)
-                    {
-                        Console.WriteLine("ReadFile failed w/err 0x{0:X}",
-                            Marshal.GetLastWin32Error());
-                        break;
-                    }
-
-                    // Display the message. 
-
-                    Console.WriteLine("Message #{0}: {1}", nMessageId,
-                        Encoding.Unicode.GetString(bBuffer));
-
-                    // Add item to listbox
-
-                    string stringa = "Message " + nMessageId + " : " + Encoding.Unicode.GetString(bBuffer);
-
-                    parseMessage(Encoding.Unicode.GetString(bBuffer));
-
-                    lbMessages.Dispatcher.Invoke(DispatcherPriority.Normal, new Action(() =>
-                    {
-                        lbMessages.Items.Add(stringa);
-                        lbMessages.SelectedIndex = lbMessages.Items.Count -1;
-                        
-                        lbMessages.ScrollIntoView(lbMessages.SelectedIndex);
-                        lbMessages.UpdateLayout();
-                    }));
-
-
-
-                    // Get the current number of un-read messages in the slot. The number
-                    // may not equal the initial message number because new messages may 
-                    // arrive while we are reading the items in the slot.
-                    succeeded = NativeMethods.GetMailslotInfo(
-                        hMailslot,              // Handle of the mailslot
-                        IntPtr.Zero,            // No maximum message size 
-                        out cbMessageBytes,     // Size of next message 
-                        out cMessages,          // Number of messages 
-                        IntPtr.Zero             // No read time-out 
-                        );
-                    if (!succeeded)
-                    {
-                        Console.WriteLine("GetMailslotInfo failed w/err 0x{0:X}",
-                            Marshal.GetLastWin32Error());
-                        break;
-                    }
-                    return succeeded;
-                }
-            }
-            catch (Exception e)
-            {
-                Console.WriteLine("Errore in fase di lettura ,forse è stata chiusa");
-                return false;
-            }
-            return true;
-        }
-
-  
 
         private void parseMessage(string buffer)
         {
             //TO-DO : OTTIMIZZARE PRESTAZIONI
 
             List<string> commands = buffer.Split(' ').ToList();
+           
             if (commands.ElementAt(0).Equals("M"))
             {
-                //RAMO DEL MOUSE   
-                string[] points = buffer.Split(' ');
+                //16 bit è più veloce
+                int x = Convert.ToInt16(Double.Parse(commands.ElementAt(1)) * System.Windows.SystemParameters.PrimaryScreenWidth);
+                int y = Convert.ToInt16(Double.Parse(commands.ElementAt(2)) * System.Windows.SystemParameters.PrimaryScreenHeight);
+                //RAMO DEL MOUSE 
+                //Metodo che setta la posizione del mouse
+                NativeMethodsBiss.SetCursorPos(x,y);
+                               
+
                 PointX.Dispatcher.Invoke(DispatcherPriority.Background, new Action(() =>
                 {
-                    PointX.Text = points[1];
+                    PointX.Text = x.ToString();
+                    
                 }));
                 PointY.Dispatcher.Invoke(DispatcherPriority.Background, new Action(() =>
                 {
-                    PointY.Text = points[2];
+                    PointY.Text = y.ToString();
                 }));
+                Console.WriteLine("Received: {0}", buffer);
             }
             else if (commands.ElementAt(0).ToString().Equals("K"))
             {
@@ -263,6 +88,18 @@ namespace HookerServer
                     Console.WriteLine(commands.ElementAt(0) + " UP");
                     //InputSimulator.SimulateKeyUp(vk);
                 }
+
+                //UPDATE MESSAGEBOX
+                lbMessages.Dispatcher.Invoke(DispatcherPriority.Background, new Action(() =>
+                {
+                    lbMessages.Items.Add(buffer);
+                }));
+
+
+            }
+            else
+            {
+                Console.WriteLine("MESSAGGIO NON CAPITO :" + buffer);
             }
 
            
@@ -271,38 +108,91 @@ namespace HookerServer
 
         private void Button_Click(object sender, RoutedEventArgs e)
         {
-            
-            new Thread(() =>
+
+            this.runThread = new Thread(() =>
             {
                 Thread.CurrentThread.IsBackground = true;
-                initKeyboardMailslot();
+                runServer();
                 //this.IsEnabled = false; 
                 //btnStart.IsEnabled = false;
                 //btnClose.IsEnabled = true;
 
-            }).Start();
-             
+            });
+            this.runThread.Start();
+            btnClose.IsEnabled = true;
+            btnStart.IsEnabled = false;
         }
 
+
+        private void runServer()
+        {
+            
+            this.server = new TcpListener(IPAddress.Any, port);
+            this.udpListener = new UdpClient(port);
+            this.remoteIPEndpoint = new IPEndPoint(IPAddress.Any, port);
+            this.server.Start(1);
+            Byte[] bytes = new Byte[128];
+            String message = null;
+
+            // Enter the listening loop.
+            while (true)
+            {
+                try
+                {
+                    Console.Write("Waiting for a connection... ");
+                    this.client = this.server.AcceptTcpClient();
+                    Console.WriteLine("Connected!");
+                    
+                    NetworkStream stream = client.GetStream();
+
+                    // Loop to receive all the data sent by the client.
+                    while (this.client.Connected ){
+                        int i;
+                        //read exactly 128 bytes
+                        message = "";
+                        bytes = this.udpListener.Receive(ref this.remoteIPEndpoint);
+                        message += System.Text.Encoding.ASCII.GetString(bytes, 0, bytes.Length);
+                        // Translate data bytes to a ASCII string.
+                        
+                        parseMessage(message);
+                    }
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine("ERRORE: "+ex.Message);
+                    
+                }
+
+            }
+
+        }
       
 
-        private void Button_Click_1(object sender, RoutedEventArgs e)
+
+
+        private void stopServer()
         {
-            //VirtualKeyCode k = VirtualKeyCode.UP; 
-            //InputSimulator.SimulateKeyDown(k);
-   
+            if (this.client != null)
+            {
+                this.client.Close();
+            }
+            this.server.Server.Close();
+            this.server.Stop();
+            this.udpListener.Close();
+            this.udpListener = null;
+            this.client = null;
+            this.server = null;
+            this.runThread.Abort();
         }
 
         private void btnClose_Click(object sender, RoutedEventArgs e)
         {
-            if (hMailslot != null)
-            {
-                if(hMailslot.IsClosed)
-                    hMailslot.Close();
-                hMailslot = null;
-            }
+            btnStart.IsEnabled = true;
+            stopServer();
+            btnClose.IsEnabled = false;
         }
 
+    
         private void Button_Click_2(object sender, RoutedEventArgs e)
         {
             lbMessages.Dispatcher.Invoke(DispatcherPriority.Background, new Action(() =>
@@ -311,14 +201,12 @@ namespace HookerServer
             }));
         }
 
+
+
+
         private void ExitButton(object sender, RoutedEventArgs e)
         {
-            if (hMailslot != null)
-            {
-                if (hMailslot.IsClosed)
-                    hMailslot.Close();
-                hMailslot = null;
-            }
+           //TODO chiudere server da tray area
 
             this.Close();
         }
@@ -342,4 +230,13 @@ namespace HookerServer
             }
         }
     }
+    public partial class NativeMethodsBiss
+    {
+        /// Return Type: BOOL->int  
+        ///X: int  
+        ///Y: int  
+        [System.Runtime.InteropServices.DllImportAttribute("user32.dll", EntryPoint = "SetCursorPos")]
+        [return: System.Runtime.InteropServices.MarshalAsAttribute(System.Runtime.InteropServices.UnmanagedType.Bool)]
+        public static extern bool SetCursorPos(int X, int Y);
+    } 
 }

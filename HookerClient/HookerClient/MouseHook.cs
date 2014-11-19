@@ -27,6 +27,7 @@
 using System;
 using System.Runtime.InteropServices;
 using System.Diagnostics;
+using System.Threading;
 
 namespace RamGecTools
 {   
@@ -152,6 +153,9 @@ namespace RamGecTools
                     if (MiddleButtonUp != null)
                         MiddleButtonUp((MSLLHOOKSTRUCT)Marshal.PtrToStructure(lParam, typeof(MSLLHOOKSTRUCT)));
             }*/
+
+            //Inserito questo sleep perchè migliora i movimenti del mouse
+            Thread.Sleep(10);
             return CallNextHookEx(hookID, nCode, wParam, lParam);
         }
 

@@ -19,6 +19,7 @@ using System.Windows.Shapes;
 using System.DirectoryServices;
 using System.Windows.Threading;
 using System.IO;
+using System.Net.Sockets;
 
 
 namespace HookerClient
@@ -30,45 +31,39 @@ namespace HookerClient
     {
         RamGecTools.MouseHook mouseHook = new RamGecTools.MouseHook();
         RamGecTools.KeyboardHook keyboardHook = new RamGecTools.KeyboardHook();
-        
-       //METTENDO L'ASTERISCO MANDO IL MESSAGGIO A TUTTE LE MAISLOT CON QUEL NOME
-        //String keyboardMailslotName = @"\\*\mailslot\keyboardMailslot";
-        
-        //Questa lista di mailslot è la lista dei nomi della mailslot costantemente aggiornata ad ogni cambiamento di  selezione su listbox
-        public  List<String> mailslotNames = new List<String>();
-        //op
-        //Questa lista di handler verrà popolata in fase di connessione
-        private List<NativeMethods.SafeMailslotHandle> mailslotHandlers = new List<NativeMethods.SafeMailslotHandle>();
-
+        private ServerManager serverManger;
+        public Thread ConnectionChecker;
         public MainWindow()
         {
+            Console.WriteLine("Screen resolution :" + (int)System.Windows.SystemParameters.PrimaryScreenWidth + " " + (int)System.Windows.SystemParameters.FullPrimaryScreenHeight);
             InitializeComponent();
-            InstallMouseAndKeyboard();
             //TODO eliminare definitivamente le checkbox relative a mouse e tastiera
-    
+            this.serverManger = new ServerManager();
             btnContinue.IsEnabled = false; //deve per forza essere inattivo all'inizio
             new Thread(() =>
             {
 
                 Thread.CurrentThread.IsBackground = true;
-                populateComputerList();
-              
+                getAvailableServers();
+                
             }).Start();
-
+       
         }
 
-        public void populateComputerList()
+        public void getAvailableServers()
         {
-
-            List<String> computerList = new List<string>();
+            this.serverManger.availableServers.Clear();
+            List<ServerEntity> servers = new List<ServerEntity>();
             DirectoryEntry root = new DirectoryEntry("WinNT:");
             foreach (DirectoryEntry computers in root.Children)
             {
                 foreach (DirectoryEntry computer in computers.Children)
                 {
-                    if (computer.Name != "Schema" && computer.Name != System.Environment.MachineName)
+                    if (computer.Name != "Schema" /*&& computer.Name != System.Environment.MachineName*/)
                     {
-                        Console.WriteLine("Found new computer : "+computer.Name);
+                        Console.WriteLine("Found new computer : " + computer.Name);
+                        //aggiungo il server alla lista dei server disponibili
+                        this.serverManger.availableServers.Add(new ServerEntity(computer.Name));
                         lbServers.Dispatcher.Invoke(DispatcherPriority.Background, new Action(() =>
                         {
                             lbServers.Items.Add(computer.Name);
@@ -77,131 +72,41 @@ namespace HookerClient
                     }
                 }
             }
-            return; 
-        }
-
-
-        NativeMethods.SECURITY_ATTRIBUTES CreateMailslotSecurity()
-        {
-            // Define the SDDL for the security descriptor.
-            string sddl = "D:" +        // Discretionary ACL
-                "(A;OICI;GRGW;;;AU)" +  // Allow read/write to authenticated users
-                "(A;OICI;GA;;;BA)";     // Allow full control to administrators
-
-            NativeMethods.SafeLocalMemHandle pSecurityDescriptor = null;
-            if (!NativeMethods.ConvertStringSecurityDescriptorToSecurityDescriptor(
-                sddl, 1, out pSecurityDescriptor, IntPtr.Zero))
-            {
-                throw new Win32Exception();
-            }
-
-            NativeMethods.SECURITY_ATTRIBUTES sa = new NativeMethods.SECURITY_ATTRIBUTES();
-            sa.nLength = Marshal.SizeOf(sa);
-            sa.lpSecurityDescriptor = pSecurityDescriptor;
-            sa.bInheritHandle = false;
-            return sa;
         }
 
 
 
-        public void initSelectedMailslots()
-        {
-            foreach (String mailslotname in mailslotNames)
-            {
-                try
-                {
-                    // Try to open the mailslot with the write access.
-                    
-                    NativeMethods.SafeMailslotHandle hMailslot = NativeMethods.CreateFile(
-                        mailslotname,                           // The name of the mailslot
-                        NativeMethods.FileDesiredAccess.GENERIC_WRITE,        // Write access 
-                        NativeMethods.FileShareMode.FILE_SHARE_READ,          // Share mode
-                        IntPtr.Zero,                            // Default security attributes
-                        NativeMethods.FileCreationDisposition.OPEN_EXISTING,  // Opens existing mailslot
-                        0,                                      // No other attributes set
-                        IntPtr.Zero                             // No template file
-                        );
-
-                    NativeMethods.SECURITY_ATTRIBUTES sa = null;
-                   
-                    if (hMailslot.IsInvalid)
-                    {
-                        throw new Win32Exception();
-                    }
-                    mailslotHandlers.Add(hMailslot); //aggiungo handler alla lista
-                    Console.WriteLine("The mailslot is opened {0}", mailslotname);
-
-                }
-                catch (Win32Exception ex)
-                {
-                    Console.WriteLine("The client throws the error: {0}", ex.Message);
-                }
-                finally
-                {
-                    /* if (hMailslot != null)
-                     {
-                         hMailslot.Close();
-                         hMailslot = null;
-                     }*/
-                }
-            }
-        }
-     
-
-        //metodo wrapper che permette di scrivere a tutte le mailslot selezionate
-        public void WriteSelectedMailslots(string message)
-        {
-            //TODO : scrivere a tutte le mailslot (gestire sia handle che 
-            foreach (NativeMethods.SafeMailslotHandle h in mailslotHandlers)
-            {
-                WriteMailslot(h, message);
-                
-            }
-        }
-        private int WriteMailslot(NativeMethods.SafeMailslotHandle hMailslot, string message)
-        {
-            int cbMessageBytes = 0;         // Message size in bytes
-            int cbBytesWritten = 0;         // Number of bytes written to the slot
-
-            byte[] bMessage = Encoding.Unicode.GetBytes(message);
-            cbMessageBytes = bMessage.Length;
-
-            bool succeeded = NativeMethods.WriteFile(
-                hMailslot,                  // Handle to the mailslot
-                bMessage,                   // Message to be written
-                cbMessageBytes,             // Number of bytes to write
-                out cbBytesWritten,         // Number of bytes written
-                IntPtr.Zero                 // Not overlapped
-                );
-            if (!succeeded || cbMessageBytes != cbBytesWritten)
-            {
-                Console.WriteLine("WriteFile failed w/err 0x{0:X}",
-                    Marshal.GetLastWin32Error());
-                return -1;
-            }
-            else
-            {
-                Console.WriteLine("The message \"{0}\" is written to the slot",
-                    message);
-                return 0;
-            }
-        }
-
-       
-
-      
-      
         //TODO: passare un'oggetto al server in modo che questo possa eseguire azione
         void keyboardHook_KeyPress(int op,RamGecTools.KeyboardHook.VKeys key ){
-            if(op == 0){
-                //key is down
-                WriteSelectedMailslots("K" + " " + (int)key + " " + "DOWN");
+
+            try
+            {
+                if (op == 0)
+                {
+                    //key is down
+                    this.serverManger.sendMessage("K" + " " + (int)key + " " + "DOWN");
+
+                }
+                else
+                {
+                    //key is up
+                    this.serverManger.sendMessage("K" + " " + (int)key + " " + "UP");
+                }
+            }
+            catch (Exception ex)
+            {
+                closeOnException();
+                MessageBox.Show("La connessione si è interrotta");
                 
             }
-            else{
-                //key is up
-                WriteSelectedMailslots("K" + " " + (int)key + " " + "UP");
-            }
+        }
+
+        public void closeOnException()
+        {
+            UnistallMouseAndKeyboard();
+            this.serverManger.closeConnection();
+            unbindHotkeyCommands(); //rimuovo vincoli su hotkeys
+            refreshGUIonClosing();
         }
 
 
@@ -212,7 +117,7 @@ namespace HookerClient
          */
         void keyboardHook_HotKeyPress(int virtualKeyCode)
         {
-            WriteSelectedMailslots("K" + " " + (int)virtualKeyCode + " " + "DOWN");
+            this.serverManger.sendMessage("K" + " " + (int)virtualKeyCode + " " + "DOWN");
         }
 
         void mouseHook_MouseEvent(int type, RamGecTools.MouseHook.MSLLHOOKSTRUCT mouse, RamGecTools.MouseHook.MouseMessages move)
@@ -220,12 +125,13 @@ namespace HookerClient
             switch(type)
             {
                 case 0: // Mouse click
-                    WriteSelectedMailslots( move.ToString());
+                    this.serverManger.sendMessage(move.ToString());
                     break;
                 case 1: // Mouse movement
-                    int x = mouse.pt.x;
-                    int y = mouse.pt.y;
-                    WriteSelectedMailslots( "M" + " " + x.ToString() + " " + y.ToString());
+                    double x = Math.Round((mouse.pt.x / System.Windows.SystemParameters.PrimaryScreenWidth),4); //must send relative position REAL/RESOLUTION
+                    double y = Math.Round((mouse.pt.y / System.Windows.SystemParameters.PrimaryScreenHeight),4) ;
+
+                    this.serverManger.sendMessage("M" + " " + x.ToString() + " " + y.ToString());
                     break;
                 default:
                     break;
@@ -243,28 +149,94 @@ namespace HookerClient
             mouseHook.MouseEvent += new RamGecTools.MouseHook.myMouseHookCallback(mouseHook_MouseEvent);
             mouseHook.Install();
         }
-       
+
+        private void UnistallMouseAndKeyboard()
+        {
+            keyboardHook.KeyPress -= new RamGecTools.KeyboardHook.myKeyboardHookCallback(keyboardHook_KeyPress);
+            mouseHook.MouseEvent -= new RamGecTools.MouseHook.myMouseHookCallback(mouseHook_MouseEvent);
+            keyboardHook.Uninstall();
+            mouseHook.Uninstall();
+            
+        }
 
         private void lbServers_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
-            mailslotNames.Clear(); //pulisco la lista dei nomi delle maislot, per ricalcolarla
-
+            this.serverManger.selectedServers.Clear();
             foreach (var x in lbServers.SelectedItems)
             {
-                mailslotNames.Add(@"\\"+x.ToString()+@"\mailslot\keyboardMailslot");
+                //trova il server a cui si riferisce
+                ServerEntity se = this.serverManger.availableServers.Find(item => item.name.Equals(x.ToString()));
+                this.serverManger.selectedServers.Add(se);
             }
         }
 
         private void btnConnect_Click(object sender, RoutedEventArgs e)
         {
-            
-            new Thread(() =>
+            Thread t = new Thread(() =>
             {
-                Thread.CurrentThread.IsBackground = true;
-                initSelectedMailslots();
-            }).Start();
-            //Questo bind vale solo mentre si è connessi
-            bindHotkeyCommands();
+                    Thread.CurrentThread.IsBackground = true;
+                    //this.serverManger.connectToServer(this.serverManger.selectedServers.ElementAt(this.serverManger.serverPointer), "TODO");
+                    this.serverManger.connect();
+            });
+            t.Start();
+            t.Join();
+
+            bool allConnected = true;
+            foreach(ServerEntity s in this.serverManger.selectedServers){
+                if(s.server!= null && !s.server.Connected){
+                    //almeno un server non è connesso 
+                    allConnected = false;
+                    MessageBox.Show("Non sono riuscito a connettermi a "+s.name);
+                    refreshGUIonClosing();
+                }
+            }
+            if (allConnected != false)
+            {
+                //se le connessioni sono andate a buon fine
+                InstallMouseAndKeyboard();
+                //Questo bind vale solo mentre si è connessi
+                bindHotkeyCommands();
+                refreshGUIonConnection();
+                this.ConnectionChecker = new Thread(() =>
+                {
+                    while (true)
+                    {
+                        // Detect if client disconnected
+                        try
+                        {
+                            bool bClosed = false;
+                            if (this.serverManger.selectedServers.ElementAt(this.serverManger.serverPointer).server.Client.Poll(0, SelectMode.SelectRead))
+                            {
+                                byte[] buff = new byte[1];
+                                if (this.serverManger.selectedServers.ElementAt(this.serverManger.serverPointer).server.Client.Receive(buff, SocketFlags.Peek) == 0)
+                                {
+                                    // Client disconnected
+                                    bClosed = true;
+                                    MessageBox.Show("La connessione è stata interrotta");
+                                    closeOnException();
+                                    break;
+                                }
+                            }
+                            
+                            Thread.Sleep(2000);
+                        }
+                        catch (SocketException se)
+                        {
+                            closeOnException();
+                            MessageBox.Show("La connessione è stata interrotta");
+                            break;
+                        }
+                    }
+                }
+             );
+                this.ConnectionChecker.Start();
+            }
+            
+        }
+
+    
+        public void refreshGUIonConnection()
+        {
             //aggiorno i pulsanti
             btnConnect.IsEnabled = false;
             btnRefreshServers.IsEnabled = false;
@@ -274,26 +246,39 @@ namespace HookerClient
             tbStatus.Dispatcher.Invoke(DispatcherPriority.Background, new Action(() =>
             {
                 tbStatus.Text = "Il Client è attivo, ricordati di attivare il Server sulla/e macchina/e selezionata/e!\n"
-                                +"Per mettere in pausa la connessione premi CTRL-ALT-P\n"
-                                +"Per terminare la connessione premi CTRL-ALT-E";
+                                + "Per mettere in pausa la connessione premi CTRL-ALT-P\n"
+                                + "Per terminare la connessione premi CTRL-ALT-E";
+            }));
+        }
+        public void refreshGUIonClosing()
+        {
+            btnRefreshServers.Dispatcher.Invoke(DispatcherPriority.Background , 
+                new Action(()=>{btnRefreshServers.IsEnabled = true; }));
+            lbServers.Dispatcher.Invoke(DispatcherPriority.Background,
+               new Action(() => { lbServers.IsEnabled = true; }));
+            btnConnect.Dispatcher.Invoke(DispatcherPriority.Background,
+             new Action(() => { btnConnect.IsEnabled = true; }));
+            btnContinue.Dispatcher.Invoke(DispatcherPriority.Background,
+            new Action(() => { btnContinue.IsEnabled = false; }));
+            btnExit.Dispatcher.Invoke(DispatcherPriority.Background,
+           new Action(() => { btnExit.IsEnabled = true; }));
+            tbStatus.Dispatcher.Invoke(DispatcherPriority.Background, new Action(() =>
+            {
+                tbStatus.Text = "Seleziona uno o più server dalla lista e connettiti!";
             }));
         }
 
         public void closeCommunication(object sender, ExecutedRoutedEventArgs e)
         {
             //Piccolo stratagemma x evitare che al server arrivino solo gli eventi KEYDOWN (che causerebberro problemi)
-            WriteSelectedMailslots("K" + " " + (int)RamGecTools.KeyboardHook.VKeys.LCONTROL + " " + "UP");
-            WriteSelectedMailslots("K" + " " + (int)RamGecTools.KeyboardHook.VKeys.LMENU + " " + "UP");
-            WriteSelectedMailslots("K" + " " + (int)RamGecTools.KeyboardHook.VKeys.KEY_E + " " + "UP");
-            foreach (NativeMethods.SafeMailslotHandle h in mailslotHandlers)
-            {
-                h.Close();
-            }
-            mailslotHandlers.Clear(); //pulisco la lista degli handlers
+            this.serverManger.sendMessage("K" + " " + (int)RamGecTools.KeyboardHook.VKeys.LCONTROL + " " + "UP");
+            this.serverManger.sendMessage("K" + " " + (int)RamGecTools.KeyboardHook.VKeys.LMENU + " " + "UP");
+            this.serverManger.sendMessage("K" + " " + (int)RamGecTools.KeyboardHook.VKeys.KEY_E + " " + "UP");
+            this.serverManger.closeConnection();
             unbindHotkeyCommands(); //rimuovo vincoli su hotkeys
-            
+
             btnRefreshServers.IsEnabled = true;
-            lbServers.IsEnabled = true; 
+            lbServers.IsEnabled = true;
             btnConnect.IsEnabled = true;
             btnContinue.IsEnabled = false;
             btnExit.IsEnabled = true;
@@ -306,15 +291,15 @@ namespace HookerClient
         private void pauseCommunication(object sender , ExecutedRoutedEventArgs e)
         {
             //Piccolo stratagemma x evitare che al server arrivino solo gli eventi KEYDOWN (che causerebberro problemi)
-            WriteSelectedMailslots("K" + " " + (int)RamGecTools.KeyboardHook.VKeys.LCONTROL + " " + "UP");
-            WriteSelectedMailslots("K" + " " + (int)RamGecTools.KeyboardHook.VKeys.LMENU + " " + "UP");
-            WriteSelectedMailslots("K" + " " + (int)RamGecTools.KeyboardHook.VKeys.KEY_P + " " + "UP");
+            this.serverManger.sendMessage("K" + " " + (int)RamGecTools.KeyboardHook.VKeys.LCONTROL + " " + "UP");
+            this.serverManger.sendMessage("K" + " " + (int)RamGecTools.KeyboardHook.VKeys.LMENU + " " + "UP");
+            this.serverManger.sendMessage("K" + " " + (int)RamGecTools.KeyboardHook.VKeys.KEY_P + " " + "UP");
             /*
             foreach (NativeMethods.SafeMailslotHandle h in mailslotHandlers)
             {
                 h.Close();
             }*/
-            mailslotHandlers.Clear(); //pulisco la lista degli handlers
+         
             unbindHotkeyCommands(); //rimuovo i vincoli sugli hotkeys
             btnContinue.IsEnabled = true; 
             
@@ -327,27 +312,14 @@ namespace HookerClient
                 tbStatus.Text = "La comunicazione è in PAUSA, premi CONTINUA per riattivarla!";
             }));
         }
-
-        private void continueCommunication()
-        {
-            initSelectedMailslots();
-            bindHotkeyCommands();
-            btnContinue.IsEnabled = false;
-            tbStatus.Dispatcher.Invoke(DispatcherPriority.Background, new Action(() =>
-            {
-                tbStatus.Text = "Il Client è attivo, ricordati di attivare il Server sulla/e macchina/e selezionata/e!\n"
-                               + "Per mettere in pausa la connessione premi CTRL-ALT-P\n"
-                               + "Per terminare la connessione premi CTRL-ALT-E";
-            }));
-        }
-
+   
         private void btnRefreshServers_Click(object sender, RoutedEventArgs e)
         {
             lbServers.Dispatcher.Invoke(DispatcherPriority.Background, new Action(() =>
             {
                 lbServers.Items.Clear();
             }));
-            populateComputerList();
+            getAvailableServers();
         }
 
 
@@ -384,16 +356,7 @@ namespace HookerClient
 
         private void unbindHotkeyCommands()
         {
-            try
-            {
-                //Al momento li rimuovo tutti, in futuro forse è meglio rimuoverne solo alcuni
-                CommandBindings.Clear();
-            }
-            catch (Exception e)
-            {
-                //MessageBox.Show("unbindHotKeyCommands: "+e.Message);
-                Application.Current.Shutdown();
-            }
+          //TODO
         }
     
         private void btnExit_Click(object sender, RoutedEventArgs e)
@@ -403,11 +366,11 @@ namespace HookerClient
 
         private void btnContinue_Click(object sender, RoutedEventArgs e)
         {
-            continueCommunication();
+            //continueCommunication();
+            MessageBox.Show("Non fa nulla al momento");
         }
     }
 
-   
 
 
 }
