@@ -1,0 +1,28 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio 2013
+VisualStudioVersion = 12.0.21005.1
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "HookerClient", "HookerClient\HookerClient.csproj", "{C2371132-FE08-453E-B2D7-B05D5E2BBD76}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "HookerServer", "HookerServer\HookerServer.csproj", "{6AC4A3C8-D9C3-4DD0-AC5C-DC88C167D093}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{C2371132-FE08-453E-B2D7-B05D5E2BBD76}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{C2371132-FE08-453E-B2D7-B05D5E2BBD76}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{C2371132-FE08-453E-B2D7-B05D5E2BBD76}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{C2371132-FE08-453E-B2D7-B05D5E2BBD76}.Release|Any CPU.Build.0 = Release|Any CPU
+		{6AC4A3C8-D9C3-4DD0-AC5C-DC88C167D093}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{6AC4A3C8-D9C3-4DD0-AC5C-DC88C167D093}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{6AC4A3C8-D9C3-4DD0-AC5C-DC88C167D093}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{6AC4A3C8-D9C3-4DD0-AC5C-DC88C167D093}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+EndGlobal

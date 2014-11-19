@@ -1,0 +1,278 @@
+﻿using CSMailslotClient;
+using System;
+using System.Collections.Generic;
+using System.ComponentModel;
+using System.Linq;
+using System.Runtime.InteropServices;
+using System.Text;
+using System.Threading;
+using System.Threading.Tasks;
+using System.Windows;
+using System.Windows.Controls;
+using System.Windows.Data;
+using System.Windows.Documents;
+using System.Windows.Input;
+using System.Windows.Media;
+using System.Windows.Media.Imaging;
+using System.Windows.Navigation;
+using System.Windows.Shapes;
+<<<<<<< HEAD
+using System.Windows.Input;
+using System.DirectoryServices;
+using System.Windows.Threading;
+using System.IO;
+
+=======
+>>>>>>> e64d33ee8b9a442e4457d3eb30cf0dbbbd0ff3ce
+
+namespace HookerClient
+{
+    /// <summary>
+    /// Logica di interazione per MainWindow.xaml
+    /// </summary>
+    public partial class MainWindow : Window
+    {
+        RamGecTools.MouseHook mouseHook = new RamGecTools.MouseHook();
+        RamGecTools.KeyboardHook keyboardHook = new RamGecTools.KeyboardHook();
+        NativeMethods.SafeMailslotHandle hMailslot = null;
+        //METTENDO L'ASTERISCO MANDO IL MESSAGGIO A TUTTE LE MAISLOT CON QUEL NOME
+        //String keyboardMailslotName = @"\\*\mailslot\keyboardMailslot";
+        
+        //Questa lista di mailslot è la lista dei nomi della mailslot costantemente aggiornata ad ogni cambiamento di  selezione su listbox
+        public  List<String> mailslotNames = new List<String>();
+        //Questa lista di handler verrà popolata in fase di connessione
+        private List<NativeMethods.SafeMailslotHandle> mailslotHandlers = new List<NativeMethods.SafeMailslotHandle>();
+
+        public MainWindow()
+        {
+            InitializeComponent();
+
+            new Thread(() =>
+            {
+                Thread.CurrentThread.IsBackground = true;
+                populateComputerList();
+
+            }).Start();
+
+        }
+
+        public void populateComputerList()
+        {
+
+            List<String> computerList = new List<string>();
+            DirectoryEntry root = new DirectoryEntry("WinNT:");
+            foreach (DirectoryEntry computers in root.Children)
+            {
+                foreach (DirectoryEntry computer in computers.Children)
+                {
+                    if (computer.Name != "Schema" && computer.Name != System.Environment.MachineName)
+                    {
+                        Console.WriteLine("Found new computer : "+computer.Name);
+                        lbServers.Dispatcher.Invoke(DispatcherPriority.Background, new Action(() =>
+                        {
+                            lbServers.Items.Add(computer.Name);
+                        }));
+
+                    }
+                }
+            }
+            return; 
+        }
+
+
+        NativeMethods.SECURITY_ATTRIBUTES CreateMailslotSecurity()
+        {
+            // Define the SDDL for the security descriptor.
+            string sddl = "D:" +        // Discretionary ACL
+                "(A;OICI;GRGW;;;AU)" +  // Allow read/write to authenticated users
+                "(A;OICI;GA;;;BA)";     // Allow full control to administrators
+
+            NativeMethods.SafeLocalMemHandle pSecurityDescriptor = null;
+            if (!NativeMethods.ConvertStringSecurityDescriptorToSecurityDescriptor(
+                sddl, 1, out pSecurityDescriptor, IntPtr.Zero))
+            {
+                throw new Win32Exception();
+            }
+
+            NativeMethods.SECURITY_ATTRIBUTES sa = new NativeMethods.SECURITY_ATTRIBUTES();
+            sa.nLength = Marshal.SizeOf(sa);
+            sa.lpSecurityDescriptor = pSecurityDescriptor;
+            sa.bInheritHandle = false;
+            return sa;
+        }
+
+
+
+        public void initSelectedMailslots()
+        {
+            foreach (String mailslotname in mailslotNames)
+            {
+                try
+                {
+                    // Try to open the mailslot with the write access.
+                    
+                    NativeMethods.SafeMailslotHandle hMailslot = NativeMethods.CreateFile(
+                        mailslotname,                           // The name of the mailslot
+                        NativeMethods.FileDesiredAccess.GENERIC_WRITE,        // Write access 
+                        NativeMethods.FileShareMode.FILE_SHARE_READ,          // Share mode
+                        IntPtr.Zero,                            // Default security attributes
+                        NativeMethods.FileCreationDisposition.OPEN_EXISTING,  // Opens existing mailslot
+                        0,                                      // No other attributes set
+                        IntPtr.Zero                             // No template file
+                        );
+
+                    NativeMethods.SECURITY_ATTRIBUTES sa = null;
+                    sa = CreateMailslotSecurity();
+                     NativeMethods.SafeMailslotHandle existing  = NativeMethods.CreateMailslot("prova", 0, 0, sa);
+                     NativeMethods.SafeMailslotHandle existing2 = NativeMethods.CreateMailslot(mailslotname, 0, 0, sa);
+
+                    if (hMailslot.IsInvalid)
+                    {
+                        throw new Win32Exception();
+                    }
+                    mailslotHandlers.Add(hMailslot); //aggiungo handler alla lista
+                    Console.WriteLine("The mailslot is opened {0}", mailslotname);
+
+                }
+                catch (Win32Exception ex)
+                {
+                    Console.WriteLine("The client throws the error: {0}", ex.Message);
+                }
+                finally
+                {
+                    /* if (hMailslot != null)
+                     {
+                         hMailslot.Close();
+                         hMailslot = null;
+                     }*/
+                }
+            }
+        }
+     
+
+        //metodo wrapper che permette di scrivere a tutte le mailslot selezionate
+        public void WriteSelectedMailslots(string message)
+        {
+            //TODO : scrivere a tutte le mailslot (gestire sia handle che 
+            foreach (NativeMethods.SafeMailslotHandle h in mailslotHandlers)
+            {
+                WriteMailslot(h, message);
+            }
+        }
+        static void WriteMailslot(NativeMethods.SafeMailslotHandle hMailslot, string message)
+        {
+            int cbMessageBytes = 0;         // Message size in bytes
+            int cbBytesWritten = 0;         // Number of bytes written to the slot
+
+            byte[] bMessage = Encoding.Unicode.GetBytes(message);
+            cbMessageBytes = bMessage.Length;
+
+            bool succeeded = NativeMethods.WriteFile(
+                hMailslot,                  // Handle to the mailslot
+                bMessage,                   // Message to be written
+                cbMessageBytes,             // Number of bytes to write
+                out cbBytesWritten,         // Number of bytes written
+                IntPtr.Zero                 // Not overlapped
+                );
+            if (!succeeded || cbMessageBytes != cbBytesWritten)
+            {
+                Console.WriteLine("WriteFile failed w/err 0x{0:X}",
+                    Marshal.GetLastWin32Error());
+            }
+            else
+            {
+                Console.WriteLine("The message \"{0}\" is written to the slot",
+                    message);
+            }
+        }
+
+       
+
+      
+      
+        //TODO: passare un'oggetto al server in modo che questo possa eseguire azione
+        void keyboardHook_KeyPress(int op,RamGecTools.KeyboardHook.VKeys key ){
+            if(op == 0){
+                //key is down
+                WriteSelectedMailslots("K" + " " + (int)key + " " + "DOWN");
+                
+            }
+            else{
+                //key is up
+                WriteSelectedMailslots("K" + " " + (int)key + " " + "UP");
+            }
+        }
+
+        void mouseHook_MouseEvent(int type, RamGecTools.MouseHook.MSLLHOOKSTRUCT mouse, RamGecTools.MouseHook.MouseMessages move)
+        {
+            switch(type)
+            {
+                case 0: // Mouse click
+                    WriteSelectedMailslots( move.ToString());
+                    break;
+                case 1: // Mouse movement
+                    int x = mouse.pt.x;
+                    int y = mouse.pt.y;
+                    WriteSelectedMailslots( "M" + " " + x.ToString() + " " + y.ToString());
+                    break;
+                default:
+                    break;
+            }
+        }
+
+        private void cbKeyboard_Checked(object sender, RoutedEventArgs e)
+        {          
+            //AGGANCIO 
+            keyboardHook.KeyPress += new RamGecTools.KeyboardHook.myKeyboardHookCallback(keyboardHook_KeyPress);
+            
+            //INSTALLO CATTURA
+            keyboardHook.Install();    
+        }
+
+        private void cbMouse_Checked(object sender, RoutedEventArgs e)
+        {
+            mouseHook.MouseEvent += new RamGecTools.MouseHook.myMouseHookCallback(mouseHook_MouseEvent);
+            mouseHook.Install();
+        }
+
+        private void lbServers_SelectionChanged(object sender, SelectionChangedEventArgs e)
+        {
+            mailslotNames.Clear(); //pulisco la lista dei nomi delle maislot, per ricalcolarla
+
+            foreach (var x in lbServers.SelectedItems)
+            {
+                mailslotNames.Add(@"\\"+x.ToString()+@"\mailslot\keyboardMailslot");
+            }
+        }
+
+        private void btnConnect_Click(object sender, RoutedEventArgs e)
+        {
+            new Thread(() =>
+            {
+                Thread.CurrentThread.IsBackground = true;
+                initSelectedMailslots();
+
+            }).Start();
+            btnConnect.IsEnabled = false;
+            btnRefreshServers.IsEnabled = false; 
+            btnDisconnect.IsEnabled = true; 
+        }
+
+        private void btnDisconnect_Click(object sender, RoutedEventArgs e)
+        {
+            foreach( NativeMethods.SafeMailslotHandle h in mailslotHandlers){
+                h.Close();
+            }
+            mailslotHandlers.Clear();
+            btnDisconnect.IsEnabled = false;
+            btnRefreshServers.IsEnabled = true; 
+            btnConnect.IsEnabled = true; 
+        }
+
+     
+
+    }
+
+
+
+}

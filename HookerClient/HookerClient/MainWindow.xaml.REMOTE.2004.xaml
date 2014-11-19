@@ -1,0 +1,16 @@
+﻿<Window x:Class="HookerClient.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="MainWindow" Height="350" Width="525">
+    <Grid>
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="0*"/>
+            <ColumnDefinition/>
+        </Grid.ColumnDefinitions>
+        <Button Grid.ColumnSpan="2" Content="Prendi il controllo" HorizontalAlignment="Left" Margin="372,213,0,0" VerticalAlignment="Top" Width="114" Click="Button_Click" Height="78"/>
+        <CheckBox x:Name="cbKeyboard" Grid.ColumnSpan="2" Content="Keyboard" HorizontalAlignment="Left" Margin="354,123,0,0" VerticalAlignment="Top" Checked="cbKeyboard_Checked" />
+        <CheckBox x:Name="cbMouse" Grid.ColumnSpan="2" Content="Mouse" HorizontalAlignment="Left" Margin="354, 143, 0, 0" VerticalAlignment="Top" Checked="cbMouse_Checked"/>
+        <TextBox x:Name="keyboardLog" Grid.ColumnSpan="2" HorizontalAlignment="Left" Height="281" Margin="21,10,0,0" TextWrapping="Wrap" Text="TextBox" VerticalAlignment="Top" Width="318" />
+
+    </Grid>
+</Window>

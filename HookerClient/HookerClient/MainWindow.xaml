@@ -1,0 +1,25 @@
+﻿<Window x:Name="wnd" x:Class="HookerClient.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="MainWindow" Height="558" Width="923" WindowState="Maximized"  WindowStyle="ThreeDBorderWindow">
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition/>
+            <RowDefinition Height="31*"/>
+        </Grid.RowDefinitions>
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="0*"/>
+            <ColumnDefinition Width="0*"/>
+            <ColumnDefinition Width="516*"/>
+            <ColumnDefinition/>
+        </Grid.ColumnDefinitions>
+        <ListBox x:Name="lbServers" Grid.Column="2" HorizontalAlignment="Left" Height="100" Margin="51,38,0,0" Grid.Row="1" VerticalAlignment="Top" Width="635" SelectionMode="Multiple" SelectionChanged="lbServers_SelectionChanged"/>
+        <Label Content="Computer in Rete" Grid.Column="2" HorizontalAlignment="Left" Margin="47,3,0,0" VerticalAlignment="Top" Height="39" Width="219" FontSize="20" Grid.Row="1"/>
+        <Button x:Name="btnRefreshServers" Content="Aggiorna Lista" Grid.Column="2" HorizontalAlignment="Left" Margin="691,38,0,0" Grid.Row="1" VerticalAlignment="Top" Width="87" Height="100" Click="btnRefreshServers_Click" RenderTransformOrigin="-0.827,0.537"/>
+        <Button x:Name="btnConnect" Content="Connect" Grid.Column="2" HorizontalAlignment="Left" Margin="51,143,0,0" Grid.Row="1" VerticalAlignment="Top" Width="327" Height="55" Click="btnConnect_Click" />
+        <Button x:Name="btnExit" Content="Esci" Grid.Column="2" HorizontalAlignment="Left" Margin="783,38,0,0" Grid.Row="1" VerticalAlignment="Top" Width="91" Height="100" Click="btnExit_Click"/>
+        <Button x:Name="btnContinue" Content="Continue" Grid.Column="2" HorizontalAlignment="Left" Margin="383,143,0,0" Grid.Row="1" VerticalAlignment="Top" Width="303" Height="54" Click="btnContinue_Click"/>
+        <TextBox x:Name="tbStatus" Grid.ColumnSpan="3" HorizontalAlignment="Left" Height="280" Margin="51,204,0,0" Grid.Row="1" TextWrapping="Wrap" VerticalAlignment="Top" Width="823" FontSize="25" IsReadOnly="True" BorderThickness="0" FontWeight="SemiBold"/>
+
+    </Grid>
+</Window>
