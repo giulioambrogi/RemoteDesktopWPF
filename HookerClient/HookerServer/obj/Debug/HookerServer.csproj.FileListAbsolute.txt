@@ -28,6 +28,12 @@ C:\Users\Babi\Desktop\GIT GIULIO\progettopds\HookerClient\HookerServer\obj\Debug
 C:\Users\Babi\Desktop\GIT GIULIO\progettopds\HookerClient\HookerServer\obj\Debug\HookerServer.Properties.Resources.resources
 C:\Users\Babi\Desktop\GIT GIULIO\progettopds\HookerClient\HookerServer\obj\Debug\HookerServer.csproj.GenerateResource.Cache
 C:\Users\Babi\Desktop\GIT GIULIO\progettopds\HookerClient\HookerServer\obj\Debug\HookerServer.csprojResolveAssemblyReference.cache
+<<<<<<< HEAD
+C:\Users\Babi\Desktop\GIT GIULIO\Progetto PDS\test\HookerClient\HookerServer\bin\Debug\HookerServer.exe.config
+C:\Users\Babi\Desktop\GIT GIULIO\Progetto PDS\test\HookerClient\HookerServer\obj\Debug\HookerServer.exe
+C:\Users\Babi\Desktop\GIT GIULIO\Progetto PDS\test\HookerClient\HookerServer\obj\Debug\HookerServer.pdb
+=======
 C:\Users\GIULIO\Documents\Git\Progetto PDS\test\HookerClient\HookerServer\bin\Debug\HookerServer.exe.config
 C:\Users\GIULIO\Documents\Git\Progetto PDS\test\HookerClient\HookerServer\obj\Debug\HookerServer.exe
 C:\Users\GIULIO\Documents\Git\Progetto PDS\test\HookerClient\HookerServer\obj\Debug\HookerServer.pdb
+>>>>>>> 8a8a164ee14aff80eaee51846bd8abcac2fd5a1d
