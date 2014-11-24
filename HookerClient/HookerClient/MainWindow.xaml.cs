@@ -32,13 +32,11 @@ namespace HookerClient
         RamGecTools.MouseHook mouseHook = new RamGecTools.MouseHook();
         RamGecTools.KeyboardHook keyboardHook = new RamGecTools.KeyboardHook();
         
-       //METTENDO L'ASTERISCO MANDO IL MESSAGGIO A TUTTE LE MAISLOT CON QUEL NOME
-        //String keyboardMailslotName = @"\\*\mailslot\keyboardMailslot";
-        
+        public Thread ConnectionChecker;
         //Questa lista di mailslot è la lista dei nomi della mailslot costantemente aggiornata ad ogni cambiamento di  selezione su listbox
         public  List<String> mailslotNames = new List<String>();
         //op
-        //Questa lista di handler verrà popolata in fase di connessione
+        //Questa lista di handler verrà popolata in fase di connessione o
         private List<NativeMethods.SafeMailslotHandle> mailslotHandlers = new List<NativeMethods.SafeMailslotHandle>();
         private ServerManager serverManger;
         public MainWindow()
@@ -111,8 +109,8 @@ namespace HookerClient
         public void closeOnException()
         {
             UnistallMouseAndKeyboard();
-            this.serverManger.closeConnection();
             unbindHotkeyCommands(); //rimuovo vincoli su hotkeys
+            this.serverManger.disconnect();
             refreshGUIonClosing();
         }
 
@@ -204,6 +202,40 @@ namespace HookerClient
                 //Questo bind vale solo mentre si è connessi
                 bindHotkeyCommands();
                 refreshGUIonConnection();
+                this.ConnectionChecker = new Thread(() =>
+                {
+                    while (true)
+                    {
+                        // Detect if client disconnected
+                        try
+                        {
+                            bool bClosed = false;
+                            if (this.serverManger.selectedServers.ElementAt(this.serverManger.serverPointer).server.Client.Poll(0, SelectMode.SelectRead))
+                            {
+                                byte[] buff = new byte[1];
+                                if (this.serverManger.selectedServers.ElementAt(this.serverManger.serverPointer).server.Client.Receive(buff, SocketFlags.Peek) == 0)
+                                {
+                                    // Client disconnected
+                                    bClosed = true;
+                                    MessageBox.Show("La connessione è stata interrotta");
+                                    closeOnException();
+                                    break;
+                                }
+                            }
+
+                            Thread.Sleep(2000);
+                        }
+                        catch (SocketException se)
+                        {
+                            closeOnException();
+                            MessageBox.Show("La connessione è stata interrotta");
+                            break;
+                        }
+                    }
+                }
+            );
+                this.ConnectionChecker.Start();
+
             }
         }
 
@@ -246,8 +278,9 @@ namespace HookerClient
             this.serverManger.sendMessage("K" + " " + (int)RamGecTools.KeyboardHook.VKeys.LCONTROL + " " + "UP");
             this.serverManger.sendMessage("K" + " " + (int)RamGecTools.KeyboardHook.VKeys.LMENU + " " + "UP");
             this.serverManger.sendMessage("K" + " " + (int)RamGecTools.KeyboardHook.VKeys.KEY_E + " " + "UP");
-            this.serverManger.closeConnection();
+            UnistallMouseAndKeyboard();
             unbindHotkeyCommands(); //rimuovo vincoli su hotkeys
+            this.serverManger.disconnect();
 
             btnRefreshServers.IsEnabled = true;
             lbServers.IsEnabled = true;
@@ -271,7 +304,6 @@ namespace HookerClient
             {
                 h.Close();
             }*/
-            mailslotHandlers.Clear(); //pulisco la lista degli handlers
             unbindHotkeyCommands(); //rimuovo i vincoli sugli hotkeys
             btnContinue.IsEnabled = true; 
             

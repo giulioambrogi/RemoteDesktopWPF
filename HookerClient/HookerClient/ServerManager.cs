@@ -62,15 +62,11 @@ namespace HookerClient
             
         }
 
-        public void closeConnection(){
-       
-                this.selectedServers.ElementAt(this.serverPointer).UdpSender.Close();
-                this.selectedServers.ElementAt(this.serverPointer).UdpSender = null;
-                this.selectedServers.ElementAt(this.serverPointer).server.GetStream().Close();
-                this.selectedServers.ElementAt(this.serverPointer).server.Close();
-              
-            
-           }
+        public void disconnectFromServer(ServerEntity se){
+                 se.UdpSender.Close();
+               se.server.GetStream().Close();
+               se.server.Close();
+        }
 
         public void nextSelectedServers(){
             //treat the list as a circular list
@@ -83,6 +79,13 @@ namespace HookerClient
             foreach ( ServerEntity se in selectedServers)
             {
                 connectToServer( se);
+            }
+        }
+        internal void disconnect()
+        {
+            foreach (ServerEntity se in selectedServers)
+            {
+                disconnectFromServer(se);
             }
         }
     }
