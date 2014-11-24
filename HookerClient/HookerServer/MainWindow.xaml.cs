@@ -36,12 +36,43 @@ namespace HookerServer
         public UdpClient udpListener;
         public IPEndPoint remoteIPEndpoint;
         Thread runThread;
+        Thread ConnectionChecker;
         public MainWindow()
         {
             InitializeComponent();
             Console.WriteLine("Nome computer :"+System.Environment.MachineName);
             btnStart.IsEnabled = true;
             btnClose.IsEnabled = false;
+            this.ConnectionChecker = new Thread(() =>
+            {
+                while (true)
+                {
+                    // Detect if client disconnected
+                    try
+                    {
+                        bool bClosed = false;
+                        if (this.client.Client.Poll(0, SelectMode.SelectRead))
+                        {
+                            byte[] buff = new byte[1];
+                            if (this.client.Client.Receive(buff, SocketFlags.Peek) == 0)
+                            {
+                                // Client disconnected
+                                bClosed = true;
+                                MessageBox.Show("La connessione è stata interrotta");
+                                //closeOnException();
+                                return;
+                            }
+                        }
+                        Thread.Sleep(2000);
+                    }
+                    catch (SocketException se)
+                    {
+                        //closeOnException();
+                        MessageBox.Show("La connessione è stata interrotta");
+                    }
+                }
+            }
+                       );
         }
 
         private void parseMessage(string buffer)
@@ -113,11 +144,8 @@ namespace HookerServer
             {
                 Thread.CurrentThread.IsBackground = true;
                 runServer();
-                //this.IsEnabled = false; 
-                //btnStart.IsEnabled = false;
-                //btnClose.IsEnabled = true;
-
             });
+            this.ConnectionChecker.Start();
             this.runThread.Start();
             btnClose.IsEnabled = true;
             btnStart.IsEnabled = false;
@@ -171,6 +199,7 @@ namespace HookerServer
 
         private void stopServer()
         {
+            this.ConnectionChecker.Abort();
             if (this.client != null)
             {
                 this.client.Close();
@@ -183,6 +212,7 @@ namespace HookerServer
             this.client = null;
             this.server = null;
             this.runThread.Abort();
+
         }
 
         private void btnClose_Click(object sender, RoutedEventArgs e)
