@@ -19,7 +19,9 @@
         <Button x:Name="btnConnect" Content="Connect" Grid.Column="2" HorizontalAlignment="Left" Margin="51,143,0,0" Grid.Row="1" VerticalAlignment="Top" Width="327" Height="55" Click="btnConnect_Click" />
         <Button x:Name="btnExit" Content="Esci" Grid.Column="2" HorizontalAlignment="Left" Margin="783,38,0,0" Grid.Row="1" VerticalAlignment="Top" Width="91" Height="100" Click="btnExit_Click"/>
         <Button x:Name="btnContinue" Content="Continue" Grid.Column="2" HorizontalAlignment="Left" Margin="383,143,0,0" Grid.Row="1" VerticalAlignment="Top" Width="303" Height="54" Click="btnContinue_Click"/>
-        <TextBox x:Name="tbStatus" Grid.ColumnSpan="3" HorizontalAlignment="Left" Height="280" Margin="51,204,0,0" Grid.Row="1" TextWrapping="Wrap" VerticalAlignment="Top" Width="823" FontSize="25" IsReadOnly="True" BorderThickness="0" FontWeight="SemiBold"/>
+        <TextBox x:Name="tbStatus" Grid.ColumnSpan="3" HorizontalAlignment="Left" Height="155" Margin="51,204,0,0" Grid.Row="1" TextWrapping="Wrap" VerticalAlignment="Top" Width="823" FontSize="25" IsReadOnly="True" BorderThickness="0" FontWeight="SemiBold"/>
+        <Label x:Name="lbSeiConnessoA" Grid.ColumnSpan="3" Content="" HorizontalAlignment="Left" Margin="51,377,0,0" Grid.Row="1" VerticalAlignment="Top" Height="110" Width="260" FontSize="35"/>
+        <Label x:Name="lblConnectedPC" Grid.ColumnSpan="3" Content="" HorizontalAlignment="Left" Margin="354,391,0,0" Grid.Row="1" VerticalAlignment="Top" Height="55" Width="520" FontSize="35"/>
 
     </Grid>
 </Window>

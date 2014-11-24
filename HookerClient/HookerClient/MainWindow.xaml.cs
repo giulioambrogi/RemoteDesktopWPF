@@ -210,16 +210,19 @@ namespace HookerClient
                         try
                         {
                             bool bClosed = false;
-                            if (this.serverManger.selectedServers.ElementAt(this.serverManger.serverPointer).server.Client.Poll(0, SelectMode.SelectRead))
+                            foreach (ServerEntity se in this.serverManger.selectedServers)
                             {
-                                byte[] buff = new byte[1];
-                                if (this.serverManger.selectedServers.ElementAt(this.serverManger.serverPointer).server.Client.Receive(buff, SocketFlags.Peek) == 0)
+                                if (se.server.Client.Poll(0, SelectMode.SelectRead))
                                 {
-                                    // Client disconnected
-                                    bClosed = true;
-                                    MessageBox.Show("La connessione è stata interrotta");
-                                    closeOnException();
-                                    break;
+                                    byte[] buff = new byte[1];
+                                    if (se.server.Client.Receive(buff, SocketFlags.Peek) == 0)
+                                    {
+                                        // Client disconnected
+                                        bClosed = true;
+                                        MessageBox.Show("La connessione è stata interrotta");
+                                        closeOnException();
+                                        return;
+                                    }
                                 }
                             }
 
@@ -253,6 +256,18 @@ namespace HookerClient
                                 + "Per mettere in pausa la connessione premi CTRL-ALT-P\n"
                                 + "Per terminare la connessione premi CTRL-ALT-E";
             }));
+
+            lbSeiConnessoA.Dispatcher.Invoke(DispatcherPriority.Background, new Action(() =>
+            {
+                    lbSeiConnessoA.Content = "Sei connesso a : ";
+            }));
+
+            lblConnectedPC.Dispatcher.Invoke(DispatcherPriority.Background, new Action(() =>
+            {
+                lblConnectedPC.Content = this.serverManger.selectedServers.ElementAt(this.serverManger.serverPointer).name;
+            })); 
+            
+
         }
         public void refreshGUIonClosing()
         {
@@ -362,6 +377,9 @@ namespace HookerClient
                 RoutedCommand closeComm = new RoutedCommand();
                 closeComm.InputGestures.Add(new KeyGesture(Key.E, ModifierKeys.Control | ModifierKeys.Alt));
                 CommandBindings.Add(new CommandBinding(closeComm, closeCommunication));
+                RoutedCommand nextServer = new RoutedCommand();
+                nextServer.InputGestures.Add(new KeyGesture(Key.N, ModifierKeys.Control | ModifierKeys.Alt));
+                CommandBindings.Add(new CommandBinding(nextServer, switchToNextServer));
 
             }
             catch (Exception e)
@@ -369,6 +387,20 @@ namespace HookerClient
                 //MessageBox.Show("bindHotKeyCommands: " + e.Message);
                 Application.Current.Shutdown();
             }
+        }
+
+        private void switchToNextServer(object sender, ExecutedRoutedEventArgs e)
+        {
+            this.serverManger.sendMessage("K" + " " + (int)RamGecTools.KeyboardHook.VKeys.LCONTROL + " " + "UP");
+            this.serverManger.sendMessage("K" + " " + (int)RamGecTools.KeyboardHook.VKeys.LMENU + " " + "UP");
+            this.serverManger.sendMessage("K" + " " + (int)RamGecTools.KeyboardHook.VKeys.KEY_N + " " + "UP");
+            //chiamo il metodo che realmente switcha il puntatore al sender udp 
+            this.serverManger.nextSelectedServers();
+            //aggiorno la label in base ai risultati effettivi dell'operazione
+            lblConnectedPC.Dispatcher.Invoke(DispatcherPriority.Background, new Action(() =>
+            {
+                lblConnectedPC.Content = this.serverManger.selectedServers.ElementAt(this.serverManger.serverPointer).name;
+            }));
         }
 
         private void unbindHotkeyCommands()

@@ -70,7 +70,15 @@ namespace HookerClient
 
         public void nextSelectedServers(){
             //treat the list as a circular list
-           
+            
+            if (this.serverPointer < this.selectedServers.Count - 1)
+            {
+                this.serverPointer++;
+            }
+            else if (this.serverPointer != 0 && this.serverPointer == this.selectedServers.Count - 1)
+            {
+                this.serverPointer = 0;
+            }
 
         }
 
