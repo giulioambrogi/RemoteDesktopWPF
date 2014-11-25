@@ -21,7 +21,6 @@ using System.Windows.Threading;
 using System.IO;
 using System.Net.Sockets;
 
-
 namespace HookerClient
 {
     /// <summary>
@@ -35,25 +34,21 @@ namespace HookerClient
         public Thread ConnectionChecker;
         //Questa lista di mailslot è la lista dei nomi della mailslot costantemente aggiornata ad ogni cambiamento di  selezione su listbox
         public  List<String> mailslotNames = new List<String>();
-        //op
+ 
         //Questa lista di handler verrà popolata in fase di connessione o
         private List<NativeMethods.SafeMailslotHandle> mailslotHandlers = new List<NativeMethods.SafeMailslotHandle>();
         private ServerManager serverManger;
         public MainWindow()
         {
-            Console.WriteLine("Screen resolution :" + (int)System.Windows.SystemParameters.PrimaryScreenWidth + " " + (int)System.Windows.SystemParameters.FullPrimaryScreenHeight);
+            Console.WriteLine("Screen resolution : "+(int)System.Windows.SystemParameters.PrimaryScreenWidth+" "+(int)System.Windows.SystemParameters.FullPrimaryScreenHeight);
             InitializeComponent();
             //TODO eliminare definitivamente le checkbox relative a mouse e tastiera
             this.serverManger = new ServerManager();
             btnContinue.IsEnabled = false; //deve per forza essere inattivo all'inizio
-            new Thread(() =>
-            {
-
+            new Thread(() =>{
                 Thread.CurrentThread.IsBackground = true;
                 getAvailableServers();
-              
             }).Start();
-
         }
 
         public void getAvailableServers()
@@ -242,6 +237,7 @@ namespace HookerClient
             }
         }
 
+        #region graphic interface refreshing methods
         public void refreshGUIonConnection()
         {
             //aggiorno i pulsanti
@@ -257,22 +253,19 @@ namespace HookerClient
                                 + "Per terminare la connessione premi CTRL-ALT-E";
             }));
 
-            lbSeiConnessoA.Dispatcher.Invoke(DispatcherPriority.Background, new Action(() =>
-            {
-                    lbSeiConnessoA.Content = "Sei connesso a : ";
-            }));
+
 
             lblConnectedPC.Dispatcher.Invoke(DispatcherPriority.Background, new Action(() =>
             {
-                lblConnectedPC.Content = this.serverManger.selectedServers.ElementAt(this.serverManger.serverPointer).name;
-            })); 
-            
+                lblConnectedPC.Content = "Sei connesso a : " + this.serverManger.selectedServers.ElementAt(this.serverManger.serverPointer).name;
+            }));
+
 
         }
         public void refreshGUIonClosing()
         {
-            btnRefreshServers.Dispatcher.Invoke(DispatcherPriority.Background , 
-                new Action(()=>{btnRefreshServers.IsEnabled = true; }));
+            btnRefreshServers.Dispatcher.Invoke(DispatcherPriority.Background,
+                new Action(() => { btnRefreshServers.IsEnabled = true; }));
             lbServers.Dispatcher.Invoke(DispatcherPriority.Background,
                new Action(() => { lbServers.IsEnabled = true; }));
             btnConnect.Dispatcher.Invoke(DispatcherPriority.Background,
@@ -285,14 +278,45 @@ namespace HookerClient
             {
                 tbStatus.Text = "Seleziona uno o più server dalla lista e connettiti!";
             }));
+            lblConnectedPC.Dispatcher.Invoke(DispatcherPriority.Background, new Action(() =>
+            {
+                lblConnectedPC.Content = "";
+            }));
+        }
+        private void refreshGUIOnPause()
+        {
+            btnContinue.IsEnabled = true;
+            btnRefreshServers.IsEnabled = false;
+            lbServers.IsEnabled = false;
+            btnConnect.IsEnabled = false;
+            btnExit.IsEnabled = true;
+            tbStatus.Dispatcher.Invoke(DispatcherPriority.Background, new Action(() =>
+            {
+                tbStatus.Text = "La comunicazione è in PAUSA, premi CONTINUA per riattivarla!";
+            }));
         }
 
+        private void refreshGUIOnContinue()
+        {
+            btnContinue.IsEnabled = false;
+            btnExit.IsEnabled = false;
+            tbStatus.Dispatcher.Invoke(DispatcherPriority.Background, new Action(() =>
+            {
+                tbStatus.Text = "Il Client è attivo, ricordati di attivare il Server sulla/e macchina/e selezionata/e!\n"
+                               + "Per mettere in pausa la connessione premi CTRL-ALT-P\n"
+                               + "Per terminare la connessione premi CTRL-ALT-E";
+            }));
+        }
+        #endregion
+
+        #region runtimeOperations
         public void closeCommunication(object sender, ExecutedRoutedEventArgs e)
         {
             //Piccolo stratagemma x evitare che al server arrivino solo gli eventi KEYDOWN (che causerebberro problemi)
             this.serverManger.sendMessage("K" + " " + (int)RamGecTools.KeyboardHook.VKeys.LCONTROL + " " + "UP");
             this.serverManger.sendMessage("K" + " " + (int)RamGecTools.KeyboardHook.VKeys.LMENU + " " + "UP");
             this.serverManger.sendMessage("K" + " " + (int)RamGecTools.KeyboardHook.VKeys.KEY_E + " " + "UP");
+            this.ConnectionChecker.Abort();
             UnistallMouseAndKeyboard();
             unbindHotkeyCommands(); //rimuovo vincoli su hotkeys
             this.serverManger.disconnect();
@@ -306,6 +330,10 @@ namespace HookerClient
             {
                 tbStatus.Text = "Seleziona uno o più server dalla lista e connettiti!";
             }));
+            lblConnectedPC.Dispatcher.Invoke(DispatcherPriority.Background, new Action(() =>
+            {
+                lblConnectedPC.Content = "";
+            }));
         }
 
         private void pauseCommunication(object sender , ExecutedRoutedEventArgs e)
@@ -314,28 +342,18 @@ namespace HookerClient
             this.serverManger.sendMessage("K" + " " + (int)RamGecTools.KeyboardHook.VKeys.LCONTROL + " " + "UP");
             this.serverManger.sendMessage("K" + " " + (int)RamGecTools.KeyboardHook.VKeys.LMENU + " " + "UP");
             this.serverManger.sendMessage("K" + " " + (int)RamGecTools.KeyboardHook.VKeys.KEY_P + " " + "UP");
-            /*
-            foreach (NativeMethods.SafeMailslotHandle h in mailslotHandlers)
-            {
-                h.Close();
-            }*/
-            unbindHotkeyCommands(); //rimuovo i vincoli sugli hotkeys
-            btnContinue.IsEnabled = true; 
-            
-            btnRefreshServers.IsEnabled = false;
-            lbServers.IsEnabled = false;
-            btnConnect.IsEnabled = false;
-            btnExit.IsEnabled = true;
-            tbStatus.Dispatcher.Invoke(DispatcherPriority.Background, new Action(() =>
-            {
-                tbStatus.Text = "La comunicazione è in PAUSA, premi CONTINUA per riattivarla!";
-            }));
+            UnistallMouseAndKeyboard();
+            unbindHotkeyCommands();
+            refreshGUIOnPause();
+
         }
-        /*
+
+
+        
         private void continueCommunication()
         {
-            initSelectedMailslots();
-            bindHotkeyCommands();
+            InstallMouseAndKeyboard();
+            //bindHotkeyCommands();
             btnContinue.IsEnabled = false;
             tbStatus.Dispatcher.Invoke(DispatcherPriority.Background, new Action(() =>
             {
@@ -344,7 +362,9 @@ namespace HookerClient
                                + "Per terminare la connessione premi CTRL-ALT-E";
             }));
         }
-        */
+        
+
+        #endregion
         private void btnRefreshServers_Click(object sender, RoutedEventArgs e)
         {
             lbServers.Dispatcher.Invoke(DispatcherPriority.Background, new Action(() =>
@@ -415,8 +435,7 @@ namespace HookerClient
 
         private void btnContinue_Click(object sender, RoutedEventArgs e)
         {
-            //continueCommunication();
-            MessageBox.Show("Non fa nulla al momento");
+            continueCommunication();
         }
     }
 

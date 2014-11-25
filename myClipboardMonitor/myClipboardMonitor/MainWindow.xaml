@@ -1,0 +1,16 @@
+﻿<Window x:Class="myClipboardMonitor.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="MainWindow" Height="530.469" Width="1152.539">
+    <Grid Margin="0,0,30,28">
+        <Label x:Name="lblText" Content="testo" HorizontalAlignment="Left" Margin="119,90,0,0" VerticalAlignment="Top"/>
+        <Label x:Name="lblMusic" Content="music" HorizontalAlignment="Left" Margin="112,152,0,0" VerticalAlignment="Top"/>
+        <Label x:Name="lblOther" Content="other" HorizontalAlignment="Left" Margin="115,204,0,0" VerticalAlignment="Top"/>
+        <Grid Margin="10,8,-10,-8">
+            <Button x:Name="btnStart" Content="Install Clipboard Monitor" HorizontalAlignment="Left" Margin="768,115,0,0" VerticalAlignment="Top" Width="232" Height="114"/>
+            <Label x:Name="lblFile" Content="file" HorizontalAlignment="Left" Margin="108,242,0,0" VerticalAlignment="Top"/>
+
+        </Grid>
+
+    </Grid>
+</Window>
