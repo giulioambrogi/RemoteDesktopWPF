@@ -1,5 +1,4 @@
-﻿using CSMailslotClient;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Linq;
@@ -30,20 +29,16 @@ namespace HookerClient
     {
         RamGecTools.MouseHook mouseHook = new RamGecTools.MouseHook();
         RamGecTools.KeyboardHook keyboardHook = new RamGecTools.KeyboardHook();
-        
         public Thread ConnectionChecker;
-        //Questa lista di mailslot è la lista dei nomi della mailslot costantemente aggiornata ad ogni cambiamento di  selezione su listbox
-        public  List<String> mailslotNames = new List<String>();
- 
-        //Questa lista di handler verrà popolata in fase di connessione o
-        private List<NativeMethods.SafeMailslotHandle> mailslotHandlers = new List<NativeMethods.SafeMailslotHandle>();
         private ServerManager serverManger;
+        private ClipboardMgmt cbmgmt;
         public MainWindow()
         {
             Console.WriteLine("Screen resolution : "+(int)System.Windows.SystemParameters.PrimaryScreenWidth+" "+(int)System.Windows.SystemParameters.FullPrimaryScreenHeight);
             InitializeComponent();
             //TODO eliminare definitivamente le checkbox relative a mouse e tastiera
             this.serverManger = new ServerManager();
+            this.cbmgmt = new ClipboardMgmt();
             btnContinue.IsEnabled = false; //deve per forza essere inattivo all'inizio
             new Thread(() =>{
                 Thread.CurrentThread.IsBackground = true;
@@ -343,7 +338,7 @@ namespace HookerClient
             this.serverManger.sendMessage("K" + " " + (int)RamGecTools.KeyboardHook.VKeys.LMENU + " " + "UP");
             this.serverManger.sendMessage("K" + " " + (int)RamGecTools.KeyboardHook.VKeys.KEY_P + " " + "UP");
             UnistallMouseAndKeyboard();
-            unbindHotkeyCommands();
+            //unbindHotkeyCommands();
             refreshGUIOnPause();
 
         }
@@ -397,9 +392,14 @@ namespace HookerClient
                 RoutedCommand closeComm = new RoutedCommand();
                 closeComm.InputGestures.Add(new KeyGesture(Key.E, ModifierKeys.Control | ModifierKeys.Alt));
                 CommandBindings.Add(new CommandBinding(closeComm, closeCommunication));
+                //aggancio CTRL+ALT+N per next server
                 RoutedCommand nextServer = new RoutedCommand();
                 nextServer.InputGestures.Add(new KeyGesture(Key.N, ModifierKeys.Control | ModifierKeys.Alt));
                 CommandBindings.Add(new CommandBinding(nextServer, switchToNextServer));
+                //aggancio CTRL+ALT+X per inviare mia clipboard
+                RoutedCommand sendClipboardcmd = new RoutedCommand();
+                sendClipboardcmd.InputGestures.Add(new KeyGesture(Key.X, ModifierKeys.Control | ModifierKeys.Alt));
+                CommandBindings.Add(new CommandBinding(sendClipboardcmd, sendClipboard));
 
             }
             catch (Exception e)
@@ -436,6 +436,24 @@ namespace HookerClient
         private void btnContinue_Click(object sender, RoutedEventArgs e)
         {
             continueCommunication();
+        }
+
+        private void btnClipboardMonitor_Click(object sender, RoutedEventArgs e)
+        {
+            this.serverManger.testSendClipboard();
+        }
+
+        public void sendClipboard(object sender, ExecutedRoutedEventArgs e)
+        {
+            //Piccolo stratagemma x evitare che al server arrivino solo gli eventi KEYDOWN (che causerebberro problemi)
+            this.serverManger.sendMessage("K" + " " + (int)RamGecTools.KeyboardHook.VKeys.LCONTROL + " " + "UP");
+            this.serverManger.sendMessage("K" + " " + (int)RamGecTools.KeyboardHook.VKeys.LMENU + " " + "UP");
+            this.serverManger.sendMessage("K" + " " + (int)RamGecTools.KeyboardHook.VKeys.KEY_X + " " + "UP");
+            this.serverManger.testSendClipboard();
+        }
+        private void btnSetData_Click(object sender, RoutedEventArgs e)
+        {
+            //this.cbmgmt.setData(DataFormats.UnicodeText, "prova");
         }
     }
 

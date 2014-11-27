@@ -1,8 +1,10 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Net;
 using System.Net.Sockets;
+using System.Runtime.Serialization.Formatters.Binary;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows;
@@ -12,11 +14,13 @@ namespace HookerClient
     class ServerManager
     {
         public const Int32 port = 5143;
+        public const Int32 cbport = 9898;
         public List<ServerEntity> availableServers;
         public List<ServerEntity> selectedServers;
         public int serverPointer;
         public TcpClient client ;
         public NetworkStream stream;
+        public Socket ClipboardEndpoint;
         public ServerManager()
         {
             this.availableServers = new List<ServerEntity>();
@@ -36,10 +40,14 @@ namespace HookerClient
                 e.server.Connect(e.ipAddress, port);
                 e.stream = e.server.GetStream();
                 //exchange data for authentication
-                Console.WriteLine("Connesso al server " + e.name);
+              
                 //connetto sender udp
                 e.UdpSender = new UdpClient();
                 e.UdpSender.Connect(e.ipAddress, port);
+                //connect to clipboard
+                e.cbServer.Connect(new IPEndPoint(e.ipAddress, 9898));
+                Console.WriteLine("Connesso al server " + e.name);
+               
             }
             catch (SocketException ex)
             {
@@ -96,5 +104,74 @@ namespace HookerClient
                 disconnectFromServer(se);
             }
         }
+
+        #region clipboard management
+
+        public void testSendClipboard()
+        {
+            if (Clipboard.ContainsData(DataFormats.Text))
+            {
+                String text = Clipboard.GetText();
+                byte[] bytes = ObjectToByteArray(text);
+                int sent1 = this.selectedServers.ElementAt(this.serverPointer).cbServer.Send(ObjectToByteArray("T " + text.Length.ToString()));
+                Console.WriteLine("Inviati " + sent1 + " bytes (testo di dimensione " + text.Length.ToString() + ")");
+            }
+            else if(Clipboard.ContainsText()){
+                String text = Clipboard.GetText();
+                byte[] bytes = ObjectToByteArray(text);
+                int sent1 = this.selectedServers.ElementAt(this.serverPointer).cbServer.Send(ObjectToByteArray("T " + text.Length.ToString()));
+                Console.WriteLine("Inviati " + sent1 + " bytes (testo di dimensione "+ text.Length.ToString()+")");
+               // int sent2 = this.selectedServers.ElementAt(this.serverPointer).cbServer.Send(bytes);
+               // Console.WriteLine("Inviati " + sent2 + " bytes [" + text + "]");
+                
+            }
+        }
+
+        public void sendClipBoard(ServerEntity se, Socket from, Object obj, String format)
+        {
+            switch (format)
+            {
+                case "T":
+                    String s = (String)obj;
+                    byte[] bytearr = this.ObjectToByteArray(obj);
+                    int sent = from.Send(bytearr);
+                    Console.WriteLine("Ho inviato " + sent + " bytes [" + s + "]");
+                    break;
+                case "F":
+                    break;
+                case "I":
+                    break;
+                default:
+                    break;
+
+
+            }
+
+        }
+
+        // Convert an object to a byte array
+        private byte[] ObjectToByteArray(Object obj)
+        {
+            if (obj == null)
+                return null;
+            BinaryFormatter bf = new BinaryFormatter();
+            MemoryStream ms = new MemoryStream();
+            bf.Serialize(ms, obj);
+            return ms.ToArray();
+        }
+
+        // Convert a byte array to an Object
+        private Object ByteArrayToObject(byte[] arrBytes)
+        {
+            MemoryStream memStream = new MemoryStream();
+            BinaryFormatter binForm = new BinaryFormatter();
+            memStream.Write(arrBytes, 0, arrBytes.Length);
+            memStream.Seek(0, SeekOrigin.Begin);
+            Object obj = (Object)binForm.Deserialize(memStream);
+            return obj;
+        }
+
+
+        #endregion
     }
 }
