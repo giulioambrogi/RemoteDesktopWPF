@@ -6,6 +6,7 @@ using System.Net;
 using System.Net.Sockets;
 using System.Runtime.Serialization.Formatters.Binary;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 using System.Windows;
 
@@ -40,14 +41,13 @@ namespace HookerClient
                 e.server.Connect(e.ipAddress, port);
                 e.stream = e.server.GetStream();
                 //exchange data for authentication
-              
                 //connetto sender udp
                 e.UdpSender = new UdpClient();
                 e.UdpSender.Connect(e.ipAddress, port);
                 //connect to clipboard
+               // Thread.Sleep(2000);
                 e.cbServer.Connect(new IPEndPoint(e.ipAddress, 9898));
                 Console.WriteLine("Connesso al server " + e.name);
-               
             }
             catch (SocketException ex)
             {
@@ -109,22 +109,28 @@ namespace HookerClient
 
         public void testSendClipboard()
         {
-            if (Clipboard.ContainsData(DataFormats.Text))
-            {
-                String text = Clipboard.GetText();
-                byte[] bytes = ObjectToByteArray(text);
-                int sent1 = this.selectedServers.ElementAt(this.serverPointer).cbServer.Send(ObjectToByteArray("T " + text.Length.ToString()));
-                Console.WriteLine("Inviati " + sent1 + " bytes (testo di dimensione " + text.Length.ToString() + ")");
-            }
-            else if(Clipboard.ContainsText()){
-                String text = Clipboard.GetText();
-                byte[] bytes = ObjectToByteArray(text);
-                int sent1 = this.selectedServers.ElementAt(this.serverPointer).cbServer.Send(ObjectToByteArray("T " + text.Length.ToString()));
-                Console.WriteLine("Inviati " + sent1 + " bytes (testo di dimensione "+ text.Length.ToString()+")");
-               // int sent2 = this.selectedServers.ElementAt(this.serverPointer).cbServer.Send(bytes);
-               // Console.WriteLine("Inviati " + sent2 + " bytes [" + text + "]");
-                
-            }
+            byte[] typeBytes = new byte[4] ;
+             byte[] lengthBytes = new byte[4];
+             if (Clipboard.ContainsData(DataFormats.Text))
+             {
+                 String text = Clipboard.GetText();
+                 typeBytes = ObjectToByteArray("T");
+                 byte[] contentBytes = ObjectToByteArray(text);
+                 lengthBytes = ObjectToByteArray(contentBytes.Length);
+
+                 int typeSent = this.selectedServers.ElementAt(this.serverPointer).cbServer.Send(typeBytes, 4, 0);
+                 Console.WriteLine("Inviati " + typeSent + " bytes (tipo)");
+                 int lengthSent = this.selectedServers.ElementAt(this.serverPointer).cbServer.Send(lengthBytes, 4, 0);
+                 Console.WriteLine("Inviati " + lengthSent + " bytes (lunghezza = " + contentBytes.Length + ")");
+                 int bytesSent = this.selectedServers.ElementAt(this.serverPointer).cbServer.Send(contentBytes, contentBytes.Length, 0);
+                 Console.WriteLine("Inviati " + bytesSent + " bytes (contenuto = "+(String)ByteArrayToObject(contentBytes)+")");
+                 Thread.Sleep(100);
+                 // int sent2 = this.selectedServers.ElementAt(this.serverPointer).cbServer.Send(bytes);
+                 // Console.WriteLine("Inviati " + sent2 + " bytes [" + text + "]");
+             }
+             else {
+                 Console.WriteLine("Nothing to send");
+             }
         }
 
         public void sendClipBoard(ServerEntity se, Socket from, Object obj, String format)

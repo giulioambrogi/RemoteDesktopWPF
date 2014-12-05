@@ -12,8 +12,6 @@ C:\Users\GIULIO\Documents\Git\Progetto PDS\test\HookerClient\HookerClient\obj\De
 C:\Users\GIULIO\Documents\Git\Progetto PDS\test\HookerClient\HookerClient\obj\Debug\HookerClient.exe
 C:\Users\GIULIO\Documents\Git\Progetto PDS\test\HookerClient\HookerClient\obj\Debug\HookerClient.pdb
 C:\Users\Giulio\Documents\Visual Studio 2013\Projects\ProgettoC\progettopds\test\HookerClient\HookerClient\bin\Debug\HookerClient.exe.config
-C:\Users\Giulio\Documents\Visual Studio 2013\Projects\ProgettoC\progettopds\test\HookerClient\HookerClient\obj\Debug\HookerClient.exe
-C:\Users\Giulio\Documents\Visual Studio 2013\Projects\ProgettoC\progettopds\test\HookerClient\HookerClient\obj\Debug\HookerClient.pdb
 C:\Users\Giulio\Documents\Visual Studio 2013\Projects\ProgettoC\progettopds\test\HookerClient\HookerClient\bin\Debug\HookerClient.exe
 C:\Users\Giulio\Documents\Visual Studio 2013\Projects\ProgettoC\progettopds\test\HookerClient\HookerClient\bin\Debug\HookerClient.pdb
 C:\Users\Giulio\Documents\Visual Studio 2013\Projects\ProgettoC\progettopds\test\HookerClient\HookerClient\obj\Debug\MainWindow.baml
@@ -23,4 +21,5 @@ C:\Users\Giulio\Documents\Visual Studio 2013\Projects\ProgettoC\progettopds\test
 C:\Users\Giulio\Documents\Visual Studio 2013\Projects\ProgettoC\progettopds\test\HookerClient\HookerClient\obj\Debug\HookerClient.g.resources
 C:\Users\Giulio\Documents\Visual Studio 2013\Projects\ProgettoC\progettopds\test\HookerClient\HookerClient\obj\Debug\HookerClient.Properties.Resources.resources
 C:\Users\Giulio\Documents\Visual Studio 2013\Projects\ProgettoC\progettopds\test\HookerClient\HookerClient\obj\Debug\HookerClient.csproj.GenerateResource.Cache
-C:\Users\Giulio\Documents\Visual Studio 2013\Projects\ProgettoC\progettopds\test\HookerClient\HookerClient\obj\Debug\HookerClient.csprojResolveAssemblyReference.cache
+C:\Users\Giulio\Documents\Visual Studio 2013\Projects\ProgettoC\progettopds\test\HookerClient\HookerClient\obj\Debug\HookerClient.exe
+C:\Users\Giulio\Documents\Visual Studio 2013\Projects\ProgettoC\progettopds\test\HookerClient\HookerClient\obj\Debug\HookerClient.pdb
