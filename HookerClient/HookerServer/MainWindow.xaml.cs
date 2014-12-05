@@ -39,7 +39,8 @@ namespace HookerServer
         public IPEndPoint remoteIPEndpoint;
         Thread runThread;
         Thread ConnectionChecker;
-        public Socket cbSocketServer;
+        Thread cbListener;
+        public TcpListener cbSocketServer;
         public MainWindow()
         {
             InitializeComponent();
@@ -51,15 +52,16 @@ namespace HookerServer
 
         private void bindHotKeyCommands()
         {
-            
+            /*
             RoutedCommand recvCb = new RoutedCommand();
             recvCb.InputGestures.Add(new KeyGesture(Key.X, ModifierKeys.Control | ModifierKeys.Alt));
             CommandBindings.Add(new CommandBinding(recvCb,receiveClipboard));
+            */
         }
-
+        //temporaneamente disabilitato
         private void receiveClipboard(object sender, ExecutedRoutedEventArgs e)
         {
-            InputSimulator.SimulateKeyUp(VirtualKeyCode.CONTROL);
+           /* InputSimulator.SimulateKeyUp(VirtualKeyCode.CONTROL);
             InputSimulator.SimulateKeyUp(VirtualKeyCode.MENU);
             InputSimulator.SimulateKeyUp(VirtualKeyCode.VK_X);
             try
@@ -76,7 +78,7 @@ namespace HookerServer
             catch (SocketException ex)
             {
                 Console.WriteLine("Non riesco a ricevere la clipboard");
-            }
+            }*/
         }
 
         private void parseMessage(string buffer)
@@ -179,15 +181,10 @@ namespace HookerServer
                     Console.WriteLine("Connected!");
                     isConnected = true;
                     NetworkStream stream = client.GetStream();
-                    //build clipboard
-                    this.cbSocketServer = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
-                    this.cbSocketServer.Bind(new IPEndPoint(IPAddress.Any, 9898));
-                    this.cbSocketServer.Listen(1);
-                    this.cbSocketServer.Accept();
-                    Console.WriteLine("Clipboard è connessa");
+                    
                     //connection checker
                     this.runConnectionChecker();
-                  
+                    this.runCBListener();
                     while (isConnected ){
                         int i;
                         //read exactly 128 bytes
@@ -211,15 +208,15 @@ namespace HookerServer
 
         private void stopServer()
         {
-            this.ConnectionChecker.Abort();
+            if(this.ConnectionChecker!= null)
+                this.ConnectionChecker.Abort();
             if (this.client != null)
-            {
                 this.client.Close();
-            }
+
             this.server.Server.Close();
             this.server.Stop();
             this.udpListener.Close();
-            this.cbSocketServer.Close();
+            this.cbSocketServer.Stop();
             this.runThread.Abort();
 
         }
@@ -303,6 +300,67 @@ namespace HookerServer
             this.ConnectionChecker.Start();
         }
 
+
+        public void runCBListener()
+        {
+            this.cbListener = new Thread(() =>
+            {
+                Thread.CurrentThread.IsBackground = true;
+                this.cbSocketServer = new TcpListener(IPAddress.Any, 9898);
+                this.remoteIPEndpoint = new IPEndPoint(IPAddress.Any, port);
+                this.cbSocketServer.Start(1);
+
+                byte[] typeByte = new byte[4];
+                byte[] lengthByte = new byte[4];
+                byte[] contentByte;
+                
+                //build clipboard
+  /*              this.cbSocketServer = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
+                this.cbSocketServer.Server.Bind(new IPEndPoint(IPAddress.Any, 9898));
+                this.cbSocketServer.Listen(2);
+                Console.WriteLine("Aspettando il collegamento alla cb...");
+                this.cbSocketServer.Accept();
+                Console.WriteLine("Clipboard è connessa");
+                this.cbSocketServer.Server.ReceiveTimeout = Timeout.Infinite;*/
+
+                Console.Write("Waiting for a cn connection... ");
+                this.client = this.cbSocketServer.AcceptTcpClient();
+                Console.WriteLine("Clipboard Connected!");
+               
+                NetworkStream stream = client.GetStream();
+               
+                String message = null;
+
+                while (true)
+                {
+                    try
+                    {
+                        Console.WriteLine("Aspettando un messaggio dalla clipboard");
+                        //int recvType = this.cbSocketServer.Server.Receive(typeByte, 4, 0);
+                        int recvType = stream.Read(typeByte, 0, 4);
+                        String type = (String)ByteArrayToObject(typeByte);
+                        Console.WriteLine("Ricevuto " + recvType + " bytes. Tipo " + type);
+                        //int recvLength = this.cbSocketServer.Server.Receive(lengthByte, 4, 0);
+                        int recvLength = stream.Read(lengthByte, 0, 4);
+                        int length = (int)ByteArrayToObject(lengthByte);
+                        Console.WriteLine("Ricevuto " + recvLength + " bytes. Lunghezza del contenuto: " + length);
+                        contentByte = new byte[length];
+                        Console.WriteLine("Sto ricevendo " + length + " bytes di  tipo [" + type + "] ...");
+                       // int recvContent = this.cbSocketServer.Server.Receive(contentByte, length, 0);
+                        int recvContent = stream.Read(contentByte, 0, length);
+                        Console.WriteLine("Ricevuto");
+                        Thread.Sleep(500);
+                    }
+                    catch (Exception ex)
+                    {
+                        Console.WriteLine("ECCEZIONE GENERATA IN RICEZIONE CB :" + ex.Message);
+                        break;
+                    }
+                    
+                }
+            });
+            this.cbListener.Start();
+        }
         // Convert an object to a byte array
         private byte[] ObjectToByteArray(Object obj)
         {
