@@ -46,7 +46,8 @@ namespace HookerClient
                 e.UdpSender.Connect(e.ipAddress, port);
                 //connect to clipboard
                // Thread.Sleep(2000);
-                e.cbServer.Connect(new IPEndPoint(e.ipAddress, 9898));
+                e.CBClient = new TcpClient(e.ipAddress.ToString(), 9898);
+                //e.cbServer.Connect(new IPEndPoint(e.ipAddress, 9898));
                 Console.WriteLine("Connesso al server " + e.name);
             }
             catch (SocketException ex)
@@ -109,21 +110,21 @@ namespace HookerClient
 
         public void testSendClipboard()
         {
-            byte[] typeBytes = new byte[4] ;
              byte[] lengthBytes = new byte[4];
              if (Clipboard.ContainsData(DataFormats.Text))
              {
                  String text = Clipboard.GetText();
-                 typeBytes = ObjectToByteArray("T");
+                 String type = "T";
+                 byte[] typeBytes = ObjectToByteArray(type);
                  byte[] contentBytes = ObjectToByteArray(text);
                  lengthBytes = ObjectToByteArray(contentBytes.Length);
+                 NetworkStream ns = this.selectedServers.ElementAt(this.serverPointer).CBClient.GetStream();
+                 
+                 ns.Write(typeBytes, 0, typeBytes.Length);
+                  ns.Write(lengthBytes, 0, lengthBytes.Length);
+                 ns.Write(contentBytes, 0, contentBytes.Length);
 
-                 int typeSent = this.selectedServers.ElementAt(this.serverPointer).cbServer.Send(typeBytes, 4, 0);
-                 Console.WriteLine("Inviati " + typeSent + " bytes (tipo)");
-                 int lengthSent = this.selectedServers.ElementAt(this.serverPointer).cbServer.Send(lengthBytes, 4, 0);
-                 Console.WriteLine("Inviati " + lengthSent + " bytes (lunghezza = " + contentBytes.Length + ")");
-                 int bytesSent = this.selectedServers.ElementAt(this.serverPointer).cbServer.Send(contentBytes, contentBytes.Length, 0);
-                 Console.WriteLine("Inviati " + bytesSent + " bytes (contenuto = "+(String)ByteArrayToObject(contentBytes)+")");
+                 
                  Thread.Sleep(100);
                  // int sent2 = this.selectedServers.ElementAt(this.serverPointer).cbServer.Send(bytes);
                  // Console.WriteLine("Inviati " + sent2 + " bytes [" + text + "]");
