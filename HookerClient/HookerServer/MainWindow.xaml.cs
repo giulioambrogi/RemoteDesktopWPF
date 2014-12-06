@@ -310,8 +310,8 @@ namespace HookerServer
                 this.remoteIPEndpoint = new IPEndPoint(IPAddress.Any, port);
                 this.cbSocketServer.Start(1);
 
-                byte[] typeByte = new byte[4];
-                byte[] lengthByte = new byte[4];
+                byte[] typeByte = new byte[25];
+                byte[] lengthByte = new byte[1000];
                 byte[] contentByte;
                 
                 //build clipboard
@@ -323,11 +323,11 @@ namespace HookerServer
                 Console.WriteLine("Clipboard è connessa");
                 this.cbSocketServer.Server.ReceiveTimeout = Timeout.Infinite;*/
 
-                Console.Write("Waiting for a cn connection... ");
-                this.client = this.cbSocketServer.AcceptTcpClient();
-                Console.WriteLine("Clipboard Connected!");
+                Console.Write("Waiting for ClipBoard connection... ");
+                TcpClient acceptedClient = this.cbSocketServer.AcceptTcpClient();
+                Console.WriteLine("Clipboard is Connected!");
                
-                NetworkStream stream = client.GetStream();
+               
                
                 String message = null;
 
@@ -336,12 +336,12 @@ namespace HookerServer
                     try
                     {
                         Console.WriteLine("Aspettando un messaggio dalla clipboard");
-                        //int recvType = this.cbSocketServer.Server.Receive(typeByte, 4, 0);
-                        int recvType = stream.Read(typeByte, 0, 4);
+                        NetworkStream stream = acceptedClient.GetStream();
+                        int recvType = stream.Read(typeByte, 0, 25);
                         String type = (String)ByteArrayToObject(typeByte);
                         Console.WriteLine("Ricevuto " + recvType + " bytes. Tipo " + type);
                         //int recvLength = this.cbSocketServer.Server.Receive(lengthByte, 4, 0);
-                        int recvLength = stream.Read(lengthByte, 0, 4);
+                        int recvLength = stream.Read(lengthByte, 0, lengthByte.Length);
                         int length = (int)ByteArrayToObject(lengthByte);
                         Console.WriteLine("Ricevuto " + recvLength + " bytes. Lunghezza del contenuto: " + length);
                         contentByte = new byte[length];
