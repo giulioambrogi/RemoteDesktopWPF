@@ -21,7 +21,7 @@ namespace HookerClient
         public NetworkStream stream;
         //usato per clipboard
         public IPEndPoint cbLocal;
-        public Socket cbServer;
+        public TcpClient CBClient;
         public ServerEntity( string name)
         {
             this.name = name;
@@ -32,8 +32,8 @@ namespace HookerClient
             this.password = "TODO";
             this.remoteIPEndPoint = new IPEndPoint(IPAddress.Any, 0);
             this.cbLocal = new IPEndPoint(this.ipAddress, 9898);
-            this.cbServer = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
- 
+           // this.cbServer = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
+           // this.CBClient = new TcpClient(this.ipAddress.ToString(),9898);
         }
 
         public void setPassword(string password)

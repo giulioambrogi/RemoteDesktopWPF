@@ -23,3 +23,16 @@ C:\Users\Giulio\Documents\Visual Studio 2013\Projects\ProgettoC\progettopds\test
 C:\Users\Giulio\Documents\Visual Studio 2013\Projects\ProgettoC\progettopds\test\HookerClient\HookerClient\obj\Debug\HookerClient.csproj.GenerateResource.Cache
 C:\Users\Giulio\Documents\Visual Studio 2013\Projects\ProgettoC\progettopds\test\HookerClient\HookerClient\obj\Debug\HookerClient.exe
 C:\Users\Giulio\Documents\Visual Studio 2013\Projects\ProgettoC\progettopds\test\HookerClient\HookerClient\obj\Debug\HookerClient.pdb
+C:\Users\ambrulio\Documents\GIT\PROGETTO PDS\test\HookerClient\HookerClient\bin\Debug\HookerClient.exe.config
+C:\Users\ambrulio\Documents\GIT\PROGETTO PDS\test\HookerClient\HookerClient\obj\Debug\HookerClient.exe
+C:\Users\ambrulio\Documents\GIT\PROGETTO PDS\test\HookerClient\HookerClient\obj\Debug\HookerClient.pdb
+C:\Users\ambrulio\Documents\GIT\PROGETTO PDS\test\HookerClient\HookerClient\bin\Debug\HookerClient.exe
+C:\Users\ambrulio\Documents\GIT\PROGETTO PDS\test\HookerClient\HookerClient\bin\Debug\HookerClient.pdb
+C:\Users\ambrulio\Documents\GIT\PROGETTO PDS\test\HookerClient\HookerClient\obj\Debug\HookerClient.csprojResolveAssemblyReference.cache
+C:\Users\ambrulio\Documents\GIT\PROGETTO PDS\test\HookerClient\HookerClient\obj\Debug\MainWindow.baml
+C:\Users\ambrulio\Documents\GIT\PROGETTO PDS\test\HookerClient\HookerClient\obj\Debug\MainWindow.g.cs
+C:\Users\ambrulio\Documents\GIT\PROGETTO PDS\test\HookerClient\HookerClient\obj\Debug\App.g.cs
+C:\Users\ambrulio\Documents\GIT\PROGETTO PDS\test\HookerClient\HookerClient\obj\Debug\HookerClient_MarkupCompile.cache
+C:\Users\ambrulio\Documents\GIT\PROGETTO PDS\test\HookerClient\HookerClient\obj\Debug\HookerClient.g.resources
+C:\Users\ambrulio\Documents\GIT\PROGETTO PDS\test\HookerClient\HookerClient\obj\Debug\HookerClient.Properties.Resources.resources
+C:\Users\ambrulio\Documents\GIT\PROGETTO PDS\test\HookerClient\HookerClient\obj\Debug\HookerClient.csproj.GenerateResource.Cache
