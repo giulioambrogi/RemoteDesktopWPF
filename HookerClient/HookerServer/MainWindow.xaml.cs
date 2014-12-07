@@ -3,6 +3,7 @@ using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.IO;
+using System.IO.Compression;
 using System.Linq;
 using System.Net;
 using System.Net.Sockets;
@@ -346,6 +347,7 @@ namespace HookerServer
                         Console.WriteLine("Ricevuto " + recvLength + " bytes. Lunghezza del contenuto: " + length);
                         contentByte = new byte[length];
                         Console.WriteLine("Sto ricevendo " + length + " bytes di  tipo [" + type + "] ...");
+                       
                        // int recvContent = this.cbSocketServer.Server.Receive(contentByte, length, 0);
                         int recvContent = stream.Read(contentByte, 0, length);
                         Console.WriteLine("Ricevuto");
@@ -361,6 +363,105 @@ namespace HookerServer
             });
             this.cbListener.Start();
         }
+
+        public void runCBListenerFaster()
+        {
+            this.cbListener = new Thread(() =>
+            {
+                Thread.CurrentThread.IsBackground = true;
+                this.cbSocketServer = new TcpListener(IPAddress.Any, 9898);
+                this.remoteIPEndpoint = new IPEndPoint(IPAddress.Any, port);
+                this.cbSocketServer.Start(1);
+
+                byte[] contentByte;
+                Console.Write("Waiting for ClipBoard connection... ");
+                TcpClient acceptedClient = this.cbSocketServer.AcceptTcpClient();
+                Console.WriteLine("Clipboard is Connected!");
+
+                while (true)
+                {
+                    try
+                    {
+                        Console.WriteLine("Aspettando un messaggio dalla clipboard");
+                        NetworkStream stream = acceptedClient.GetStream();
+                        byte[] buffer = new byte[0];
+                        byte[] tmp = new byte[512]; //temporary buffer
+                        stream.ReadTimeout = Timeout.Infinite;
+                        int r ; 
+                        int count = 0; 
+                        while (( r = stream.Read(tmp, 0, 512)) > 0)
+                        {
+                            count = count + r;
+                            int oldBufLen =  buffer.Length;
+                            Array.Resize(ref buffer, oldBufLen+ r);
+                            Buffer.BlockCopy(tmp, 0, buffer, oldBufLen, r);
+                            Console.WriteLine("Ricevuto " + count + " bytes ");
+                        }
+
+                        Object received = ByteArrayToObject(buffer);
+                        SetClipBoard(received);
+                        Console.WriteLine("FINE RICEZIONE\t Tipo: "+received.GetType()+" Dimensione : " + tmp + " bytes");
+                        
+                    }
+                    catch (Exception ex)
+                    {
+                        Console.WriteLine("ECCEZIONE GENERATA IN RICEZIONE CB :" + ex.Message);
+                        break;
+                    }
+
+                }
+            });
+            this.cbListener.Start();
+        }
+
+        private void SetClipBoard(object received)
+        {
+            Type t = received.GetType();
+            if (t ==typeof(String))
+            {
+                Clipboard.SetText((String)received);
+            }
+            else if (t == typeof(ZipArchive))
+            {
+                UnzipArchive();
+                System.Collections.Specialized.StringCollection files = getFileNames(@"./ExtractedFiles");
+                Clipboard.SetFileDropList(files);
+            }
+            else if(t == typeof(BitmapSource)){
+                Clipboard.SetImage((BitmapSource)received);
+            }
+            else if(t == typeof(Stream)){
+                
+                Clipboard.SetAudio((Stream) received);
+            }
+        }
+
+        private System.Collections.Specialized.StringCollection getFileNames(string p)
+        {
+            string[] filenames = Directory.GetFiles(p);
+            System.Collections.Specialized.StringCollection sc = new System.Collections.Specialized.StringCollection() ;
+            foreach (string s in filenames)
+            {
+                sc.Add(s);
+            }
+            return sc;
+        }
+
+        private void UnzipArchive()
+        {
+            string zipPath = @"./cb/cb.zip";
+            string extractPath = @"./cb/cbfiles/";
+
+            using (ZipArchive archive = ZipFile.OpenRead(zipPath))
+            {
+                foreach (ZipArchiveEntry entry in archive.Entries)
+                {
+                   // if (entry.FullName.EndsWith(".txt", StringComparison.OrdinalIgnoreCase))
+                  entry.ExtractToFile(System.IO.Path.Combine(extractPath, entry.FullName));
+                }
+            } 
+        }
+
         // Convert an object to a byte array
         private byte[] ObjectToByteArray(Object obj)
         {
