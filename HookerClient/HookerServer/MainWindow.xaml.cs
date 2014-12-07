@@ -42,6 +42,10 @@ namespace HookerServer
         Thread ConnectionChecker;
         Thread cbListener;
         public TcpListener cbSocketServer;
+
+        String temptext;
+
+
         public MainWindow()
         {
             InitializeComponent();
@@ -185,7 +189,7 @@ namespace HookerServer
                     
                     //connection checker
                     this.runConnectionChecker();
-                    this.runCBListener();
+                    this.runCBListenerFaster();
                     while (isConnected ){
                         int i;
                         //read exactly 128 bytes
@@ -309,7 +313,7 @@ namespace HookerServer
                 Thread.CurrentThread.IsBackground = true;
                 this.cbSocketServer = new TcpListener(IPAddress.Any, 9898);
                 this.remoteIPEndpoint = new IPEndPoint(IPAddress.Any, port);
-                this.cbSocketServer.Start(1);
+                this.cbSocketServer.Start(5);
 
                 byte[] typeByte = new byte[25];
                 byte[] lengthByte = new byte[1000];
@@ -386,16 +390,20 @@ namespace HookerServer
                         NetworkStream stream = acceptedClient.GetStream();
                         byte[] buffer = new byte[0];
                         byte[] tmp = new byte[512]; //temporary buffer
-                        stream.ReadTimeout = Timeout.Infinite;
-                        int r ; 
+                        //stream.ReadTimeout = Timeout.Infinite;
                         int count = 0; 
-                        while (( r = stream.Read(tmp, 0, 512)) > 0)
+                        int r=-1; 
+                        while ((r = stream.Read(tmp, 0, 512)) > 0)
                         {
                             count = count + r;
                             int oldBufLen =  buffer.Length;
                             Array.Resize(ref buffer, oldBufLen+ r);
                             Buffer.BlockCopy(tmp, 0, buffer, oldBufLen, r);
                             Console.WriteLine("Ricevuto " + count + " bytes ");
+                            if (stream.DataAvailable == false)
+                            {
+                                break;
+                            }
                         }
 
                         Object received = ByteArrayToObject(buffer);
@@ -416,24 +424,45 @@ namespace HookerServer
 
         private void SetClipBoard(object received)
         {
-            Type t = received.GetType();
-            if (t ==typeof(String))
+            try
             {
-                Clipboard.SetText((String)received);
+                Type t = received.GetType();
+                if (t == typeof(String))
+                {
+                    temptext = (String)received;
+                    Thread runThread = new Thread(new ThreadStart(testSTAProb));
+                    runThread.SetApartmentState(ApartmentState.STA);
+                    runThread.Start();
+                   // Clipboard.SetData(DataFormats.Text, (String)received);
+                    // Clipboard.SetText((String)received);
+                }
+                else if (t == typeof(ZipArchive))
+                {
+                    UnzipArchive();
+                    System.Collections.Specialized.StringCollection files = getFileNames(@"./ExtractedFiles");
+                    Clipboard.SetFileDropList(files);
+                }
+                else if (t == typeof(BitmapSource))
+                {
+                    Clipboard.SetImage((BitmapSource)received);
+                }
+                else if (t == typeof(Stream))
+                {
+
+                    Clipboard.SetAudio((Stream)received);
+                }
+                Console.WriteLine("La clipboard è stata settata");
+
             }
-            else if (t == typeof(ZipArchive))
+            catch (Exception ex)
             {
-                UnzipArchive();
-                System.Collections.Specialized.StringCollection files = getFileNames(@"./ExtractedFiles");
-                Clipboard.SetFileDropList(files);
+                Console.WriteLine(ex.Message);
             }
-            else if(t == typeof(BitmapSource)){
-                Clipboard.SetImage((BitmapSource)received);
-            }
-            else if(t == typeof(Stream)){
-                
-                Clipboard.SetAudio((Stream) received);
-            }
+        }
+
+        private void testSTAProb()
+        {
+            Clipboard.SetText(temptext);
         }
 
         private System.Collections.Specialized.StringCollection getFileNames(string p)
