@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
+using System.IO.Compression;
 using System.Linq;
 using System.Net;
 using System.Net.Sockets;
@@ -111,51 +112,138 @@ namespace HookerClient
         public void testSendClipboard()
         {
              byte[] lengthBytes = new byte[4];
-             if (Clipboard.ContainsData(DataFormats.Text))
-             {
+             if (Clipboard.ContainsText())
+                 {
                  String text = Clipboard.GetText();
                  String type = "T";
                  byte[] typeBytes = ObjectToByteArray(type);
                  byte[] contentBytes = ObjectToByteArray(text);
                  lengthBytes = ObjectToByteArray(contentBytes.Length);
                  NetworkStream ns = this.selectedServers.ElementAt(this.serverPointer).CBClient.GetStream();
-                 
                  ns.Write(typeBytes, 0, typeBytes.Length);
-                  ns.Write(lengthBytes, 0, lengthBytes.Length);
+                 ns.Write(lengthBytes, 0, lengthBytes.Length);//TODO : preferirei mandare una lunghezza fissa
                  ns.Write(contentBytes, 0, contentBytes.Length);
+             }
+             else if (Clipboard.ContainsFileDropList())
+             {
 
+             }
+             else if (Clipboard.ContainsImage())
+             {
                  
-                 Thread.Sleep(100);
-                 // int sent2 = this.selectedServers.ElementAt(this.serverPointer).cbServer.Send(bytes);
-                 // Console.WriteLine("Inviati " + sent2 + " bytes [" + text + "]");
+             }
+             else if (Clipboard.ContainsAudio())
+             {
+
              }
              else {
                  Console.WriteLine("Nothing to send");
              }
         }
 
-        public void sendClipBoard(ServerEntity se, Socket from, Object obj, String format)
+        public void sendClipBoard(TcpClient client)
         {
-            switch (format)
-            {
-                case "T":
-                    String s = (String)obj;
-                    byte[] bytearr = this.ObjectToByteArray(obj);
-                    int sent = from.Send(bytearr);
-                    Console.WriteLine("Ho inviato " + sent + " bytes [" + s + "]");
-                    break;
-                case "F":
-                    break;
-                case "I":
-                    break;
-                default:
-                    break;
+            if (Clipboard.ContainsData(DataFormats.Text))
+                if (Clipboard.ContainsText())
+                {
+                    String text = Clipboard.GetText();
+                    String type = "T";
+                    byte[] typeBytes = ObjectToByteArray(type);
+                    byte[] contentBytes = ObjectToByteArray(text);
+                    byte[] lengthBytes = ObjectToByteArray(contentBytes.Length);
+                    NetworkStream ns = client.GetStream();
+                    ns.Write(typeBytes, 0, typeBytes.Length);
+                    ns.Write(lengthBytes, 0, lengthBytes.Length);//TODO : preferirei mandare una lunghezza fissa
+                    ns.Write(contentBytes, 0, contentBytes.Length);
+                }
+                else if (Clipboard.ContainsFileDropList())
+                {
+                    //Creates a new, blank zip file to work with - the file will be
+                    //finalized when the using statement completes
+                    ZipArchive newFile = ZipFile.Open("cbfiles", ZipArchiveMode.Create);
+                    //Here are two hard-coded files that we will be adding to the zip
+                    //file.  If you don't have these files in your system, this will
+                    //fail.  Either create them or change the file names.
+                    foreach (String filepath in Clipboard.GetFileDropList())
+                    {
+                        newFile.CreateEntryFromFile(@filepath, Path.GetFileName(filepath), CompressionLevel.Fastest);
+                    }
+                    byte[] zipFileInByte = ObjectToByteArray(newFile);//creo lo zip del file
+                    NetworkStream ns = client.GetStream();
 
+                    //mando il tipo 
+                    byte[] typeInBytes  = ObjectToByteArray("F");
+                    ns.Write(typeInBytes, 0, typeInBytes.Length);
 
-            }
+                    //mando dimensione dello zip
+                    byte[] lengthInBytes = ObjectToByteArray(zipFileInByte.Length);
+                    ns.Write(lengthInBytes, 0, lengthInBytes.Length);
+
+                    //mando il file zip
+                    ns.Write(zipFileInByte, 0, zipFileInByte.Length);
+
+                }
+                else if (Clipboard.ContainsImage())
+                {
+                   byte[] imageInBytes =  ObjectToByteArray( Clipboard.GetImage());
+                }
+                else if (Clipboard.ContainsAudio())
+                {
+                    byte[] audioInBytes = ObjectToByteArray(Clipboard.GetAudioStream());
+                }
+                else
+                {
+                    Console.WriteLine("Nothing to send");
+                }
 
         }
 
+
+
+        public void sendClipBoardFaster(TcpClient client)
+        {
+            if (Clipboard.ContainsData(DataFormats.Text))
+                if (Clipboard.ContainsText())
+                {
+                   byte[] contentBytes = ObjectToByteArray(Clipboard.GetText());
+                   NetworkStream ns = client.GetStream();
+                   ns.Write(contentBytes, 0, contentBytes.Length);
+                }
+                else if (Clipboard.ContainsFileDropList())
+                {
+                    //Creates a new, blank zip file to work with - the file will be
+                    //finalized when the using statement completes
+                    ZipArchive newFile = ZipFile.Open("cbfiles", ZipArchiveMode.Create);
+                    //Here are two hard-coded files that we will be adding to the zip
+                    //file.  If you don't have these files in your system, this will
+                    //fail.  Either create them or change the file names.
+                    foreach (String filepath in Clipboard.GetFileDropList())
+                    {
+                        newFile.CreateEntryFromFile(@filepath, Path.GetFileName(filepath), CompressionLevel.Fastest);
+                    }
+                    byte[] zipFileInByte = ObjectToByteArray(newFile);//creo lo zip del file
+                    NetworkStream ns = client.GetStream();
+                    //mando il file zipxdd
+                    ns.Write(zipFileInByte, 0, zipFileInByte.Length);
+                }
+                else if (Clipboard.ContainsImage())
+                {
+                    byte[] imageInBytes = ObjectToByteArray(Clipboard.GetImage());
+                    NetworkStream ns = client.GetStream();
+                    //mando il file zip
+                    ns.Write(imageInBytes, 0, imageInBytes.Length);
+                }
+                else if (Clipboard.ContainsAudio())
+                {
+                    byte[] audioInBytes = ObjectToByteArray(Clipboard.GetAudioStream());
+                    NetworkStream ns = client.GetStream();
+                    ns.Write(audioInBytes, 0, audioInBytes.Length);
+                }
+                else
+                {
+                    Console.WriteLine("Nothing to send");
+                }
+        }
         // Convert an object to a byte array
         private byte[] ObjectToByteArray(Object obj)
         {
