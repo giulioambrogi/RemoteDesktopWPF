@@ -202,12 +202,13 @@ namespace HookerClient
 
         public void sendClipBoardFaster(TcpClient client)
         {
-            if (Clipboard.ContainsData(DataFormats.Text))
+            //client = new TcpClient(this.selectedServers.ElementAt(this.serverPointer).name, 9898);
                 if (Clipboard.ContainsText())
                 {
                    byte[] contentBytes = ObjectToByteArray(Clipboard.GetText());
                    NetworkStream ns = client.GetStream();
                    ns.Write(contentBytes, 0, contentBytes.Length);
+                   ns.Flush();
                 }
                 else if (Clipboard.ContainsFileDropList())
                 {
