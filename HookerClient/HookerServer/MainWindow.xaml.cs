@@ -1,5 +1,4 @@
-﻿using CSMailslotServer;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.IO;
@@ -99,12 +98,13 @@ namespace HookerServer
                 int y = Convert.ToInt16(Double.Parse(commands[2]) * System.Windows.SystemParameters.PrimaryScreenHeight);
                 //RAMO DEL MOUSE 
                 //Metodo che setta la posizione del mouse
-                NativeMethodsBiss.SetCursorPos(x,y);
+                NativeMethods.SetCursorPos(x,y);
                                
 
                 PointX.Dispatcher.Invoke(DispatcherPriority.Background, new Action(() =>
                 {
                     PointX.Text = x.ToString();
+                    
                     
                 }));
                 PointY.Dispatcher.Invoke(DispatcherPriority.Background, new Action(() =>
@@ -121,7 +121,6 @@ namespace HookerServer
                 {
                     //evento key down
                     Console.WriteLine(commands.ElementAt(1) + " DOWN");
-
                     InputSimulator.SimulateKeyDown(vk);
                 }
                 else if (commands.ElementAt(2).ToString().Equals("UP"))
@@ -191,7 +190,6 @@ namespace HookerServer
                     this.runConnectionChecker();
                     this.runCBListenerFaster();
                     while (isConnected ){
-                        int i;
                         //read exactly 128 bytes
                         bytes = this.udpListener.Receive(ref this.remoteIPEndpoint);
                         message = System.Text.Encoding.ASCII.GetString(bytes, 0, bytes.Length);
@@ -217,11 +215,11 @@ namespace HookerServer
                 this.ConnectionChecker.Abort();
             if (this.client != null)
                 this.client.Close();
-
+            if (this.cbSocketServer != null)
+                this.cbSocketServer.Stop();
             this.server.Server.Close();
             this.server.Stop();
             this.udpListener.Close();
-            this.cbSocketServer.Stop();
             this.runThread.Abort();
 
         }
@@ -332,10 +330,6 @@ namespace HookerServer
                 TcpClient acceptedClient = this.cbSocketServer.AcceptTcpClient();
                 Console.WriteLine("Clipboard is Connected!");
                
-               
-               
-                String message = null;
-
                 while (true)
                 {
                     try
@@ -426,33 +420,10 @@ namespace HookerServer
         {
             try
             {
-                Type t = received.GetType();
-                if (t == typeof(String))
-                {
-                    temptext = (String)received;
-                    Thread runThread = new Thread(new ThreadStart(testSTAProb));
-                    runThread.SetApartmentState(ApartmentState.STA);
-                    runThread.Start();
-                   // Clipboard.SetData(DataFormats.Text, (String)received);
-                    // Clipboard.SetText((String)received);
-                }
-                else if (t == typeof(ZipArchive))
-                {
-                    UnzipArchive();
-                    System.Collections.Specialized.StringCollection files = getFileNames(@"./ExtractedFiles");
-                    Clipboard.SetFileDropList(files);
-                }
-                else if (t == typeof(BitmapSource))
-                {
-                    Clipboard.SetImage((BitmapSource)received);
-                }
-                else if (t == typeof(Stream))
-                {
-
-                    Clipboard.SetAudio((Stream)received);
-                }
-                Console.WriteLine("La clipboard è stata settata");
-
+                ClipboardManager cbm = new ClipboardManager(received);
+                Thread runThread = new Thread(new ThreadStart(cbm.setData));
+                runThread.SetApartmentState(ApartmentState.STA);
+                runThread.Start();
             }
             catch (Exception ex)
             {
@@ -460,36 +431,10 @@ namespace HookerServer
             }
         }
 
-        private void testSTAProb()
-        {
-            Clipboard.SetText(temptext);
-        }
 
-        private System.Collections.Specialized.StringCollection getFileNames(string p)
-        {
-            string[] filenames = Directory.GetFiles(p);
-            System.Collections.Specialized.StringCollection sc = new System.Collections.Specialized.StringCollection() ;
-            foreach (string s in filenames)
-            {
-                sc.Add(s);
-            }
-            return sc;
-        }
 
-        private void UnzipArchive()
-        {
-            string zipPath = @"./cb/cb.zip";
-            string extractPath = @"./cb/cbfiles/";
 
-            using (ZipArchive archive = ZipFile.OpenRead(zipPath))
-            {
-                foreach (ZipArchiveEntry entry in archive.Entries)
-                {
-                   // if (entry.FullName.EndsWith(".txt", StringComparison.OrdinalIgnoreCase))
-                  entry.ExtractToFile(System.IO.Path.Combine(extractPath, entry.FullName));
-                }
-            } 
-        }
+        
 
         // Convert an object to a byte array
         private byte[] ObjectToByteArray(Object obj)
@@ -514,7 +459,7 @@ namespace HookerServer
         }
 
     }
-    public partial class NativeMethodsBiss
+    public partial class NativeMethods
     {
         /// Return Type: BOOL->int  
         ///X: int  
@@ -522,5 +467,9 @@ namespace HookerServer
         [System.Runtime.InteropServices.DllImportAttribute("user32.dll", EntryPoint = "SetCursorPos")]
         [return: System.Runtime.InteropServices.MarshalAsAttribute(System.Runtime.InteropServices.UnmanagedType.Bool)]
         public static extern bool SetCursorPos(int X, int Y);
-    } 
+
+        [DllImport("user32.dll", CharSet = CharSet.Auto, CallingConvention = CallingConvention.StdCall)]
+        public static extern void mouse_event(uint dwFlags, uint dx, uint dy, uint cButtons, UIntPtr dwExtraInfo);
+    
+    }
 }
