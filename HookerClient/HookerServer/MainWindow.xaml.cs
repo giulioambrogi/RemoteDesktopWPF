@@ -31,7 +31,7 @@ namespace HookerServer
     public partial class MainWindow : Window
     {
         public bool isConnected = false;
-        static Int32 port = 5143;
+        //static Int32 port = 5143;
         public IPAddress localAddr = IPAddress.Parse("127.0.0.1");
         public TcpListener server = null;
         public TcpClient client = null;
@@ -41,10 +41,12 @@ namespace HookerServer
         Thread ConnectionChecker;
         Thread cbListener;
         public TcpListener cbSocketServer;
-
         String temptext;
 
+#region Properties
+        String password { get; set;  }
 
+#endregion 
         public MainWindow()
         {
             InitializeComponent();
@@ -167,9 +169,9 @@ namespace HookerServer
         private void runServer()
         {
             
-            this.server = new TcpListener(IPAddress.Any, port);
-            this.udpListener = new UdpClient(port);
-            this.remoteIPEndpoint = new IPEndPoint(IPAddress.Any, port);
+            this.server = new TcpListener(IPAddress.Any, Properties.Settings.Default.Port); //server which accepts the connection
+            this.udpListener = new UdpClient(Properties.Settings.Default.Port); //listener which gets the commands to be executed (keyboard and mouse)
+            this.remoteIPEndpoint = new IPEndPoint(IPAddress.Any, Properties.Settings.Default.Port);
             this.server.Start(1);
             Byte[] bytes = new Byte[128];
             String message = null;
@@ -182,19 +184,20 @@ namespace HookerServer
                 {
                     Console.Write("Waiting for a connection... ");
                     this.client = this.server.AcceptTcpClient();
+                    //now check the credentials
+
                     Console.WriteLine("Connected!");
-                    isConnected = true;
+                    isConnected = true; //set the variable in order to get into the next loop
                     NetworkStream stream = client.GetStream();
                     
                     //connection checker
-                    this.runConnectionChecker();
-                    this.runCBListenerFaster();
-                    while (isConnected ){
+                    this.runConnectionChecker(); //run thread  which checks connection
+                    this.runCBListenerFaster(); //run thread which handle clipboard
+                    while (isConnected ){ //loop around the global variable that says if the client is already connected
                         //read exactly 128 bytes
                         bytes = this.udpListener.Receive(ref this.remoteIPEndpoint);
                         message = System.Text.Encoding.ASCII.GetString(bytes, 0, bytes.Length);
                         // Translate data bytes to a ASCII string.
-                        
                         parseMessage(message);
                     }
                 }
@@ -309,8 +312,8 @@ namespace HookerServer
             this.cbListener = new Thread(() =>
             {
                 Thread.CurrentThread.IsBackground = true;
-                this.cbSocketServer = new TcpListener(IPAddress.Any, 9898);
-                this.remoteIPEndpoint = new IPEndPoint(IPAddress.Any, port);
+                this.cbSocketServer = new TcpListener(IPAddress.Any, Properties.Settings.Default.Port);
+                this.remoteIPEndpoint = new IPEndPoint(IPAddress.Any, Properties.Settings.Default.CBPort);
                 this.cbSocketServer.Start(5);
 
                 byte[] typeByte = new byte[25];
@@ -319,7 +322,7 @@ namespace HookerServer
                 
                 //build clipboard
   /*              this.cbSocketServer = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
-                this.cbSocketServer.Server.Bind(new IPEndPoint(IPAddress.Any, 9898));
+                this.cbSocketServer.Server.Bind(new IPEndPoint(IPAddress.Any, ));
                 this.cbSocketServer.Listen(2);
                 Console.WriteLine("Aspettando il collegamento alla cb...");
                 this.cbSocketServer.Accept();
@@ -367,8 +370,8 @@ namespace HookerServer
             this.cbListener = new Thread(() =>
             {
                 Thread.CurrentThread.IsBackground = true;
-                this.cbSocketServer = new TcpListener(IPAddress.Any, 9898);
-                this.remoteIPEndpoint = new IPEndPoint(IPAddress.Any, port);
+                this.cbSocketServer = new TcpListener(IPAddress.Any, Properties.Settings.Default.CBPort);
+                this.remoteIPEndpoint = new IPEndPoint(IPAddress.Any, Properties.Settings.Default.Port);
                 this.cbSocketServer.Start(1);
 
                 byte[] contentByte;
@@ -401,7 +404,6 @@ namespace HookerServer
                         }
 
                         Object received = ByteArrayToObject(buffer);
-                        SetClipBoard(received);
                         Console.WriteLine("FINE RICEZIONE\t Tipo: "+received.GetType()+" Dimensione : " + tmp + " bytes");
                         
                     }
@@ -420,7 +422,9 @@ namespace HookerServer
         {
             try
             {
-                ClipboardManager cbm = new ClipboardManager(received);
+                ClipboardManager cbm = new ClipboardManager(received); //passo l'oggetto al costruttore della classe
+                //non so perchè forse perchè non sapevo in che altro modo lanciare il thread 
+
                 Thread runThread = new Thread(new ThreadStart(cbm.setData));
                 runThread.SetApartmentState(ApartmentState.STA);
                 runThread.Start();
@@ -432,9 +436,25 @@ namespace HookerServer
         }
 
 
+        #region CredentialMgmt
+
+        private bool checkPassword(String password)
+        {
+            if (Properties.Settings.Default.Password.Equals(password))
+                return true;
+            else
+                return false;
+        }
+
+        private void setPassword(String password)
+        {
+            Properties.Settings.Default.Password = password;
+            Properties.Settings.Default.Save();
+        }
+
+        #endregion
 
 
-        
 
         // Convert an object to a byte array
         private byte[] ObjectToByteArray(Object obj)

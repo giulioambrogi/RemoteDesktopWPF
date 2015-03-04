@@ -28,16 +28,19 @@ namespace HookerServer
             {
                 if ( t== typeof(String))
                 {
+                    //setta il file di testo nella clipboard
                      Clipboard.SetText((String)this.content);
                 }
                 else if (t == typeof(ZipArchive))
                 {
+                    //exstract zip file into a folder then link those files to the clipboard
                     UnzipArchive();
                     System.Collections.Specialized.StringCollection files = getFileNames(@"./ExtractedFiles");
                     Clipboard.SetFileDropList(files);
                 }
                 else if (t == typeof(BitmapSource))
                 {
+                    
                     Clipboard.SetImage((BitmapSource)content);
                 }
                 else if (t == typeof(Stream))
