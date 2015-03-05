@@ -44,17 +44,25 @@ namespace HookerClient
                 //exchange data for authentication
                 //connetto sender udp
                 e.UdpSender = new UdpClient();
-                e.UdpSender.Connect(e.ipAddress, e.port_base); 
+                e.UdpSender.Connect(e.ipAddress, e.port_base);
                 //connect to clipboard
                // Thread.Sleep(2000);
-                e.CBClient = new TcpClient(e.ipAddress.ToString(), 9898); 
-                
+                if (e.authenticateWithPassword() == false)
+                {
+                    Console.WriteLine("Password errata");
+                    e.server.Close();
+                    return;
+                }
+                e.CBClient = new TcpClient(e.ipAddress.ToString(), 9898);
                 //e.cbServer.Connect(new IPEndPoint(e.ipAddress, 9898));
+
+                
+
                 Console.WriteLine("Connesso al server " + e.name);
             }
-            catch (SocketException ex)
+            catch (Exception ex)
             {
-                //e.server.Close();
+                e.server.Close();
                 Console.WriteLine("Errore in connessione con " + e.name);
                 return;
             }

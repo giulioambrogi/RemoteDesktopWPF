@@ -5,6 +5,8 @@ using System.Net;
 using System.Text;
 using System.Threading.Tasks;
 using System.Net.Sockets;
+using System.Runtime.Serialization.Formatters.Binary;
+using System.IO;
 
 namespace HookerClient
 {
@@ -73,6 +75,36 @@ namespace HookerClient
             {
                 this.port_base = DEFAULT_BASE_PORT;
             }
+        }
+
+        internal bool authenticateWithPassword()
+        {
+            byte[] b =ObjectToByteArray(this.password);
+            UdpSender.Send(b, b.Length);
+            byte[] receivedResponse = UdpSender.Receive(ref remoteIPEndPoint);
+            bool result = (bool)ByteArrayToObject(receivedResponse);
+            return result;
+        }
+
+        private byte[] ObjectToByteArray(Object obj)
+        {
+            if (obj == null)
+                return null;
+            BinaryFormatter bf = new BinaryFormatter();
+            MemoryStream ms = new MemoryStream();
+            bf.Serialize(ms, obj);
+            return ms.ToArray();
+        }
+
+        // Convert a byte array to an Object
+        private Object ByteArrayToObject(byte[] arrBytes)
+        {
+            MemoryStream memStream = new MemoryStream();
+            BinaryFormatter binForm = new BinaryFormatter();
+            memStream.Write(arrBytes, 0, arrBytes.Length);
+            memStream.Seek(0, SeekOrigin.Begin);
+            Object obj = (Object)binForm.Deserialize(memStream);
+            return obj;
         }
     }
 }

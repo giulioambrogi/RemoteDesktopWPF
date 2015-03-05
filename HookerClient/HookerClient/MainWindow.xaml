@@ -13,8 +13,7 @@
             <ColumnDefinition Width="516*"/>
             <ColumnDefinition/>
         </Grid.ColumnDefinitions>
-        <ListBox x:Name="lbServers" Grid.Column="2" HorizontalAlignment="Left" Height="100" Margin="51,38,0,0" Grid.Row="1" VerticalAlignment="Top" Width="817" SelectionMode="Multiple" SelectionChanged="lbServers_SelectionChanged"/>
-        <Label Content="Computer in Rete" Grid.Column="2" HorizontalAlignment="Left" Margin="47,3,0,0" VerticalAlignment="Top" Height="39" Width="219" FontSize="20" Grid.Row="1"/>
+        <Label Content="Computer in Rete" Grid.Column="2" HorizontalAlignment="Left" Margin="47,28,0,0" VerticalAlignment="Top" Height="39" Width="219" FontSize="20" Grid.Row="1" Foreground="White" FontWeight="Bold"/>
         <Button x:Name="btnRefreshServers" Content="Aggiorna Lista" Grid.Column="2" HorizontalAlignment="Left" Margin="980,38,0,0" Grid.Row="1" VerticalAlignment="Top" Width="88" Height="100" Click="btnRefreshServers_Click" RenderTransformOrigin="-0.827,0.537"/>
         <Button x:Name="btnConnect" Content="Connect" Grid.Column="2" HorizontalAlignment="Left" Margin="981,239,0,0" Grid.Row="1" VerticalAlignment="Top" Width="213" Height="55" Click="btnConnect_Click" />
         <Button x:Name="btnExit" Content="Esci" Grid.Column="2" HorizontalAlignment="Left" Margin="1103,38,0,0" Grid.Row="1" VerticalAlignment="Top" Width="91" Height="100" Click="btnExit_Click"/>
@@ -23,14 +22,18 @@
         <Label x:Name="lblConnectedPC" Grid.ColumnSpan="3" Content="" HorizontalAlignment="Left" Margin="914,394,0,0" Grid.Row="1" VerticalAlignment="Top" Height="34" Width="66" FontSize="35"/>
         <Button x:Name="btnClipboardMonitor" Grid.ColumnSpan="3" Content="cb test" HorizontalAlignment="Left" Margin="1103,146,0,0" Grid.Row="1" VerticalAlignment="Top" Width="87" Click="btnClipboardMonitor_Click" Height="29"/>
         <Button x:Name="btnSetData" Grid.ColumnSpan="3" Content="setData" HorizontalAlignment="Left" Margin="981,153,0,0" Grid.Row="1" VerticalAlignment="Top" Width="87" Click="btnSetData_Click"/>
-        <Grid x:Name="grdMain" Grid.ColumnSpan="3" HorizontalAlignment="Left" Height="222" Margin="51,180,0,0" Grid.Row="1" VerticalAlignment="Top" Width="817">
+       
+        <Grid x:Name="grdMain" Grid.ColumnSpan="3" HorizontalAlignment="Left" Height="222" Margin="47,72,0,0" Grid.Row="1" VerticalAlignment="Top" Width="817">
             <Grid.ColumnDefinitions>
-                <ColumnDefinition Width="395*"/>
-                <ColumnDefinition Width="188*"/>
+                <ColumnDefinition Width="288*"/>
+                <ColumnDefinition Width="203*"/>
                 <ColumnDefinition Width="177*"/>
-                <ColumnDefinition Width="57*"/>
+                <ColumnDefinition Width="92*"/>
             </Grid.ColumnDefinitions>
         </Grid>
+        
+        <Label x:Name="lblPassword" Grid.ColumnSpan="3" Content="Password" HorizontalAlignment="Left" Margin="386,28,0,0" Grid.Row="1" VerticalAlignment="Top" Width="168" FontSize="20" Foreground="White" FontWeight="Bold"/>
+        <Label x:Name="lblPort" Grid.ColumnSpan="3" Content="Porta" HorizontalAlignment="Left" Margin="602,28,0,0" Grid.Row="1" VerticalAlignment="Top" Width="172" Height="34" FontSize="20" Foreground="White" FontWeight="Bold"/>
 
     </Grid>
 </Window>

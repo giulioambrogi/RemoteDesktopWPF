@@ -54,6 +54,7 @@ namespace HookerClient
         public void getAvailableServers()
         {
             this.serverManger.availableServers.Clear();
+            this.serverManger.selectedServers.Clear();
             List<ServerEntity> servers = new List<ServerEntity>();
             DirectoryEntry root = new DirectoryEntry("WinNT:");
             int index = 1;
@@ -81,10 +82,7 @@ namespace HookerClient
             se.setId(index);
             this.serverManger.availableServers.Add(se);
 
-            lbServers.Dispatcher.Invoke(DispatcherPriority.Background, new Action(() =>
-            {
-                lbServers.Items.Add(computerName);
-            }));
+           
             this.grdMain.Dispatcher.Invoke(DispatcherPriority.Background, new Action(() =>
             {
                 grdMain.RowDefinitions.Add(new RowDefinition());
@@ -212,17 +210,6 @@ namespace HookerClient
             
         }
 
-        private void lbServers_SelectionChanged(object sender, SelectionChangedEventArgs e)
-        {
-            this.serverManger.selectedServers.Clear();
-            foreach (var x in lbServers.SelectedItems)
-            {
-                //trova il server a cui si riferisce
-                ServerEntity se = this.serverManger.availableServers.Find(item => item.name.Equals(x.ToString()));
-                this.serverManger.selectedServers.Add(se);
-            }
-        }
-
         private void btnConnect_Click(object sender, RoutedEventArgs e)
         {
             Thread t = new Thread(() =>
@@ -297,7 +284,6 @@ namespace HookerClient
             btnConnect.IsEnabled = false;
             btnRefreshServers.IsEnabled = false;
             btnExit.IsEnabled = false;
-            lbServers.IsEnabled = false;
             //scrivo messaggio per l'utente
             tbStatus.Dispatcher.Invoke(DispatcherPriority.Background, new Action(() =>
             {
@@ -319,8 +305,6 @@ namespace HookerClient
         {
             btnRefreshServers.Dispatcher.Invoke(DispatcherPriority.Background,
                 new Action(() => { btnRefreshServers.IsEnabled = true; }));
-            lbServers.Dispatcher.Invoke(DispatcherPriority.Background,
-               new Action(() => { lbServers.IsEnabled = true; }));
             btnConnect.Dispatcher.Invoke(DispatcherPriority.Background,
              new Action(() => { btnConnect.IsEnabled = true; }));
             btnContinue.Dispatcher.Invoke(DispatcherPriority.Background,
@@ -340,7 +324,6 @@ namespace HookerClient
         {
             btnContinue.IsEnabled = true;
             btnRefreshServers.IsEnabled = false;
-            lbServers.IsEnabled = false;
             btnConnect.IsEnabled = false;
             btnExit.IsEnabled = true;
             tbStatus.Dispatcher.Invoke(DispatcherPriority.Background, new Action(() =>
@@ -375,7 +358,6 @@ namespace HookerClient
             this.serverManger.disconnect();
 
             btnRefreshServers.IsEnabled = true;
-            lbServers.IsEnabled = true;
             btnConnect.IsEnabled = true;
             btnContinue.IsEnabled = false;
             btnExit.IsEnabled = true;
@@ -401,8 +383,6 @@ namespace HookerClient
 
         }
 
-
-        
         private void continueCommunication()
         {
             InstallMouseAndKeyboard();
@@ -416,14 +396,12 @@ namespace HookerClient
             }));
         }
         
-
         #endregion
         private void btnRefreshServers_Click(object sender, RoutedEventArgs e)
         {
-            lbServers.Dispatcher.Invoke(DispatcherPriority.Background, new Action(() =>
-            {
-                lbServers.Items.Clear();
-            }));
+            //TODO: CANCELLARE LA GRID
+            grdMain.Children.Clear();
+            grdMain.RowDefinitions.Clear();
             getAvailableServers();
         }
 
