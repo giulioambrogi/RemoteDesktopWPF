@@ -22,6 +22,9 @@ namespace HookerClient
         //usato per clipboard
         public IPEndPoint cbLocal;
         public TcpClient CBClient;
+        public int Id; //id usato per creare gli oggetti dinamici 
+        public int port_base;
+        private int DEFAULT_BASE_PORT = 5143; 
         public ServerEntity( string name)
         {
             this.name = name;
@@ -41,5 +44,35 @@ namespace HookerClient
             this.password = password;
         }
 
+        private String getPassword()
+        {
+            return this.password;
+        }
+
+        private String getName()
+        {
+            return this.name;
+        }
+        private int getId()
+        {
+            return this.Id;
+        }
+
+        internal void setId(int index)
+        {
+            this.Id = index;
+        }
+        internal void setPortFromString(String port)
+        {
+            try
+            {
+                int convertedPort = Convert.ToInt32(port);
+                this.port_base = convertedPort;
+            }
+            catch (Exception e)
+            {
+                this.port_base = DEFAULT_BASE_PORT;
+            }
+        }
     }
 }

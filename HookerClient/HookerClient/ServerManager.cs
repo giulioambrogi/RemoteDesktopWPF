@@ -15,7 +15,7 @@ namespace HookerClient
 {
     class ServerManager
     {
-        public const Int32 port = 5143;
+        public const Int32 default_port = 5143;
         public const Int32 cbport = 9898;
         public List<ServerEntity> availableServers;
         public List<ServerEntity> selectedServers;
@@ -32,22 +32,23 @@ namespace HookerClient
             serverPointer = 0;
         }
 
-
+        
 
         public void connectToServer( ServerEntity e){
             try
             {
                 Console.WriteLine("Mi sto connettendo al server " + e.name);
                 e.server = new TcpClient();
-                e.server.Connect(e.ipAddress, port);
+                e.server.Connect(e.ipAddress, e.port_base);
                 e.stream = e.server.GetStream();
                 //exchange data for authentication
                 //connetto sender udp
                 e.UdpSender = new UdpClient();
-                e.UdpSender.Connect(e.ipAddress, port);
+                e.UdpSender.Connect(e.ipAddress, e.port_base); 
                 //connect to clipboard
                // Thread.Sleep(2000);
-                e.CBClient = new TcpClient(e.ipAddress.ToString(), 9898);
+                e.CBClient = new TcpClient(e.ipAddress.ToString(), 9898); 
+                
                 //e.cbServer.Connect(new IPEndPoint(e.ipAddress, 9898));
                 Console.WriteLine("Connesso al server " + e.name);
             }
@@ -94,17 +95,45 @@ namespace HookerClient
 
         internal void connect()
         {
+
+            //setPasswords(); //gets the passwords for users , to be used for connection
             foreach ( ServerEntity se in selectedServers)
             {
                 connectToServer( se);
             }
         }
+
+      
         internal void disconnect()
         {
             foreach (ServerEntity se in selectedServers)
             {
                 disconnectFromServer(se);
             }
+        }
+
+        public ServerEntity getSrvByName(String name)
+        {
+            foreach (ServerEntity se in this.availableServers)
+            {
+                if (se.name.Equals(name))
+                {
+                    return se;
+                }
+            }
+            return null;
+        }
+
+        public ServerEntity getServerById(int id)
+        {
+            foreach (ServerEntity se in this.availableServers)
+            {
+                if (se.Id == id)
+                {
+                    return se;
+                }
+            }
+            return null;
         }
 
         #region clipboard management

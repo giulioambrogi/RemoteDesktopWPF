@@ -32,6 +32,7 @@ namespace HookerClient
         public Thread ConnectionChecker;
         private ServerManager serverManger;
         private ClipboardMgmt cbmgmt;
+        private LayoutManager layout;
         public MainWindow()
         {
             Console.WriteLine("Screen resolution : "+(int)System.Windows.SystemParameters.PrimaryScreenWidth+" "+(int)System.Windows.SystemParameters.FullPrimaryScreenHeight);
@@ -39,11 +40,15 @@ namespace HookerClient
             //TODO eliminare definitivamente le checkbox relative a mouse e tastiera
             this.serverManger = new ServerManager();
             this.cbmgmt = new ClipboardMgmt();
+            this.layout = new LayoutManager();
             btnContinue.IsEnabled = false; //deve per forza essere inattivo all'inizio
+            btnConnect.IsEnabled = false;
             new Thread(() =>{
                 Thread.CurrentThread.IsBackground = true;
                 getAvailableServers();
             }).Start();
+
+            
         }
 
         public void getAvailableServers()
@@ -51,6 +56,7 @@ namespace HookerClient
             this.serverManger.availableServers.Clear();
             List<ServerEntity> servers = new List<ServerEntity>();
             DirectoryEntry root = new DirectoryEntry("WinNT:");
+            int index = 1;
             foreach (DirectoryEntry computers in root.Children)
             {
                 foreach (DirectoryEntry computer in computers.Children)
@@ -58,17 +64,69 @@ namespace HookerClient
                     if (computer.Name != "Schema" /*&& computer.Name != System.Environment.MachineName*/)
                     {
                         Console.WriteLine("Found new computer : " + computer.Name);
-                        //aggiungo il server alla lista dei server disponibili
-                        this.serverManger.availableServers.Add(new ServerEntity(computer.Name));
-                        lbServers.Dispatcher.Invoke(DispatcherPriority.Background, new Action(() =>
-                        {
-                            lbServers.Items.Add(computer.Name);
-                        }));
+                        processFoundComputer(computer.Name, index);
+                        index++;
+                                           
 
                     }
                 }
             }
         }
+
+        private void processFoundComputer(string computerName, int index)
+        {
+            //aggiungo il server alla lista dei server disponibili
+            //costruisco server Entity
+            ServerEntity se = new ServerEntity(computerName);
+            se.setId(index);
+            this.serverManger.availableServers.Add(se);
+
+            lbServers.Dispatcher.Invoke(DispatcherPriority.Background, new Action(() =>
+            {
+                lbServers.Items.Add(computerName);
+            }));
+            this.grdMain.Dispatcher.Invoke(DispatcherPriority.Background, new Action(() =>
+            {
+                grdMain.RowDefinitions.Add(new RowDefinition());
+                Label l = new Label { Content = computerName };
+                layout.setComputerNameLabelLayout(l);
+                l.SetValue(Grid.RowProperty, grdMain.RowDefinitions.Count-1);
+                l.SetValue(Grid.ColumnProperty, 0);
+                //create textbox for password
+                TextBox tbPwd = new TextBox() { Name = "k" + index }; //t for the passwords
+                tbPwd.TextChanged += tbPassword_Changed;
+                layout.setPasswordTextBoxLayout(tbPwd);
+                tbPwd.SetValue(Grid.RowProperty, grdMain.RowDefinitions.Count-1);
+                tbPwd.SetValue(Grid.ColumnProperty, 1);
+                //create port field
+                TextBox tbPort = new TextBox() { Name = "p" + index }; //p for the ports
+                tbPort.TextChanged += tbPort_Changed;
+                layout.setPortTextBoxLayout(tbPort);
+                tbPort.SetValue(Grid.RowProperty, grdMain.RowDefinitions.Count - 1);
+                tbPort.SetValue(Grid.ColumnProperty, 2);
+                //create button checkin button
+                String cbname = "cb" + index;
+                CheckBox cbox = new CheckBox { Name=cbname };
+                cbox.Checked += checkbox_Checked; //ADD EVENT 
+                cbox.Unchecked += checkbox_Unchecked;
+                cbox.SetValue(Grid.RowProperty, grdMain.RowDefinitions.Count-1);
+                cbox.SetValue(Grid.ColumnProperty, 3);
+                layout.setCheckBoxLayout(cbox);
+                //add elements to the window
+                grdMain.Children.Add(l);
+                grdMain.Children.Add(tbPwd);
+                grdMain.Children.Add(tbPort);
+                grdMain.Children.Add(cbox);
+                grdMain.UpdateLayout();
+            }));
+        }
+
+      
+
+
+      
+
+     
 
 
 
@@ -370,7 +428,7 @@ namespace HookerClient
         }
 
 
-
+      
         public KeyEventHandler wnd_KeyDown { get; set; }
 
         /*
@@ -455,6 +513,91 @@ namespace HookerClient
         {
             //this.cbmgmt.setData(DataFormats.UnicodeText, "prova");
         }
+
+
+        #region dinGenEvents
+      
+
+        private void checkbox_Checked(object sender, RoutedEventArgs e)
+        {
+            enableConnectButton();
+            CheckBox cb = (CheckBox)sender;
+            String rem = cb.Name.Replace("cb", "");
+            int index = Convert.ToInt32(rem);
+            Console.WriteLine("Attivazione della cb " + cb.Name);
+            ServerEntity selectedServer = this.serverManger.getServerById(index);
+
+            this.serverManger.selectedServers.Add(selectedServer);
+        }
+
+       
+
+        private void checkbox_Unchecked(object sender, RoutedEventArgs e)
+        {
+            tryDisableConnectButton();
+            CheckBox cb = (CheckBox)sender;
+            String rem = cb.Name.Replace("cb", "");
+            int index = Convert.ToInt32(rem);
+            Console.WriteLine("Disattivazione della cb " + cb.Name);
+            this.serverManger.selectedServers.Remove(this.serverManger.getServerById(index));
+        }
+
+        private void tbPassword_Changed(object sender, TextChangedEventArgs e)
+        {
+            int id = Convert.ToInt32(((TextBox)sender).Name.Replace("k", ""));
+            ServerEntity se = this.serverManger.getServerById(id);
+            se.setPassword(((TextBox)sender).Text);
+            Console.WriteLine("Modifica password per " + se.name);
+        }
+
+
+        private void tbPort_Changed(object sender, TextChangedEventArgs e)
+        {
+            int id = Convert.ToInt32(((TextBox)sender).Name.Replace("p", ""));
+            ServerEntity se = this.serverManger.getServerById(id);
+            se.setPortFromString(((TextBox)sender).Text);
+            Console.WriteLine("Modifica porta ["+((TextBox)sender).Text+"] per " + se.name);
+        }
+
+
+        private void enableConnectButton()
+        {
+            if (btnConnect.IsEnabled == false)
+                btnConnect.IsEnabled = true;
+        }
+        private void tryDisableConnectButton()
+        {
+            foreach (CheckBox tb in FindVisualChildren<CheckBox>(grdMain))
+            {
+                if (tb.IsChecked==true)
+                {
+                    return;
+                }
+            }
+            //if i'm here, no cb is setted then change connect button status
+            btnConnect.IsEnabled = false;
+        }
+        public static IEnumerable<T> FindVisualChildren<T>(DependencyObject depObj) where T : DependencyObject
+        {
+            if (depObj != null)
+            {
+                for (int i = 0; i < VisualTreeHelper.GetChildrenCount(depObj); i++)
+                {
+                    DependencyObject child = VisualTreeHelper.GetChild(depObj, i);
+                    if (child != null && child is T)
+                    {
+                        yield return (T)child;
+                    }
+
+                    foreach (T childOfChild in FindVisualChildren<T>(child))
+                    {
+                        yield return childOfChild;
+                    }
+                }
+            }
+        }
+        #endregion
+
     }
 
    

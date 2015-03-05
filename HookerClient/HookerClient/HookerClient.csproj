@@ -57,6 +57,7 @@
       <SubType>Designer</SubType>
     </ApplicationDefinition>
     <Compile Include="ClipboardMgmt.cs" />
+    <Compile Include="LayoutManager.cs" />
     <Compile Include="ServerEntity.cs" />
     <Compile Include="ServerManager.cs" />
     <Compile Include="Win32.cs" />
