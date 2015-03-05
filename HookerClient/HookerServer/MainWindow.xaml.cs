@@ -31,12 +31,12 @@ namespace HookerServer
     public partial class MainWindow : Window
     {
         public bool isConnected = false;
-        //static Int32 port = 5143;
         public IPAddress localAddr = IPAddress.Parse("127.0.0.1");
         public TcpListener server = null;
         public TcpClient client = null;
         public UdpClient udpListener;
         public IPEndPoint remoteIPEndpoint;
+        public IPEndPoint cbEndpoint; 
         Thread runThread;
         Thread ConnectionChecker;
         Thread cbListener;
@@ -142,7 +142,7 @@ namespace HookerServer
             }
             else
             {
-                Console.WriteLine("MESSAGGIO NON CAPITO :" + buffer);
+                Console.WriteLine("MESSAGGIO NON CAPITO :[" + buffer+"]");
             }
 
            
@@ -185,26 +185,29 @@ namespace HookerServer
                     Console.Write("Waiting for a connection... ");
                     this.client = this.server.AcceptTcpClient();
                     //now check the credentials
-
+                    byte[] passwordInBytes = this.udpListener.Receive(ref this.remoteIPEndpoint);
+                    Boolean result;
+                    if(((String)ByteArrayToObject(passwordInBytes)).Equals(Properties.Settings.Default.Password)){
+                        result = true;
+                    }else{
+                        result = false;
+                    }
+                    this.udpListener.Send(ObjectToByteArray(result), ObjectToByteArray(result).Length,this.remoteIPEndpoint);
                     Console.WriteLine("Connected!");
                     isConnected = true; //set the variable in order to get into the next loop
                     NetworkStream stream = client.GetStream();
-                    
                     //connection checker
                     this.runConnectionChecker(); //run thread  which checks connection
                     this.runCBListenerFaster(); //run thread which handle clipboard
                     while (isConnected ){ //loop around the global variable that says if the client is already connected
-                        //read exactly 128 bytes
-                        bytes = this.udpListener.Receive(ref this.remoteIPEndpoint);
+                        bytes = this.udpListener.Receive(ref this.remoteIPEndpoint);//read exactly 128 bytes
                         message = System.Text.Encoding.ASCII.GetString(bytes, 0, bytes.Length);
-                        // Translate data bytes to a ASCII string.
-                        parseMessage(message);
+                        parseMessage(message); // Translate data bytes to a ASCII string.
                     }
                 }
                 catch (Exception ex)
                 {
                     Console.WriteLine("ERRORE: "+ex.Message);
-                    
                 }
 
             }
@@ -306,80 +309,18 @@ namespace HookerServer
             this.ConnectionChecker.Start();
         }
 
-
-        public void runCBListener()
-        {
-            this.cbListener = new Thread(() =>
-            {
-                Thread.CurrentThread.IsBackground = true;
-                this.cbSocketServer = new TcpListener(IPAddress.Any, Properties.Settings.Default.Port);
-                this.remoteIPEndpoint = new IPEndPoint(IPAddress.Any, Properties.Settings.Default.CBPort);
-                this.cbSocketServer.Start(5);
-
-                byte[] typeByte = new byte[25];
-                byte[] lengthByte = new byte[1000];
-                byte[] contentByte;
-                
-                //build clipboard
-  /*              this.cbSocketServer = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
-                this.cbSocketServer.Server.Bind(new IPEndPoint(IPAddress.Any, ));
-                this.cbSocketServer.Listen(2);
-                Console.WriteLine("Aspettando il collegamento alla cb...");
-                this.cbSocketServer.Accept();
-                Console.WriteLine("Clipboard è connessa");
-                this.cbSocketServer.Server.ReceiveTimeout = Timeout.Infinite;*/
-
-                Console.Write("Waiting for ClipBoard connection... ");
-                TcpClient acceptedClient = this.cbSocketServer.AcceptTcpClient();
-                Console.WriteLine("Clipboard is Connected!");
-               
-                while (true)
-                {
-                    try
-                    {
-                        Console.WriteLine("Aspettando un messaggio dalla clipboard");
-                        NetworkStream stream = acceptedClient.GetStream();
-                        int recvType = stream.Read(typeByte, 0, 25);
-                        String type = (String)ByteArrayToObject(typeByte);
-                        Console.WriteLine("Ricevuto " + recvType + " bytes. Tipo " + type);
-                        //int recvLength = this.cbSocketServer.Server.Receive(lengthByte, 4, 0);
-                        int recvLength = stream.Read(lengthByte, 0, lengthByte.Length);
-                        int length = (int)ByteArrayToObject(lengthByte);
-                        Console.WriteLine("Ricevuto " + recvLength + " bytes. Lunghezza del contenuto: " + length);
-                        contentByte = new byte[length];
-                        Console.WriteLine("Sto ricevendo " + length + " bytes di  tipo [" + type + "] ...");
-                       
-                       // int recvContent = this.cbSocketServer.Server.Receive(contentByte, length, 0);
-                        int recvContent = stream.Read(contentByte, 0, length);
-                        Console.WriteLine("Ricevuto");
-                        Thread.Sleep(500);
-                    }
-                    catch (Exception ex)
-                    {
-                        Console.WriteLine("ECCEZIONE GENERATA IN RICEZIONE CB :" + ex.Message);
-                        break;
-                    }
-                    
-                }
-            });
-            this.cbListener.Start();
-        }
-
         public void runCBListenerFaster()
         {
             this.cbListener = new Thread(() =>
             {
                 Thread.CurrentThread.IsBackground = true;
                 this.cbSocketServer = new TcpListener(IPAddress.Any, Properties.Settings.Default.CBPort);
-                this.remoteIPEndpoint = new IPEndPoint(IPAddress.Any, Properties.Settings.Default.Port);
+                this.cbEndpoint = new IPEndPoint(IPAddress.Any, Properties.Settings.Default.CBPort);
                 this.cbSocketServer.Start(1);
-
-                byte[] contentByte;
                 Console.Write("Waiting for ClipBoard connection... ");
                 TcpClient acceptedClient = this.cbSocketServer.AcceptTcpClient();
                 Console.WriteLine("Clipboard is Connected!");
-
-                while (true)
+                 while (true)
                 {
                     try
                     {

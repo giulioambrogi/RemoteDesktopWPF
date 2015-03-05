@@ -28,3 +28,18 @@ C:\Users\GIULIO\Documents\Git\Progetto PDS\test\HookerClient\HookerServer\obj\De
 C:\Users\GIULIO\Documents\Git\Progetto PDS\test\HookerClient\HookerServer\obj\Debug\HookerServer.exe
 C:\Users\GIULIO\Documents\Git\Progetto PDS\test\HookerClient\HookerServer\obj\Debug\HookerServer.pdb
 C:\Users\GIULIO\Documents\Git\Progetto PDS\test\HookerClient\HookerServer\obj\Debug\HookerServer.csprojResolveAssemblyReference.cache
+C:\Users\Giulio\Documents\Visual Studio 2013\Projects\ProgettoC\progettopds\test\HookerClient\HookerServer\obj\Debug\HookerServer.csprojResolveAssemblyReference.cache
+C:\Users\Giulio\Documents\Visual Studio 2013\Projects\ProgettoC\progettopds\test\HookerClient\HookerServer\obj\Debug\MainWindow.baml
+C:\Users\Giulio\Documents\Visual Studio 2013\Projects\ProgettoC\progettopds\test\HookerClient\HookerServer\obj\Debug\MainWindow.g.cs
+C:\Users\Giulio\Documents\Visual Studio 2013\Projects\ProgettoC\progettopds\test\HookerClient\HookerServer\obj\Debug\App.g.cs
+C:\Users\Giulio\Documents\Visual Studio 2013\Projects\ProgettoC\progettopds\test\HookerClient\HookerServer\obj\Debug\HookerServer_MarkupCompile.cache
+C:\Users\Giulio\Documents\Visual Studio 2013\Projects\ProgettoC\progettopds\test\HookerClient\HookerServer\obj\Debug\HookerServer.g.resources
+C:\Users\Giulio\Documents\Visual Studio 2013\Projects\ProgettoC\progettopds\test\HookerClient\HookerServer\obj\Debug\HookerServer.Properties.Resources.resources
+C:\Users\Giulio\Documents\Visual Studio 2013\Projects\ProgettoC\progettopds\test\HookerClient\HookerServer\obj\Debug\HookerServer.csproj.GenerateResource.Cache
+C:\Users\Giulio\Documents\Visual Studio 2013\Projects\ProgettoC\progettopds\test\HookerClient\HookerServer\obj\Debug\HookerServer.exe
+C:\Users\Giulio\Documents\Visual Studio 2013\Projects\ProgettoC\progettopds\test\HookerClient\HookerServer\obj\Debug\HookerServer.pdb
+C:\Users\Giulio\Documents\Visual Studio 2013\Projects\ProgettoC\progettopds\test\HookerClient\HookerServer\bin\Debug\HookerServer.exe.config
+C:\Users\Giulio\Documents\Visual Studio 2013\Projects\ProgettoC\progettopds\test\HookerClient\HookerServer\bin\Debug\HookerServer.exe
+C:\Users\Giulio\Documents\Visual Studio 2013\Projects\ProgettoC\progettopds\test\HookerClient\HookerServer\bin\Debug\HookerServer.pdb
+C:\Users\Giulio\Documents\Visual Studio 2013\Projects\ProgettoC\progettopds\test\HookerClient\HookerServer\bin\Debug\Hardcodet.Wpf.TaskbarNotification.dll
+C:\Users\Giulio\Documents\Visual Studio 2013\Projects\ProgettoC\progettopds\test\HookerClient\HookerServer\bin\Debug\InputSimulator.dll
