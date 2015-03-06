@@ -2,19 +2,23 @@
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:tb="http://www.hardcodet.net/taskbar"
-        Title="MainWindow" Height="350" Width="525"
+        Title="MainWindow" Height="383" Width="617"
         StateChanged="Window_StateChanged">
-    
-    <Grid>
-        
-        <ListBox x:Name="lbMessages" HorizontalAlignment="Left" Height="266" Margin="51,24,0,0" VerticalAlignment="Top" Width="322" />
-        <Button x:Name="btnStart" Content="Avvia Server" HorizontalAlignment="Left" Height="67" Margin="378,118,0,0" VerticalAlignment="Top" Width="129" Click="Button_Click"/>
-        <TextBox x:Name="PointX" IsReadOnly="True" Margin="443,24,0,260" RenderTransformOrigin="1.574,0" HorizontalAlignment="Left" Width="54"/>
-        <TextBox x:Name="PointY" IsReadOnly="True" Margin="443,65,0,219" RenderTransformOrigin="1.574,0" HorizontalAlignment="Left" Width="54"/>
-        <Button x:Name="btnClose" Content="Stop Server" HorizontalAlignment="Left" Margin="378,242,0,0" VerticalAlignment="Top" Width="129" Height="48" Click="btnClose_Click" />
-        <Button Content="Pulisci Lista" HorizontalAlignment="Left" Margin="378,190,0,0" VerticalAlignment="Top" Width="129" Height="47" Click="Button_Click_2"/>
 
-        <tb:TaskbarIcon IconSource="/Icons/Connected.ico" ToolTipText="Server running..." >
+    <Grid>
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="10*"/>
+            <ColumnDefinition Width="193*"/>
+        </Grid.ColumnDefinitions>
+
+        <ListBox x:Name="lbMessages" HorizontalAlignment="Left" Height="266" Margin="21,24,0,0" VerticalAlignment="Top" Width="322" Grid.Column="1" />
+        <Button x:Name="btnStart" Content="Avvia Server" HorizontalAlignment="Left" Height="67" Margin="348,118,0,0" VerticalAlignment="Top" Width="129" Click="Button_Click" Grid.Column="1"/>
+        <TextBox x:Name="PointX" IsReadOnly="True" Margin="413,24,0,287" RenderTransformOrigin="1.574,0" HorizontalAlignment="Left" Width="54" Grid.Column="1"/>
+        <TextBox x:Name="PointY" IsReadOnly="True" Margin="413,80,0,239" RenderTransformOrigin="1.574,0" HorizontalAlignment="Left" Width="54" Grid.Column="1"/>
+        <Button x:Name="btnClose" Content="Stop Server" HorizontalAlignment="Left" Margin="348,242,0,0" VerticalAlignment="Top" Width="129" Height="48" Click="btnClose_Click" Grid.Column="1" />
+        <Button Content="Pulisci Lista" HorizontalAlignment="Left" Margin="348,190,0,0" VerticalAlignment="Top" Width="129" Height="47" Click="Button_Click_2" Grid.Column="1"/>
+
+        <tb:TaskbarIcon IconSource="/Icons/Connected.ico" ToolTipText="Server running..." Grid.ColumnSpan="2" >
             <tb:TaskbarIcon.TrayToolTip>
                 <Border Background="White" BorderBrush="AliceBlue" BorderThickness="2" CornerRadius="4" Opacity="1.0" Width="160" Height="40">
                     <TextBlock Text="Server running..." HorizontalAlignment="Center" VerticalAlignment="Center"/>

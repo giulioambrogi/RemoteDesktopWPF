@@ -13,8 +13,8 @@ namespace HookerServer
     class ClipboardManager
     {
         Object content;
-        string ZIP_FILE_PATH = @"./cb/cb.zip";
-        string ZIP_EXTRACTED_FOLDER = @"./cb/cbfiles/";
+        public string ZIP_FILE_PATH = @"./cb/cbfiles.zip";
+        public string ZIP_EXTRACTED_FOLDER = @"./cb/cbfiles/";
         public ClipboardManager(Object content)
         {
             this.content = content; 
@@ -33,14 +33,15 @@ namespace HookerServer
                 }
                 else if (t == typeof(ZipArchive))
                 {
-                    //exstract zip file into a folder then link those files to the clipboard
-                    UnzipArchive();
-                    System.Collections.Specialized.StringCollection files = getFileNames(@"./ExtractedFiles");
+                    //extraction  already been done
+                    System.Collections.Specialized.StringCollection files = getFileNames(ZIP_EXTRACTED_FOLDER+@"/CBFILES/");
+                    Clipboard.Clear();
                     Clipboard.SetFileDropList(files);
+                    foreach (String file in files)
+                        Console.WriteLine("Ho aggiunto in CB : " + file);
                 }
                 else if (t == typeof(BitmapSource))
                 {
-                    
                     Clipboard.SetImage((BitmapSource)content);
                 }
                 else if (t == typeof(Stream))
@@ -62,7 +63,7 @@ namespace HookerServer
             System.Collections.Specialized.StringCollection sc = new System.Collections.Specialized.StringCollection();
             foreach (string s in filenames)
             {
-                sc.Add(s);
+                sc.Add(System.IO.Path.GetFullPath(s));
             }
             return sc;
         }
