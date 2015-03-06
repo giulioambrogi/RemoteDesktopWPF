@@ -36,21 +36,24 @@ namespace HookerServer
         public TcpClient client = null;
         public UdpClient udpListener;
         public IPEndPoint remoteIPEndpoint;
-        public IPEndPoint cbEndpoint; 
+        public IPEndPoint cbEndpoint;
         Thread runThread;
         Thread ConnectionChecker;
         Thread cbListener;
         public TcpListener cbSocketServer;
         String temptext;
+        public string ZIP_FILE_PATH = @"./cb/cbfiles.zip";
+        public string ZIP_EXTRACTED_FOLDER = @"./cb/cbfiles/";
 
-#region Properties
-        String password { get; set;  }
+        Window w = new Window();
+        #region Properties
+        String password { get; set; }
 
-#endregion 
+        #endregion
         public MainWindow()
         {
             InitializeComponent();
-            Console.WriteLine("Nome computer :"+System.Environment.MachineName);
+            Console.WriteLine("Nome computer :" + System.Environment.MachineName);
             btnStart.IsEnabled = true;
             btnClose.IsEnabled = false;
             bindHotKeyCommands();
@@ -67,24 +70,24 @@ namespace HookerServer
         //temporaneamente disabilitato
         private void receiveClipboard(object sender, ExecutedRoutedEventArgs e)
         {
-           /* InputSimulator.SimulateKeyUp(VirtualKeyCode.CONTROL);
-            InputSimulator.SimulateKeyUp(VirtualKeyCode.MENU);
-            InputSimulator.SimulateKeyUp(VirtualKeyCode.VK_X);
-            try
-            {
-                Console.WriteLine("INTERRUPT CLIPBOARD");
-                if (isConnected)
-                {
-                    byte[] msg = new byte[128];
-                    this.cbSocketServer.Receive(msg);
-                    String msgString = (String)ByteArrayToObject(msg);
-                    Console.WriteLine(msgString);
-                }
-            }
-            catch (SocketException ex)
-            {
-                Console.WriteLine("Non riesco a ricevere la clipboard");
-            }*/
+            /* InputSimulator.SimulateKeyUp(VirtualKeyCode.CONTROL);
+             InputSimulator.SimulateKeyUp(VirtualKeyCode.MENU);
+             InputSimulator.SimulateKeyUp(VirtualKeyCode.VK_X);
+             try
+             {
+                 Console.WriteLine("INTERRUPT CLIPBOARD");
+                 if (isConnected)
+                 {
+                     byte[] msg = new byte[128];
+                     this.cbSocketServer.Receive(msg);
+                     String msgString = (String)ByteArrayToObject(msg);
+                     Console.WriteLine(msgString);
+                 }
+             }
+             catch (SocketException ex)
+             {
+                 Console.WriteLine("Non riesco a ricevere la clipboard");
+             }*/
         }
 
         private void parseMessage(string buffer)
@@ -100,20 +103,16 @@ namespace HookerServer
                 int y = Convert.ToInt16(Double.Parse(commands[2]) * System.Windows.SystemParameters.PrimaryScreenHeight);
                 //RAMO DEL MOUSE 
                 //Metodo che setta la posizione del mouse
-                NativeMethods.SetCursorPos(x,y);
-                               
-
+                NativeMethods.SetCursorPos(x, y);
                 PointX.Dispatcher.Invoke(DispatcherPriority.Background, new Action(() =>
                 {
                     PointX.Text = x.ToString();
-                    
-                    
                 }));
                 PointY.Dispatcher.Invoke(DispatcherPriority.Background, new Action(() =>
                 {
                     PointY.Text = y.ToString();
                 }));
-                Console.WriteLine("Received: {0}", buffer);
+                //Console.WriteLine("Received: {0}", buffer);
             }
             else if (commands.ElementAt(0).ToString().Equals("K"))
             {
@@ -131,21 +130,18 @@ namespace HookerServer
                     Console.WriteLine(commands.ElementAt(0) + " UP");
                     InputSimulator.SimulateKeyUp(vk);
                 }
-
                 //UPDATE MESSAGEBOX
                 lbMessages.Dispatcher.Invoke(DispatcherPriority.Background, new Action(() =>
                 {
                     lbMessages.Items.Add(buffer);
                 }));
-
-
-            }
+             }
             else
             {
-                Console.WriteLine("MESSAGGIO NON CAPITO :[" + buffer+"]");
+                Console.WriteLine("MESSAGGIO NON CAPITO :[" + buffer + "]");
             }
 
-           
+
 
         }
 
@@ -158,7 +154,7 @@ namespace HookerServer
                 runServer();
             });
 
-            
+
 
             this.runThread.Start();
             btnClose.IsEnabled = true;
@@ -168,14 +164,14 @@ namespace HookerServer
 
         private void runServer()
         {
-            
+
             this.server = new TcpListener(IPAddress.Any, Properties.Settings.Default.Port); //server which accepts the connection
             this.udpListener = new UdpClient(Properties.Settings.Default.Port); //listener which gets the commands to be executed (keyboard and mouse)
             this.remoteIPEndpoint = new IPEndPoint(IPAddress.Any, Properties.Settings.Default.Port);
             this.server.Start(1);
             Byte[] bytes = new Byte[128];
             String message = null;
-            
+
 
             // Enter the listening loop.
             while (true)
@@ -187,19 +183,27 @@ namespace HookerServer
                     //now check the credentials
                     byte[] passwordInBytes = this.udpListener.Receive(ref this.remoteIPEndpoint);
                     Boolean result;
-                    if(((String)ByteArrayToObject(passwordInBytes)).Equals(Properties.Settings.Default.Password)){
+                    if (((String)ByteArrayToObject(passwordInBytes)).Equals(Properties.Settings.Default.Password))
+                    {
                         result = true;
-                    }else{
-                        result = false;
+                        this.udpListener.Send(ObjectToByteArray(result), ObjectToByteArray(result).Length, this.remoteIPEndpoint);
                     }
-                    this.udpListener.Send(ObjectToByteArray(result), ObjectToByteArray(result).Length,this.remoteIPEndpoint);
+                    else
+                    {
+                        result = false;
+                        this.udpListener.Send(ObjectToByteArray(result), ObjectToByteArray(result).Length, this.remoteIPEndpoint);
+                        this.client.Close();
+                        continue;
+                    }
+
                     Console.WriteLine("Connected!");
                     isConnected = true; //set the variable in order to get into the next loop
                     NetworkStream stream = client.GetStream();
                     //connection checker
                     this.runConnectionChecker(); //run thread  which checks connection
                     this.runCBListenerFaster(); //run thread which handle clipboard
-                    while (isConnected ){ //loop around the global variable that says if the client is already connected
+                    while (isConnected)
+                    { //loop around the global variable that says if the client is already connected
                         bytes = this.udpListener.Receive(ref this.remoteIPEndpoint);//read exactly 128 bytes
                         message = System.Text.Encoding.ASCII.GetString(bytes, 0, bytes.Length);
                         parseMessage(message); // Translate data bytes to a ASCII string.
@@ -207,7 +211,7 @@ namespace HookerServer
                 }
                 catch (Exception ex)
                 {
-                    Console.WriteLine("ERRORE: "+ex.Message);
+                    Console.WriteLine("ERRORE: " + ex.Message);
                 }
 
             }
@@ -217,7 +221,7 @@ namespace HookerServer
 
         private void stopServer()
         {
-            if(this.ConnectionChecker!= null)
+            if (this.ConnectionChecker != null)
                 this.ConnectionChecker.Abort();
             if (this.client != null)
                 this.client.Close();
@@ -237,7 +241,7 @@ namespace HookerServer
             btnClose.IsEnabled = false;
         }
 
-    
+
         private void Button_Click_2(object sender, RoutedEventArgs e)
         {
             lbMessages.Dispatcher.Invoke(DispatcherPriority.Background, new Action(() =>
@@ -251,7 +255,7 @@ namespace HookerServer
 
         private void ExitButton(object sender, RoutedEventArgs e)
         {
-           //TODO chiudere server da tray area
+            //TODO chiudere server da tray area
 
             this.Close();
         }
@@ -277,35 +281,35 @@ namespace HookerServer
 
         public void runConnectionChecker()
         {
-            this.ConnectionChecker = new Thread( () =>
-                 {
-                     while (true)
-                     {
+            this.ConnectionChecker = new Thread(() =>
+            {
+                while (true)
+                {
 
-                         try
-                         {
-                             if (this.client.Client.Poll(0, SelectMode.SelectRead))
-                             {
-                                 byte[] buff = new byte[1];
-                                 if (this.client.Client.Receive(buff, SocketFlags.Peek) == 0)
-                                 {
-                                     // Client disconnected
-                                     this.isConnected = false;
-                                     MessageBox.Show("La connessione è stata interrotta");
-                                     //closeOnException();
-                                     return;
-                                 }
-                             }
-                             Thread.Sleep(2000);
-                         }
-                         catch (SocketException se)
-                         {
-                             //closeOnException();
-                             MessageBox.Show("La connessione è stata interrotta");
-                             break;
-                         }
-                     }
-        });
+                    try
+                    {
+                        if (this.client.Client.Poll(0, SelectMode.SelectRead))
+                        {
+                            byte[] buff = new byte[1];
+                            if (this.client.Client.Receive(buff, SocketFlags.Peek) == 0)
+                            {
+                                // Client disconnected
+                                this.isConnected = false;
+                                MessageBox.Show("La connessione è stata interrotta");
+                                //closeOnException();
+                                return;
+                            }
+                        }
+                        Thread.Sleep(2000);
+                    }
+                    catch (SocketException se)
+                    {
+                        //closeOnException();
+                        MessageBox.Show("La connessione è stata interrotta");
+                        break;
+                    }
+                }
+            });
             this.ConnectionChecker.Start();
         }
 
@@ -320,33 +324,17 @@ namespace HookerServer
                 Console.Write("Waiting for ClipBoard connection... ");
                 TcpClient acceptedClient = this.cbSocketServer.AcceptTcpClient();
                 Console.WriteLine("Clipboard is Connected!");
-                 while (true)
+                while (true)
                 {
-                    try
-                    {
+                    try{
                         Console.WriteLine("Aspettando un messaggio dalla clipboard");
+                        int count = 0;
+                        int r = -1;
                         NetworkStream stream = acceptedClient.GetStream();
-                        byte[] buffer = new byte[0];
-                        byte[] tmp = new byte[512]; //temporary buffer
-                        //stream.ReadTimeout = Timeout.Infinite;
-                        int count = 0; 
-                        int r=-1; 
-                        while ((r = stream.Read(tmp, 0, 512)) > 0)
-                        {
-                            count = count + r;
-                            int oldBufLen =  buffer.Length;
-                            Array.Resize(ref buffer, oldBufLen+ r);
-                            Buffer.BlockCopy(tmp, 0, buffer, oldBufLen, r);
-                            Console.WriteLine("Ricevuto " + count + " bytes ");
-                            if (stream.DataAvailable == false)
-                            {
-                                break;
-                            }
-                        }
-
+                        byte[] buffer = receiveAllData(stream);
                         Object received = ByteArrayToObject(buffer);
-                        Console.WriteLine("FINE RICEZIONE\t Tipo: "+received.GetType()+" Dimensione : " + tmp + " bytes");
-                        
+                        Console.WriteLine("FINE RICEZIONE\t Tipo: " + received.GetType() + " Dimensione : " + buffer.Length + " bytes");
+                        SetClipBoard(received);
                     }
                     catch (Exception ex)
                     {
@@ -359,13 +347,36 @@ namespace HookerServer
             this.cbListener.Start();
         }
 
+
+        private byte[] receiveAllData(NetworkStream stream)
+        {
+            byte[] tmp = new byte[512]; //temporary buffer
+            byte[] sizeOfBuf = new byte[4]; //init the buffer containing the size
+            stream.Read(sizeOfBuf, 0, 4);
+            //if (BitConverter.IsLittleEndian)
+            //    Array.Reverse(sizeOfBuf);
+            Int32 dim = BitConverter.ToInt32(sizeOfBuf, 0); //dimensione del buffer;
+            //byte[] buffer = new byte[dim]; //init bufferone
+            byte[] buffer = new byte[0];
+            Console.WriteLine("La dimensione del bufferone è : {0}", dim);
+            int counter = dim;
+            while (counter > 0 ){
+                int r = stream.Read(tmp, 0, 512);
+                Console.WriteLine("Ricevuto " + r + " bytes");
+                int oldBufLen = buffer.Length;
+                Array.Resize(ref buffer, oldBufLen + r);
+                Buffer.BlockCopy(tmp, 0, buffer, oldBufLen, r);
+                counter = counter - r;
+            }
+            return buffer;
+        }
+
         private void SetClipBoard(object received)
         {
             try
             {
                 ClipboardManager cbm = new ClipboardManager(received); //passo l'oggetto al costruttore della classe
                 //non so perchè forse perchè non sapevo in che altro modo lanciare il thread 
-
                 Thread runThread = new Thread(new ThreadStart(cbm.setData));
                 runThread.SetApartmentState(ApartmentState.STA);
                 runThread.Start();
@@ -413,13 +424,67 @@ namespace HookerServer
         {
             MemoryStream memStream = new MemoryStream();
             BinaryFormatter binForm = new BinaryFormatter();
+             if(arrBytes.Length != 32 &&  byteArrayContainsZipFile(arrBytes)){
+                 return extractZIPtoFolder(arrBytes);
+            }
             memStream.Write(arrBytes, 0, arrBytes.Length);
             memStream.Seek(0, SeekOrigin.Begin);
             Object obj = (Object)binForm.Deserialize(memStream);
             return obj;
         }
 
-    }
+        private Object extractZIPtoFolder(byte[] arrBytes)
+        {
+            using (Stream ms = new MemoryStream(arrBytes))
+            {
+                Console.WriteLine("Lunghezza del buffer : " + arrBytes.Length);
+                Console.WriteLine("Lunghezza dello stream : " + ms.Length);
+                ZipArchive archive = new ZipArchive(ms);
+                if (Directory.Exists(ZIP_EXTRACTED_FOLDER))
+                {
+                    Directory.Delete(ZIP_EXTRACTED_FOLDER,true);
+                    Console.WriteLine("Cancello Vecchia cartella zip");
+                }
+                archive.ExtractToDirectory(ZIP_EXTRACTED_FOLDER);
+                return archive;
+            } 
+        }
+
+        private bool byteArrayContainsZipFile(byte[] arrBytes)
+        {
+            if( arrBytes[0]==80 && arrBytes[1]==75 && arrBytes[2] == 3 && arrBytes[3] == 4){
+                return true;
+            }
+            return false;
+        }
+
+        /*public static void DeleteDirectory(string target_dir)
+        {
+            string[] files = Directory.GetFiles(target_dir);
+            string[] dirs = Directory.GetDirectories(target_dir);
+
+            foreach (string file in files)
+            {
+                File.SetAttributes(file, FileAttributes.Normal);
+                File.Delete(file);
+            }
+
+            foreach (string dir in dirs)
+            {
+                DeleteDirectory(dir);
+            }
+
+            Directory.Delete(target_dir, false);
+        }*/
+
+ 
+            
+            
+        }
+
+    
+
+
     public partial class NativeMethods
     {
         /// Return Type: BOOL->int  
@@ -431,6 +496,6 @@ namespace HookerServer
 
         [DllImport("user32.dll", CharSet = CharSet.Auto, CallingConvention = CallingConvention.StdCall)]
         public static extern void mouse_event(uint dwFlags, uint dx, uint dy, uint cButtons, UIntPtr dwExtraInfo);
-    
+
     }
 }
