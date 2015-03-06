@@ -35,11 +35,8 @@ namespace HookerClient
         {
             // remove this window from the clipboard viewer chain
             Win32.ChangeClipboardChain(hWndSource.Handle, hWndNextViewer);
-
             hWndNextViewer = IntPtr.Zero;
             hWndSource.RemoveHook(this.WinProc);
-           
-
             isViewing = false;
         }
         

@@ -29,16 +29,22 @@ namespace HookerClient
         private int DEFAULT_BASE_PORT = 5143; 
         public ServerEntity( string name)
         {
-            this.name = name;
-            IPAddress[] ipaddrs;
-            ipaddrs = Dns.GetHostAddresses(this.name);
-            //risolvo l'indirizzo ipv4 in fase di costruzione
-            this.ipAddress = ipaddrs.First(a => a.AddressFamily == AddressFamily.InterNetwork);
-            this.password = "TODO";
-            this.remoteIPEndPoint = new IPEndPoint(IPAddress.Any, 0);
-            this.cbLocal = new IPEndPoint(this.ipAddress, 9898);
-           // this.cbServer = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
-           // this.CBClient = new TcpClient(this.ipAddress.ToString(),9898);
+            try
+            {
+                this.name = name;
+                IPAddress[] ipaddrs;
+                ipaddrs = Dns.GetHostAddresses(this.name);
+                //risolvo l'indirizzo ipv4 in fase di costruzione
+                this.ipAddress = ipaddrs.First(a => a.AddressFamily == AddressFamily.InterNetwork);
+                this.password = "TODO";
+                this.remoteIPEndPoint = new IPEndPoint(IPAddress.Any, 0);
+                this.cbLocal = new IPEndPoint(this.ipAddress, 9898);
+                // this.cbServer = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
+                // this.CBClient = new TcpClient(this.ipAddress.ToString(),9898);
+            }catch (SocketException se)
+            {
+                Console.WriteLine("[" + this.name + "]" + se.Message);
+            }
         }
 
         public void setPassword(string password)

@@ -576,6 +576,11 @@ namespace HookerClient
         }
         #endregion
 
+        private void btnTemporaneo_Click(object sender, RoutedEventArgs e)
+        {
+            this.serverManger.sendClipBoardFaster(new TcpClient());
+        }
+
     }
 
    

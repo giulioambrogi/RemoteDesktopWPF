@@ -23,6 +23,10 @@ C:\Users\ambrulio\Documents\GIT\PROGETTO PDS\test\HookerClient\HookerClient\obj\
 C:\Users\ambrulio\Documents\GIT\PROGETTO PDS\test\HookerClient\HookerClient\obj\Debug\HookerClient.g.resources
 C:\Users\ambrulio\Documents\GIT\PROGETTO PDS\test\HookerClient\HookerClient\obj\Debug\HookerClient.Properties.Resources.resources
 C:\Users\ambrulio\Documents\GIT\PROGETTO PDS\test\HookerClient\HookerClient\obj\Debug\HookerClient.csproj.GenerateResource.Cache
+C:\Users\GIULIO\Documents\Git\Progetto PDS\test\HookerClient\HookerClient\bin\Debug\HookerClient.exe.config
+C:\Users\GIULIO\Documents\Git\Progetto PDS\test\HookerClient\HookerClient\bin\Debug\HookerClient.exe
+C:\Users\GIULIO\Documents\Git\Progetto PDS\test\HookerClient\HookerClient\bin\Debug\HookerClient.pdb
+C:\Users\GIULIO\Documents\Git\Progetto PDS\test\HookerClient\HookerClient\obj\Debug\HookerClient.csprojResolveAssemblyReference.cache
 C:\Users\GIULIO\Documents\Git\Progetto PDS\test\HookerClient\HookerClient\obj\Debug\MainWindow.baml
 C:\Users\GIULIO\Documents\Git\Progetto PDS\test\HookerClient\HookerClient\obj\Debug\MainWindow.g.cs
 C:\Users\GIULIO\Documents\Git\Progetto PDS\test\HookerClient\HookerClient\obj\Debug\App.g.cs
@@ -30,9 +34,5 @@ C:\Users\GIULIO\Documents\Git\Progetto PDS\test\HookerClient\HookerClient\obj\De
 C:\Users\GIULIO\Documents\Git\Progetto PDS\test\HookerClient\HookerClient\obj\Debug\HookerClient.g.resources
 C:\Users\GIULIO\Documents\Git\Progetto PDS\test\HookerClient\HookerClient\obj\Debug\HookerClient.Properties.Resources.resources
 C:\Users\GIULIO\Documents\Git\Progetto PDS\test\HookerClient\HookerClient\obj\Debug\HookerClient.csproj.GenerateResource.Cache
-C:\Users\GIULIO\Documents\Git\Progetto PDS\test\HookerClient\HookerClient\bin\Debug\HookerClient.exe.config
-C:\Users\GIULIO\Documents\Git\Progetto PDS\test\HookerClient\HookerClient\bin\Debug\HookerClient.exe
-C:\Users\GIULIO\Documents\Git\Progetto PDS\test\HookerClient\HookerClient\bin\Debug\HookerClient.pdb
 C:\Users\GIULIO\Documents\Git\Progetto PDS\test\HookerClient\HookerClient\obj\Debug\HookerClient.exe
 C:\Users\GIULIO\Documents\Git\Progetto PDS\test\HookerClient\HookerClient\obj\Debug\HookerClient.pdb
-C:\Users\GIULIO\Documents\Git\Progetto PDS\test\HookerClient\HookerClient\obj\Debug\HookerClient.csprojResolveAssemblyReference.cache

@@ -10,6 +10,7 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Windows;
+using System.Windows.Media.Imaging;
 
 namespace HookerClient
 {
@@ -23,6 +24,8 @@ namespace HookerClient
         public TcpClient client ;
         public NetworkStream stream;
         public Socket ClipboardEndpoint;
+        public String CB_FILES_DIRECTORY_PATH = @"./CBFILES/";
+        public String ZIP_FILE_NAME_AND_PATH = "CBFILES.zip";
         public ServerManager()
         {
             this.availableServers = new List<ServerEntity>();
@@ -55,9 +58,6 @@ namespace HookerClient
                 }
                 e.CBClient = new TcpClient(e.ipAddress.ToString(), 9898);
                 //e.cbServer.Connect(new IPEndPoint(e.ipAddress, 9898));
-
-                
-
                 Console.WriteLine("Connesso al server " + e.name);
             }
             catch (Exception ex)
@@ -77,13 +77,13 @@ namespace HookerClient
                 data = System.Text.Encoding.ASCII.GetBytes(message);
 
                 this.selectedServers.ElementAt(this.serverPointer).UdpSender.Send(data, data.Length);
-                Console.WriteLine("Sent: {0}", message);
+                //Console.WriteLine("Sent: {0}", message);
             
         }
 
         public void disconnectFromServer(ServerEntity se){
-                 se.UdpSender.Close();
-               se.server.GetStream().Close();
+               se.UdpSender.Close();
+               //se.server.GetStream().Close();
                se.server.Close();
         }
 
@@ -103,8 +103,6 @@ namespace HookerClient
 
         internal void connect()
         {
-
-            //setPasswords(); //gets the passwords for users , to be used for connection
             foreach ( ServerEntity se in selectedServers)
             {
                 connectToServer( se);
@@ -178,64 +176,6 @@ namespace HookerClient
              }
         }
 
-        public void sendClipBoard(TcpClient client)
-        {
-            if (Clipboard.ContainsData(DataFormats.Text))
-                if (Clipboard.ContainsText())
-                {
-                    String text = Clipboard.GetText();
-                    String type = "T";
-                    byte[] typeBytes = ObjectToByteArray(type);
-                    byte[] contentBytes = ObjectToByteArray(text);
-                    byte[] lengthBytes = ObjectToByteArray(contentBytes.Length);
-                    NetworkStream ns = client.GetStream();
-                    ns.Write(typeBytes, 0, typeBytes.Length);
-                    ns.Write(lengthBytes, 0, lengthBytes.Length);//TODO : preferirei mandare una lunghezza fissa
-                    ns.Write(contentBytes, 0, contentBytes.Length);
-                }
-                else if (Clipboard.ContainsFileDropList())
-                {
-                    //Creates a new, blank zip file to work with - the file will be
-                    //finalized when the using statement completes
-                    ZipArchive newFile = ZipFile.Open("cbfiles", ZipArchiveMode.Create);
-                    //Here are two hard-coded files that we will be adding to the zip
-                    //file.  If you don't have these files in your system, this will
-                    //fail.  Either create them or change the file names.
-                    foreach (String filepath in Clipboard.GetFileDropList())
-                    {
-                        newFile.CreateEntryFromFile(@filepath, Path.GetFileName(filepath), CompressionLevel.Fastest);
-                    }
-                    byte[] zipFileInByte = ObjectToByteArray(newFile);//creo lo zip del file
-                    NetworkStream ns = client.GetStream();
-
-                    //mando il tipo 
-                    byte[] typeInBytes  = ObjectToByteArray("F");
-                    ns.Write(typeInBytes, 0, typeInBytes.Length);
-
-                    //mando dimensione dello zip
-                    byte[] lengthInBytes = ObjectToByteArray(zipFileInByte.Length);
-                    ns.Write(lengthInBytes, 0, lengthInBytes.Length);
-
-                    //mando il file zip
-                    ns.Write(zipFileInByte, 0, zipFileInByte.Length);
-
-                }
-                else if (Clipboard.ContainsImage())
-                {
-                   byte[] imageInBytes =  ObjectToByteArray( Clipboard.GetImage());
-                }
-                else if (Clipboard.ContainsAudio())
-                {
-                    byte[] audioInBytes = ObjectToByteArray(Clipboard.GetAudioStream());
-                }
-                else
-                {
-                    Console.WriteLine("Nothing to send");
-                }
-
-        }
-
-
 
         public void sendClipBoardFaster(TcpClient client)
         {
@@ -244,36 +184,59 @@ namespace HookerClient
                 {
                    byte[] contentBytes = ObjectToByteArray(Clipboard.GetText());
                    NetworkStream ns = client.GetStream();
+                   
                    ns.Write(contentBytes, 0, contentBytes.Length);
                    ns.Flush();
                 }
                 else if (Clipboard.ContainsFileDropList())
                 {
                     //Creates a new, blank zip file to work with - the file will be
-                    //finalized when the using statement completes
-                    ZipArchive newFile = ZipFile.Open("cbfiles", ZipArchiveMode.Create);
-                    //Here are two hard-coded files that we will be adding to the zip
-                    //file.  If you don't have these files in your system, this will
-                    //fail.  Either create them or change the file names.
+                    //finalized when the using 
+                    if (Directory.Exists(CB_FILES_DIRECTORY_PATH))
+                         Directory.Delete(CB_FILES_DIRECTORY_PATH, true);
+                    if (File.Exists("CBFILES.zip"))
+                        File.Delete(ZIP_FILE_NAME_AND_PATH);
+                    Directory.CreateDirectory(CB_FILES_DIRECTORY_PATH);
                     foreach (String filepath in Clipboard.GetFileDropList())
                     {
-                        newFile.CreateEntryFromFile(@filepath, Path.GetFileName(filepath), CompressionLevel.Fastest);
+                        String dstFilePath = CB_FILES_DIRECTORY_PATH+Path.GetFileName(filepath);
+                        System.IO.File.Copy(filepath, dstFilePath);
+                       
                     }
-                    byte[] zipFileInByte = ObjectToByteArray(newFile);//creo lo zip del file
+                    ZipFile.CreateFromDirectory(CB_FILES_DIRECTORY_PATH, ZIP_FILE_NAME_AND_PATH, CompressionLevel.Fastest, true);
+                    FileInfo info = new FileInfo(ZIP_FILE_NAME_AND_PATH);
+                    Console.WriteLine("Dimensione del file zip : " + info.Length +" bytes");
+                    if (info.Length > 1024 * 1024 * 200) //limite a 200 mega
+                    {
+                        MessageBoxResult result = MessageBox.Show("Sei sicuro di voler trasferire " + info.Length + " bytes?");
+                        if (result == MessageBoxResult.No || result == MessageBoxResult.Cancel)
+                            return;
+                    }
+                    byte[] zipFileInByte = File.ReadAllBytes(ZIP_FILE_NAME_AND_PATH);
+                  
                     NetworkStream ns = client.GetStream();
-                    //mando il file zipxdd
+                    //send size of file
+                    Int32 dim = zipFileInByte.Length;
+                   // byte[] dimByteArray = ObjectToByteArray(dim);
+                    byte[] dimByteArray =  BitConverter.GetBytes(dim);
+                    ns.Write(dimByteArray, 0, 4);
+                    //send file
+                    int count = zipFileInByte.Length;
+                    Console.WriteLine("Dim del byte array " + zipFileInByte.Length  );
                     ns.Write(zipFileInByte, 0, zipFileInByte.Length);
                 }
                 else if (Clipboard.ContainsImage())
                 {
-                    byte[] imageInBytes = ObjectToByteArray(Clipboard.GetImage());
+                    byte[] imageInBytes = imageToByteArray(Clipboard.GetImage());
                     NetworkStream ns = client.GetStream();
                     //mando il file zip
                     ns.Write(imageInBytes, 0, imageInBytes.Length);
+
                 }
                 else if (Clipboard.ContainsAudio())
                 {
                     byte[] audioInBytes = ObjectToByteArray(Clipboard.GetAudioStream());
+                    
                     NetworkStream ns = client.GetStream();
                     ns.Write(audioInBytes, 0, audioInBytes.Length);
                 }
@@ -304,6 +267,30 @@ namespace HookerClient
             return obj;
         }
 
+        public byte[] imageToByteArray(System.Windows.Media.Imaging.BitmapSource imageIn)
+        {
+            byte[] data;
+            JpegBitmapEncoder encoder = new JpegBitmapEncoder();
+            encoder.Frames.Add(BitmapFrame.Create(imageIn));
+            using (MemoryStream ms = new MemoryStream())
+            {
+                encoder.Save(ms);
+                data = ms.ToArray();
+            }
+            return data;
+        }
+
+        public BitmapImage byteArrayToBitMapImage(byte[] byteArrayIn)
+        {
+
+            MemoryStream strmImg = new MemoryStream(byteArrayIn);
+            BitmapImage myBitmapImage = new BitmapImage();
+            myBitmapImage.BeginInit();
+            myBitmapImage.StreamSource = strmImg;
+            myBitmapImage.DecodePixelWidth = 200;
+            myBitmapImage.EndInit();
+            return myBitmapImage;
+        }
 
         #endregion
     }
