@@ -247,6 +247,13 @@ namespace HookerClient
                             bool bClosed = false;
                             foreach (ServerEntity se in this.serverManger.selectedServers)
                             {
+                                if (se.server == null) //questo ciclo serve a non testare connessione nel caso la pasword fosse sbagliata ( password sbagliata-> chiude server e lo setta a null)
+                                {
+                                    closeOnException();
+                                    closeOnException();
+                                    MessageBox.Show("La connessione è stata interrotta");
+                                    break;
+                                }
                                 if (se.server.Client.Poll(0, SelectMode.SelectRead))
                                 {
                                     byte[] buff = new byte[1];

@@ -54,6 +54,7 @@ namespace HookerClient
                 {
                     Console.WriteLine("Password errata");
                     e.server.Close();
+                    e.server = null; //convenzione in modo tale che il conn checker si accorga che la password non vabbène
                     return;
                 }
                 e.CBClient = new TcpClient(e.ipAddress.ToString(), 9898);
@@ -213,6 +214,7 @@ namespace HookerClient
                     {
                         MessageBoxResult result = MessageBox.Show("Sei sicuro di voler trasferire " + info.Length + " bytes?");
                         if (result == MessageBoxResult.No || result == MessageBoxResult.Cancel)
+                            Console.WriteLine("Can't send more than 200 Mega Bytes");
                             return;
                     }
                     byte[] zipFileInByte = File.ReadAllBytes(ZIP_FILE_NAME_AND_PATH);
