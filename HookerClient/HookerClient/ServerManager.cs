@@ -63,6 +63,7 @@ namespace HookerClient
             catch (Exception ex)
             {
                 e.server.Close();
+                e.server = null;
                 Console.WriteLine("Errore in connessione con " + e.name);
                 return;
             }
@@ -85,6 +86,8 @@ namespace HookerClient
                se.UdpSender.Close();
                //se.server.GetStream().Close();
                se.server.Close();
+               se.CBClient.Close();
+               
         }
 
         public void nextSelectedServers(){

@@ -86,9 +86,15 @@ namespace HookerClient
         internal bool authenticateWithPassword()
         {
             byte[] b =ObjectToByteArray(this.password);
-            UdpSender.Send(b, b.Length);
-            byte[] receivedResponse = UdpSender.Receive(ref remoteIPEndPoint);
-            bool result = (bool)ByteArrayToObject(receivedResponse);
+            Console.WriteLine("Mandato password : [" + this.password + "]");
+            
+            //UdpSender.Send(b, b.Length);
+            server.Client.Send(b, b.Length, 0);
+
+            //byte[] receivedResponse = UdpSender.Receive(ref remoteIPEndPoint);
+            byte[] receivedResponse = new byte[ObjectToByteArray(new Boolean()).Length];
+            server.Client.Receive(receivedResponse);
+            Boolean result = (Boolean)ByteArrayToObject(receivedResponse);
             return result;
         }
 

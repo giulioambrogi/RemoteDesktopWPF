@@ -223,7 +223,7 @@ namespace HookerClient
 
             bool allConnected = true;
             foreach(ServerEntity s in this.serverManger.selectedServers){
-                if(s.server!= null && !s.server.Connected){
+                if(s.server== null ){
                     //almeno un server non è connesso 
                     allConnected = false;
                     MessageBox.Show("Non sono riuscito a connettermi a "+s.name);
