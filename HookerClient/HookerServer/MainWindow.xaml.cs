@@ -55,7 +55,7 @@ namespace HookerServer
             InitializeComponent();
             Console.WriteLine("Nome computer :" + System.Environment.MachineName);
             btnStart.IsEnabled = true;
-            btnClose.IsEnabled = false;
+            
             bindHotKeyCommands();
         }
 
@@ -104,14 +104,7 @@ namespace HookerServer
                 //RAMO DEL MOUSE 
                 //Metodo che setta la posizione del mouse
                 NativeMethods.SetCursorPos(x, y);
-                PointX.Dispatcher.Invoke(DispatcherPriority.Background, new Action(() =>
-                {
-                    PointX.Text = x.ToString();
-                }));
-                PointY.Dispatcher.Invoke(DispatcherPriority.Background, new Action(() =>
-                {
-                    PointY.Text = y.ToString();
-                }));
+                
                 //Console.WriteLine("Received: {0}", buffer);
             }
             else if (commands.ElementAt(0).ToString().Equals("K"))
@@ -130,18 +123,13 @@ namespace HookerServer
                     Console.WriteLine(commands.ElementAt(0) + " UP");
                     InputSimulator.SimulateKeyUp(vk);
                 }
-                //UPDATE MESSAGEBOX
-                lbMessages.Dispatcher.Invoke(DispatcherPriority.Background, new Action(() =>
+
+                else
                 {
-                    lbMessages.Items.Add(buffer);
-                }));
-             }
-            else
-            {
-                Console.WriteLine("MESSAGGIO NON CAPITO :[" + buffer + "]");
+                    Console.WriteLine("MESSAGGIO NON CAPITO :[" + buffer + "]");
+                }
+
             }
-
-
 
         }
 
@@ -157,7 +145,6 @@ namespace HookerServer
 
 
             this.runThread.Start();
-            btnClose.IsEnabled = true;
             btnStart.IsEnabled = false;
         }
 
@@ -190,7 +177,6 @@ namespace HookerServer
                     byte[] passwordInBytes = new byte[128];
                     int receivedBytes = this.client.Client.Receive(passwordInBytes);
                     Console.WriteLine("Ricevuto password di " + receivedBytes + " bytes");
-                    
                     Boolean result;
                     String passwd = (String)ByteArrayToObject(passwordInBytes);
                     if (passwd.Equals(Properties.Settings.Default.Password))
@@ -279,17 +265,10 @@ namespace HookerServer
         {
             btnStart.IsEnabled = true;
             stopServer();
-            btnClose.IsEnabled = false;
         }
 
 
-        private void Button_Click_2(object sender, RoutedEventArgs e)
-        {
-            lbMessages.Dispatcher.Invoke(DispatcherPriority.Background, new Action(() =>
-            {
-                lbMessages.Items.Clear();
-            }));
-        }
+       
 
 
 
@@ -297,8 +276,8 @@ namespace HookerServer
         private void ExitButton(object sender, RoutedEventArgs e)
         {
             //TODO chiudere server da tray area
-
-            this.Close();
+            icon.Visibility = Visibility.Hidden;
+            Application.Current.Shutdown();
         }
 
         private void Window_StateChanged(object sender, EventArgs e)
@@ -536,6 +515,8 @@ namespace HookerServer
             }
             return false;
         }
+
+      
 
         /*public static void DeleteDirectory(string target_dir)
         {
