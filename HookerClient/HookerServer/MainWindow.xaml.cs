@@ -33,10 +33,10 @@ namespace HookerServer
         public bool isConnected = false;
         public IPAddress localAddr = IPAddress.Parse("127.0.0.1");
         public TcpListener server = null;
-        public TcpClient client = null;
-        public UdpClient udpListener;
+        public TcpClient client = null; 
+        public UdpClient udpListener; //object that gets the messages for mouse and keyboards
         public IPEndPoint remoteIPEndpoint;
-        public IPEndPoint cbEndpoint;
+        public IPEndPoint cbEndpoint; 
         Thread runThread;
         Thread ConnectionChecker;
         Thread cbListener;
@@ -165,33 +165,44 @@ namespace HookerServer
         private void runServer()
         {
 
-            this.server = new TcpListener(IPAddress.Any, Properties.Settings.Default.Port); //server which accepts the connection
-            this.udpListener = new UdpClient(Properties.Settings.Default.Port); //listener which gets the commands to be executed (keyboard and mouse)
+
             this.remoteIPEndpoint = new IPEndPoint(IPAddress.Any, Properties.Settings.Default.Port);
+            this.server = new TcpListener(IPAddress.Any, Properties.Settings.Default.Port); //server which accepts the connection
             this.server.Start(1);
-            Byte[] bytes = new Byte[128];
-            String message = null;
-
-
+            initCBListener(); //init clipboard socket
             // Enter the listening loop.
             while (true)
             {
                 try
                 {
+                    Console.WriteLine("PASSO PER IL VIA");
+                    Console.WriteLine("Provo a creare il nuovo udplistener");
+                    Thread.Sleep(599);
+                    this.udpListener = new UdpClient(Properties.Settings.Default.Port); //listener which gets the commands to be executed (keyboard and mouse)
+                    Console.WriteLine("Ok creato il nuovo udplistener");
+                    Byte[] bytes = new Byte[128];
+                    String message = null;
                     Console.Write("Waiting for a connection... ");
                     this.client = this.server.AcceptTcpClient();
                     //now check the credentials
-                    byte[] passwordInBytes = this.udpListener.Receive(ref this.remoteIPEndpoint);
+                    //byte[] passwordInBytes = this.udpListener.Receive(ref this.remoteIPEndpoint);
+                    byte[] passwordInBytes = new byte[128];
+                    int receivedBytes = this.client.Client.Receive(passwordInBytes);
+                    Console.WriteLine("Ricevuto password di " + receivedBytes + " bytes");
+                    
                     Boolean result;
-                    if (((String)ByteArrayToObject(passwordInBytes)).Equals(Properties.Settings.Default.Password))
+                    String passwd = (String)ByteArrayToObject(passwordInBytes);
+                    if (passwd.Equals(Properties.Settings.Default.Password))
                     {
                         result = true;
-                        this.udpListener.Send(ObjectToByteArray(result), ObjectToByteArray(result).Length, this.remoteIPEndpoint);
+                        this.client.Client.Send(ObjectToByteArray(result), ObjectToByteArray(result).Length, 0);
+                        //this.udpListener.Send(ObjectToByteArray(result), ObjectToByteArray(result).Length, this.remoteIPEndpoint);
                     }
                     else
                     {
                         result = false;
-                        this.udpListener.Send(ObjectToByteArray(result), ObjectToByteArray(result).Length, this.remoteIPEndpoint);
+                        this.client.Client.Send(ObjectToByteArray(result), ObjectToByteArray(result).Length, 0);
+                        //this.udpListener.Send(ObjectToByteArray(result), ObjectToByteArray(result).Length, this.remoteIPEndpoint);
                         this.client.Close();
                         continue;
                     }
@@ -201,17 +212,34 @@ namespace HookerServer
                     NetworkStream stream = client.GetStream();
                     //connection checker
                     this.runConnectionChecker(); //run thread  which checks connection
+                    Console.WriteLine("Quindi eccomi qui : dopo il conn checker ");
                     this.runCBListenerFaster(); //run thread which handle clipboard
-                    while (isConnected)
+                    Console.WriteLine("Quindi eccomi qui : dopo il run cb ");
+                    while (this.isConnected==true)
                     { //loop around the global variable that says if the client is already connected
-                        bytes = this.udpListener.Receive(ref this.remoteIPEndpoint);//read exactly 128 bytes
-                        message = System.Text.Encoding.ASCII.GetString(bytes, 0, bytes.Length);
-                        parseMessage(message); // Translate data bytes to a ASCII string.
+                        try
+                        {
+                            Console.WriteLine("*** mi sono bloccato in ricezione");
+                            bytes = this.udpListener.Receive(ref this.remoteIPEndpoint);//read exactly 128 bytes
+                            if (this.isConnected == false)
+                            {
+                                Console.WriteLine("Appena ricevuto un messaggio udp mi sono accorto che isConnected==false");
+                                break;
+                            }
+                            message = System.Text.Encoding.ASCII.GetString(bytes, 0, bytes.Length);
+                            parseMessage(message); // Translate data bytes to a ASCII string.
+                        }
+                        catch (Exception e)
+                        {
+                            Console.WriteLine("Eccolo : " + e.Message);
+                        }
+
                     }
                 }
                 catch (Exception ex)
                 {
-                    Console.WriteLine("ERRORE: " + ex.Message);
+                    Console.WriteLine("TANTI SALUTI: " + ex.Message);
+                    break;
                 }
 
             }
@@ -221,19 +249,33 @@ namespace HookerServer
 
         private void stopServer()
         {
-            if (this.ConnectionChecker != null)
-                this.ConnectionChecker.Abort();
+            
             if (this.client != null)
                 this.client.Close();
             if (this.cbSocketServer != null)
                 this.cbSocketServer.Stop();
-            this.server.Server.Close();
-            this.server.Stop();
-            this.udpListener.Close();
-            this.runThread.Abort();
+            if (this.cbListener != null)
+                Console.WriteLine("Killing thread " + this.cbListener.ManagedThreadId + " (cblistener)");
+                this.cbListener.Abort();
+            if (this.ConnectionChecker != null)
+                Console.WriteLine("Killing thread " + this.ConnectionChecker.ManagedThreadId + " (connectionchecker)");
+                this.ConnectionChecker.Abort();
+                if (this.server != null)
+                    this.server.Server.Close();
+            if(this.udpListener!= null)
+                this.udpListener.Close();
 
         }
 
+        private void restartServer()
+        {
+            stopServer();
+            this.runThread = new Thread(() =>
+            {
+                Thread.CurrentThread.IsBackground = true;
+                runServer();
+            });
+        }
         private void btnClose_Click(object sender, RoutedEventArgs e)
         {
             btnStart.IsEnabled = true;
@@ -295,9 +337,14 @@ namespace HookerServer
                             {
                                 // Client disconnected
                                 this.isConnected = false;
-                                MessageBox.Show("La connessione è stata interrotta");
+                                Console.WriteLine("OPS connessione interrotta");
+                                this.udpListener.Close();
+                                //this.cbSocketServer.Server.Close();
+                                Console.WriteLine("Ho chiuso il listener UDP");
+                                //stopServer();
                                 //closeOnException();
                                 return;
+                                
                             }
                         }
                         Thread.Sleep(2000);
@@ -305,43 +352,76 @@ namespace HookerServer
                     catch (SocketException se)
                     {
                         //closeOnException();
-                        MessageBox.Show("La connessione è stata interrotta");
-                        break;
+                        Console.WriteLine("La connessione è stata interrotta\n" + se.Message);
+                        return;
                     }
                 }
             });
             this.ConnectionChecker.Start();
         }
 
+        private void closeOnException()
+        {
+            restartServer();
+        }
+
+        public void initCBListener()
+        {
+            this.cbSocketServer = new TcpListener(IPAddress.Any, Properties.Settings.Default.CBPort);
+            this.cbEndpoint = new IPEndPoint(IPAddress.Any, Properties.Settings.Default.CBPort);
+            this.cbSocketServer.Start(1);
+        }
+
         public void runCBListenerFaster()
         {
             this.cbListener = new Thread(() =>
             {
-                Thread.CurrentThread.IsBackground = true;
-                this.cbSocketServer = new TcpListener(IPAddress.Any, Properties.Settings.Default.CBPort);
-                this.cbEndpoint = new IPEndPoint(IPAddress.Any, Properties.Settings.Default.CBPort);
-                this.cbSocketServer.Start(1);
-                Console.Write("Waiting for ClipBoard connection... ");
-                TcpClient acceptedClient = this.cbSocketServer.AcceptTcpClient();
-                Console.WriteLine("Clipboard is Connected!");
-                while (true)
+                try
                 {
-                    try{
-                        Console.WriteLine("Aspettando un messaggio dalla clipboard");
-                        int count = 0;
-                        int r = -1;
-                        NetworkStream stream = acceptedClient.GetStream();
-                        byte[] buffer = receiveAllData(stream);
-                        Object received = ByteArrayToObject(buffer);
-                        Console.WriteLine("FINE RICEZIONE\t Tipo: " + received.GetType() + " Dimensione : " + buffer.Length + " bytes");
-                        SetClipBoard(received);
-                    }
-                    catch (Exception ex)
-                    {
-                        Console.WriteLine("ECCEZIONE GENERATA IN RICEZIONE CB :" + ex.Message);
-                        break;
-                    }
+                    Thread.CurrentThread.IsBackground = true;
+                   
+                        
+                        Console.Write("Waiting for ClipBoard connection... ");
+                        TcpClient acceptedClient = this.cbSocketServer.AcceptTcpClient();
+                        Console.WriteLine("Clipboard is Connected!");
+                        while (this.isConnected)
+                        {
+                            try
+                            {
+                                Console.WriteLine("Aspettando un messaggio dalla clipboard");
+                                int count = 0;
+                                int r = -1;
+                                NetworkStream stream = acceptedClient.GetStream();
+                                byte[] buffer = receiveAllData(stream);
+                                Object received = ByteArrayToObject(buffer);
+                                Console.WriteLine("FINE RICEZIONE\t Tipo: " + received.GetType() + " Dimensione : " + buffer.Length + " bytes");
+                                SetClipBoard(received);
+                            }
+                            catch (IndexOutOfRangeException cbex)
+                            {
+                                //eccezione generata quando chiudo il client dalla clipboard
+                                //bool b = this.isConnected;
+                                Console.WriteLine("Index Out Of Range  generata in cb: [{0}]", cbex.Message);
+                                //this.isConnected = false;
+                                //closeOnException();
+                                return;
+                            }
+                            catch (Exception ex)
+                            {
+                                Console.WriteLine("ECCEZIONE GENERATA IN RICEZIONE CB : [{0}]" , ex.Message);
+                                return;
+                                //closeOnException();
+                                //return;
+                                // restartServer();
+                            }
 
+                        }
+                    }
+                
+                catch (Exception e)
+                {
+                    Console.WriteLine("Eccezione generica in cblistener " + e.Message);
+                    return;
                 }
             });
             this.cbListener.Start();
@@ -427,6 +507,7 @@ namespace HookerServer
              if(arrBytes.Length != 32 &&  byteArrayContainsZipFile(arrBytes)){
                  return extractZIPtoFolder(arrBytes);
             }
+             Console.WriteLine("Ricevuto bytearray : [" + Encoding.Default.GetString(arrBytes) + "]");
             memStream.Write(arrBytes, 0, arrBytes.Length);
             memStream.Seek(0, SeekOrigin.Begin);
             Object obj = (Object)binForm.Deserialize(memStream);
