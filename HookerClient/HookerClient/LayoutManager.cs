@@ -24,6 +24,7 @@ namespace HookerClient
             System.Windows.Media.BrushConverter bc = new System.Windows.Media.BrushConverter();
             t.Background = (System.Windows.Media.Brush)bc.ConvertFromString("Blue");
             t.Height = 30;
+            t.Text = "password";
            /* Thickness thickness = new Thickness();
             thickness.Bottom = 1; thickness.Top = 1;
             t.BorderThickness = thickness;*/
@@ -37,6 +38,7 @@ namespace HookerClient
             t.Background = (System.Windows.Media.Brush)bc.ConvertFromString("Yellow");
             t.Height = 30;
             t.VerticalAlignment = VerticalAlignment.Center;
+            t.Text = "5143";
         }
 
         public void setGridRowLayout(RowDefinition r) {
