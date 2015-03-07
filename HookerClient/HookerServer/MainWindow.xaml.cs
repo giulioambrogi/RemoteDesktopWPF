@@ -165,7 +165,6 @@ namespace HookerServer
         private void runServer()
         {
 
-
             this.remoteIPEndpoint = new IPEndPoint(IPAddress.Any, Properties.Settings.Default.Port);
             this.server = new TcpListener(IPAddress.Any, Properties.Settings.Default.Port); //server which accepts the connection
             this.server.Start(1);
@@ -178,6 +177,8 @@ namespace HookerServer
                     Console.WriteLine("PASSO PER IL VIA");
                     Console.WriteLine("Provo a creare il nuovo udplistener");
                     Thread.Sleep(599);
+                    if (this.udpListener != null)
+                        this.udpListener.Close();
                     this.udpListener = new UdpClient(Properties.Settings.Default.Port); //listener which gets the commands to be executed (keyboard and mouse)
                     Console.WriteLine("Ok creato il nuovo udplistener");
                     Byte[] bytes = new Byte[128];
@@ -203,7 +204,7 @@ namespace HookerServer
                         result = false;
                         this.client.Client.Send(ObjectToByteArray(result), ObjectToByteArray(result).Length, 0);
                         //this.udpListener.Send(ObjectToByteArray(result), ObjectToByteArray(result).Length, this.remoteIPEndpoint);
-                        this.client.Close();
+                        
                         continue;
                     }
 
@@ -254,14 +255,12 @@ namespace HookerServer
                 this.client.Close();
             if (this.cbSocketServer != null)
                 this.cbSocketServer.Stop();
-            if (this.cbListener != null)
-                Console.WriteLine("Killing thread " + this.cbListener.ManagedThreadId + " (cblistener)");
+            if( this.cbListener!= null && this.cbListener.IsAlive)
                 this.cbListener.Abort();
-            if (this.ConnectionChecker != null)
-                Console.WriteLine("Killing thread " + this.ConnectionChecker.ManagedThreadId + " (connectionchecker)");
+            if (this.ConnectionChecker != null && this.ConnectionChecker.IsAlive)
                 this.ConnectionChecker.Abort();
-                if (this.server != null)
-                    this.server.Server.Close();
+            if (this.server != null)
+                this.server.Server.Close();
             if(this.udpListener!= null)
                 this.udpListener.Close();
 
@@ -466,7 +465,6 @@ namespace HookerServer
                 Console.WriteLine(ex.Message);
             }
         }
-
 
         #region CredentialMgmt
 
