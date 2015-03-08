@@ -58,6 +58,7 @@
     </ApplicationDefinition>
     <Compile Include="ClipboardMgmt.cs" />
     <Compile Include="LayoutManager.cs" />
+    <Compile Include="MyListViewItem.cs" />
     <Compile Include="ServerEntity.cs" />
     <Compile Include="ServerManager.cs" />
     <Compile Include="Win32.cs" />
@@ -103,6 +104,20 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="App.config" />
+  </ItemGroup>
+  <ItemGroup>
+    <Resource Include="icons\remote.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <Resource Include="icons\remote_disabled.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <Resource Include="icons\exit.png" />
+    <Resource Include="icons\exit_disabled.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <Resource Include="icons\refresh.png" />
+    <Resource Include="icons\refresh_disabled.png" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 

@@ -183,14 +183,13 @@ namespace HookerClient
 
         public void sendClipBoardFaster(TcpClient client)
         {
-            //client = new TcpClient(this.selectedServers.ElementAt(this.serverPointer).name, 9898);
+
+                byte[] content = new byte[0]; //byte array that will contain the clipboard
+                byte[] sizeInBytes = new byte[4]; //byte array that will contain the size
+
                 if (Clipboard.ContainsText())
                 {
-                   byte[] contentBytes = ObjectToByteArray(Clipboard.GetText());
-                   NetworkStream ns = client.GetStream();
-                   
-                   ns.Write(contentBytes, 0, contentBytes.Length);
-                   ns.Flush();
+                   content= ObjectToByteArray(Clipboard.GetText());
                 }
                 else if (Clipboard.ContainsFileDropList())
                 {
@@ -217,38 +216,33 @@ namespace HookerClient
                             Console.WriteLine("Can't send more than 200 Mega Bytes");
                             return;
                     }
-                    byte[] zipFileInByte = File.ReadAllBytes(ZIP_FILE_NAME_AND_PATH);
-                  
-                    NetworkStream ns = client.GetStream();
-                    //send size of file
-                    Int32 dim = zipFileInByte.Length;
-                   // byte[] dimByteArray = ObjectToByteArray(dim);
-                    byte[] dimByteArray =  BitConverter.GetBytes(dim);
-                    ns.Write(dimByteArray, 0, 4);
-                    //send file
-                    int count = zipFileInByte.Length;
-                    Console.WriteLine("Dim del byte array " + zipFileInByte.Length  );
-                    ns.Write(zipFileInByte, 0, zipFileInByte.Length);
+                    content = File.ReadAllBytes(ZIP_FILE_NAME_AND_PATH); 
                 }
                 else if (Clipboard.ContainsImage())
                 {
-                    byte[] imageInBytes = imageToByteArray(Clipboard.GetImage());
-                    NetworkStream ns = client.GetStream();
-                    //mando il file zip
-                    ns.Write(imageInBytes, 0, imageInBytes.Length);
-
+                    //content = imageToByteArray(Clipboard.GetImage());
+                    content = bitmapSourceToByteArray(Clipboard.GetImage());
                 }
                 else if (Clipboard.ContainsAudio())
                 {
-                    byte[] audioInBytes = ObjectToByteArray(Clipboard.GetAudioStream());
-                    
-                    NetworkStream ns = client.GetStream();
-                    ns.Write(audioInBytes, 0, audioInBytes.Length);
+                    content = ObjectToByteArray(Clipboard.GetAudioStream());
                 }
                 else
                 {
                     Console.WriteLine("Nothing to send");
+                    return;
                 }
+                
+                NetworkStream ns = client.GetStream();
+                Int32 len = content.Length;
+                sizeInBytes = BitConverter.GetBytes(len); //convert size of content into byte array
+                Console.WriteLine("Mando size: " + len);
+                ns.Write(sizeInBytes, 0, 4); //write 
+                Console.WriteLine("Mando buffer...");
+                ns.Write(content, 0, content.Length);
+                ns.Flush();
+                Console.WriteLine("Mandato!");
+
         }
         // Convert an object to a byte array
         private byte[] ObjectToByteArray(Object obj)
@@ -285,6 +279,14 @@ namespace HookerClient
             return data;
         }
 
+        public byte[] bitmapSourceToByteArray(BitmapSource bms)
+        {
+             MemoryStream memStream = new MemoryStream();              
+            JpegBitmapEncoder encoder = new JpegBitmapEncoder();
+            encoder.Frames.Add(BitmapFrame.Create(bms));
+            encoder.Save(memStream);
+            return memStream.GetBuffer();
+        }
         public BitmapImage byteArrayToBitMapImage(byte[] byteArrayIn)
         {
 

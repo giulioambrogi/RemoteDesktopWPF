@@ -13,36 +13,67 @@ namespace HookerClient
     {
         public LayoutManager() {}
 
+        public void listViewItem(ListViewItem i)
+        {
+            
+        }
         public void setComputerNameLabelLayout(Label l)
         {
-            l.Height = 30;
-            l.VerticalAlignment = VerticalAlignment.Center;
             System.Windows.Media.BrushConverter bc = new System.Windows.Media.BrushConverter();
-            l.Background = (System.Windows.Media.Brush)bc.ConvertFromString("Red");
+            //t.Background = (System.Windows.Media.Brush)bc.ConvertFromString("Yellow");
+            l.Background = Brushes.Transparent;
+            l.VerticalAlignment = VerticalAlignment.Stretch;
+            l.BorderBrush = Brushes.White;
+            l.HorizontalContentAlignment = HorizontalAlignment.Center;
+            l.Foreground = Brushes.White;
+            l.HorizontalAlignment = HorizontalAlignment.Stretch;
+            l.VerticalContentAlignment = VerticalAlignment.Center;
+            l.FontSize = 30;
         }
         public void setPasswordTextBoxLayout(TextBox t){
             System.Windows.Media.BrushConverter bc = new System.Windows.Media.BrushConverter();
-            t.Background = (System.Windows.Media.Brush)bc.ConvertFromString("Blue");
+            //t.Background = (System.Windows.Media.Brush)bc.ConvertFromString("Yellow");
+            t.Background = Brushes.Transparent;
             t.Height = 30;
-            t.Text = "password";
-           /* Thickness thickness = new Thickness();
-            thickness.Bottom = 1; thickness.Top = 1;
-            t.BorderThickness = thickness;*/
-           
+            t.Width = 150;
             t.VerticalAlignment = VerticalAlignment.Center;
+            t.BorderBrush = Brushes.White;
+            t.BorderThickness = new Thickness(0, 0, 0, 3);
+            t.HorizontalAlignment = HorizontalAlignment.Center;
+            t.HorizontalContentAlignment = HorizontalAlignment.Center;
+            t.Foreground = Brushes.White;
+            t.HorizontalAlignment = HorizontalAlignment.Stretch;
+            t.Margin = new Thickness(5, 0, 5, 0);
+            t.CaretBrush = Brushes.White;
+            t.Text = "password";
+            
+            
         
         }
 
         public void setPortTextBoxLayout(TextBox t) {
             System.Windows.Media.BrushConverter bc = new System.Windows.Media.BrushConverter();
-            t.Background = (System.Windows.Media.Brush)bc.ConvertFromString("Yellow");
+            //t.Background = (System.Windows.Media.Brush)bc.ConvertFromString("Yellow");
+            t.Background = Brushes.Transparent;
             t.Height = 30;
+            t.Width = 150;
             t.VerticalAlignment = VerticalAlignment.Center;
+            t.HorizontalAlignment = HorizontalAlignment.Center;
+            t.BorderBrush = Brushes.White;
+            t.BorderThickness = new Thickness(0, 0, 0, 3);
+            t.HorizontalContentAlignment = HorizontalAlignment.Center;
+            t.Foreground = Brushes.White;
+            t.HorizontalAlignment = HorizontalAlignment.Stretch;
+            t.Margin = new Thickness(5, 0, 5, 0);
+            t.CaretBrush = Brushes.White;
             t.Text = "5143";
+            
+            
         }
 
         public void setGridRowLayout(RowDefinition r) {
-            GridLength h = new GridLength(30, GridUnitType.Star);
+            GridLength h = new GridLength(30,GridUnitType.Star);
+           
             r.Height = h;
             
 
@@ -53,6 +84,11 @@ namespace HookerClient
         public void setCheckBoxLayout(CheckBox cb)
         {
             cb.VerticalAlignment = VerticalAlignment.Center;
+            cb.HorizontalAlignment = HorizontalAlignment.Center;
+            cb.Width = 35;
+            cb.Height = 35;
+            cb.BorderBrush = Brushes.White;
+            cb.Background = Brushes.Blue; 
             
         }
 
@@ -62,6 +98,7 @@ namespace HookerClient
             
         }
 
+        
         
 
     }

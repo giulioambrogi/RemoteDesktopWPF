@@ -1,40 +1,89 @@
 ﻿<Window x:Name="wnd" x:Class="HookerClient.MainWindow"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-        Title="MainWindow" Height="708" Width="1265" WindowState="Maximized"  WindowStyle="ThreeDBorderWindow" Background="#FFA04747">
-    <Grid Margin="0,0,28,28">
+        Title="MainWindow" Height="901.5" Width="1944.5" WindowState="Maximized"  WindowStyle="ThreeDBorderWindow">
+    <Grid Margin="31,6,21,22">
         <Grid.RowDefinitions>
-            <RowDefinition/>
-            <RowDefinition Height="31*"/>
+            <RowDefinition Height="739"/>
         </Grid.RowDefinitions>
         <Grid.ColumnDefinitions>
-            <ColumnDefinition Width="0*"/>
-            <ColumnDefinition Width="0*"/>
             <ColumnDefinition Width="516*"/>
-            <ColumnDefinition/>
         </Grid.ColumnDefinitions>
-        <Label Content="Computer in Rete" Grid.Column="2" HorizontalAlignment="Left" Margin="47,28,0,0" VerticalAlignment="Top" Height="39" Width="219" FontSize="20" Grid.Row="1" Foreground="White" FontWeight="Bold"/>
-        <Button x:Name="btnRefreshServers" Content="Aggiorna Lista" Grid.Column="2" HorizontalAlignment="Left" Margin="980,38,0,0" Grid.Row="1" VerticalAlignment="Top" Width="88" Height="48" Click="btnRefreshServers_Click" RenderTransformOrigin="-0.827,0.537"/>
-        <Button x:Name="btnConnect" Content="Connect" Grid.Column="2" HorizontalAlignment="Left" Margin="981,239,0,0" Grid.Row="1" VerticalAlignment="Top" Width="213" Height="55" Click="btnConnect_Click" />
-        <Button x:Name="btnExit" Content="Esci" Grid.Column="2" HorizontalAlignment="Left" Margin="1103,38,0,0" Grid.Row="1" VerticalAlignment="Top" Width="91" Height="48" Click="btnExit_Click"/>
-        <Button x:Name="btnContinue" Content="Continue" Grid.Column="2" HorizontalAlignment="Left" Margin="981,180,0,0" Grid.Row="1" VerticalAlignment="Top" Width="213" Height="54" Click="btnContinue_Click"/>
-        <TextBox x:Name="tbStatus" Grid.ColumnSpan="3" HorizontalAlignment="Left" Height="258" Margin="980,299,0,0" Grid.Row="1" TextWrapping="Wrap" VerticalAlignment="Top" Width="210" FontSize="25" IsReadOnly="True" BorderThickness="0" FontWeight="SemiBold"/>
-        <Label x:Name="lblConnectedPC" Grid.ColumnSpan="3" Content="" HorizontalAlignment="Left" Margin="914,394,0,0" Grid.Row="1" VerticalAlignment="Top" Height="34" Width="66" FontSize="35"/>
-        <Button x:Name="btnClipboardMonitor" Grid.ColumnSpan="3" Content="cb test" HorizontalAlignment="Left" Margin="1103,94,0,0" Grid.Row="1" VerticalAlignment="Top" Width="87" Click="btnClipboardMonitor_Click" Height="29"/>
-        <Button x:Name="btnSetData" Grid.ColumnSpan="3" Content="setData" HorizontalAlignment="Left" Margin="981,91,0,0" Grid.Row="1" VerticalAlignment="Top" Width="87" Click="btnSetData_Click"/>
 
-        <Grid x:Name="grdMain" Grid.ColumnSpan="3" HorizontalAlignment="Left" Height="222" Margin="47,72,0,0" Grid.Row="1" VerticalAlignment="Top" Width="817">
-            <Grid.ColumnDefinitions>
-                <ColumnDefinition Width="288*"/>
-                <ColumnDefinition Width="203*"/>
-                <ColumnDefinition Width="177*"/>
-                <ColumnDefinition Width="92*"/>
-            </Grid.ColumnDefinitions>
-        </Grid>
+        <Button x:Name="btnRefreshServers" Content="" HorizontalAlignment="Left" Margin="1296,480,0,0" VerticalAlignment="Top" Width="250" Height="250" Click="btnRefreshServers_Click" RenderTransformOrigin="-0.827,0.537" ToolTip="Aggiorna" BorderThickness="2">
+            <Button.Background>
+                <ImageBrush ImageSource="icons/refresh.png"/>
+            </Button.Background>
+        </Button>
+        <Button Name="btnConnect"   HorizontalAlignment="Left" Margin="1296,217,0,0" VerticalAlignment="Top" Width="250" Height="250" Click="btnConnect_Click" ToolTip="Connessione" BorderThickness="2"  >
+            <Button.Background>
+                <ImageBrush ImageSource="icons/remote.png"/>
+            </Button.Background>
+        </Button>
+        <Button x:Name="btnExit" Content="" HorizontalAlignment="Left" Margin="1602,480,0,0" VerticalAlignment="Top" Width="250" Height="250" Click="btnExit_Click" ToolTip="Esci" BorderThickness="2" IsEnabledChanged="btnExit_IsEnabledChanged">
+            <Button.Background>
+                <ImageBrush ImageSource="icons/exit.png"/>
+            </Button.Background>
+        </Button>
+        <Button x:Name="btnContinue" Content="" HorizontalAlignment="Left" Margin="1602,217,0,0" VerticalAlignment="Top" Width="250" Height="250" Click="btnContinue_Click" ToolTip="Continua" BorderThickness="2" Background="{x:Null}"/>
+        <!--
+            <Grid x:Name="grdMain" HorizontalAlignment="Left" Height="409" VerticalAlignment="Top" Width="1050" ScrollViewer.CanContentScroll="True" ScrollViewer.HorizontalScrollBarVisibility="Visible" Margin="112,170,0,0">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="334*"/>
+                        <ColumnDefinition Width="263*"/>
+                        <ColumnDefinition Width="273*"/>
+                        <ColumnDefinition Width="98*"/>
+                    </Grid.ColumnDefinitions>
+                </Grid>
+        -->
+        <Button Content="Insert random pc" HorizontalAlignment="Left" Margin="1296,740,0,-60" VerticalAlignment="Top" Width="238" Height="60" Click="Button_Click"/>
+        <Button Content="test audio" HorizontalAlignment="Left" Margin="1602,740,0,-42" VerticalAlignment="Top" Width="151" Height="42" Click="Button_Click_1"/>
 
-        <Label x:Name="lblPassword" Grid.ColumnSpan="3" Content="Password" HorizontalAlignment="Left" Margin="386,28,0,0" Grid.Row="1" VerticalAlignment="Top" Width="168" FontSize="20" Foreground="White" FontWeight="Bold"/>
-        <Label x:Name="lblPort" Grid.ColumnSpan="3" Content="Porta" HorizontalAlignment="Left" Margin="602,28,0,0" Grid.Row="1" VerticalAlignment="Top" Width="172" Height="34" FontSize="20" Foreground="White" FontWeight="Bold"/>
-        <Button x:Name="btnTemporaneo" Grid.ColumnSpan="3" Content="sendClipboardTester" HorizontalAlignment="Left" Margin="980,128,0,0" Grid.Row="1" VerticalAlignment="Top" Width="163" Height="47" Click="btnTemporaneo_Click"/>
+        <ListView x:Name="lvComputers" HorizontalAlignment="Left" Height="583" Margin="33,217,0,-60" VerticalAlignment="Top" Width="1234" Background="{x:Null}" BorderBrush="White" BorderThickness="0" HorizontalContentAlignment="Center">
+            <ListView.View>
+                <GridView>
+                    <GridViewColumn Header="Computer" Width="500" >
+                        <GridViewColumn.CellTemplate>
+                            <DataTemplate>
+                                <ContentControl Content="{Binding PCName}"/>
+                            </DataTemplate>
+                        </GridViewColumn.CellTemplate>
+                    </GridViewColumn>
+                    <GridViewColumn Header="Password" Width="250">
+                        <GridViewColumn.CellTemplate>
+                            <DataTemplate>
+                                <ContentControl Content="{Binding PasswordTextBox}"/>
+                            </DataTemplate>
+                        </GridViewColumn.CellTemplate>
+                    </GridViewColumn>
+                    <GridViewColumn Header="Porta" Width="150">
+                        <GridViewColumn.CellTemplate>
+                            <DataTemplate>
+                                <ContentControl Content="{Binding PortTextBox}"/>
+                            </DataTemplate>
+                        </GridViewColumn.CellTemplate>
+                    </GridViewColumn>
+                    <GridViewColumn Header="Seleziona" Width="150">
+                        <GridViewColumn.CellTemplate>
+                            <DataTemplate>
+                                <ContentControl Content="{Binding SelectionCheckBox}"/>
+                            </DataTemplate>
+                        </GridViewColumn.CellTemplate>
+                    </GridViewColumn>
+
+                </GridView>
+            </ListView.View>
+
+        </ListView>
+        <Label Content="4.5 Remote Desktop Manager" HorizontalAlignment="Left" Margin="34,35,0,0" VerticalAlignment="Top" Height="161" Width="1819" Foreground="White" FontSize="100"/>
 
     </Grid>
+
+   
+    <Window.Background>
+        <LinearGradientBrush EndPoint="0.5,1" StartPoint="0.5,0">
+            <GradientStop Color="#FFDC1717" Offset="0"/>
+            <GradientStop Color="#FFF90D0D" Offset="1"/>
+        </LinearGradientBrush>
+    </Window.Background>
 </Window>

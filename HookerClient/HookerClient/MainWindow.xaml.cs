@@ -31,7 +31,6 @@ namespace HookerClient
         RamGecTools.KeyboardHook keyboardHook = new RamGecTools.KeyboardHook();
         public Thread ConnectionChecker;
         private ServerManager serverManger;
-        private ClipboardMgmt cbmgmt;
         private LayoutManager layout;
         public MainWindow()
         {
@@ -39,7 +38,6 @@ namespace HookerClient
             InitializeComponent();
             //TODO eliminare definitivamente le checkbox relative a mouse e tastiera
             this.serverManger = new ServerManager();
-            this.cbmgmt = new ClipboardMgmt();
             this.layout = new LayoutManager();
             btnContinue.IsEnabled = false; //deve per forza essere inattivo all'inizio
             btnConnect.IsEnabled = false;
@@ -83,51 +81,36 @@ namespace HookerClient
             this.serverManger.availableServers.Add(se);
 
            
-            this.grdMain.Dispatcher.Invoke(DispatcherPriority.Background, new Action(() =>
+            this.lvComputers.Dispatcher.Invoke(DispatcherPriority.Background, new Action(() =>
             {
-                grdMain.RowDefinitions.Add(new RowDefinition());
+                
+
                 Label l = new Label { Content = computerName };
                 layout.setComputerNameLabelLayout(l);
-                l.SetValue(Grid.RowProperty, grdMain.RowDefinitions.Count-1);
-                l.SetValue(Grid.ColumnProperty, 0);
+                
                 //create textbox for password
                 TextBox tbPwd = new TextBox() { Name = "k" + index }; //t for the passwords
                 tbPwd.TextChanged += tbPassword_Changed;
                 layout.setPasswordTextBoxLayout(tbPwd);
-                tbPwd.SetValue(Grid.RowProperty, grdMain.RowDefinitions.Count-1);
-                tbPwd.SetValue(Grid.ColumnProperty, 1);
+
                 //create port field
                 TextBox tbPort = new TextBox() { Name = "p" + index }; //p for the ports
                 tbPort.TextChanged += tbPort_Changed;
                 layout.setPortTextBoxLayout(tbPort);
-                tbPort.SetValue(Grid.RowProperty, grdMain.RowDefinitions.Count - 1);
-                tbPort.SetValue(Grid.ColumnProperty, 2);
+
                 //create button checkin button
                 String cbname = "cb" + index;
                 CheckBox cbox = new CheckBox { Name=cbname };
                 cbox.Checked += checkbox_Checked; //ADD EVENT 
                 cbox.Unchecked += checkbox_Unchecked;
-                cbox.SetValue(Grid.RowProperty, grdMain.RowDefinitions.Count-1);
-                cbox.SetValue(Grid.ColumnProperty, 3);
                 layout.setCheckBoxLayout(cbox);
                 //add elements to the window
-                grdMain.Children.Add(l);
-                grdMain.Children.Add(tbPwd);
-                grdMain.Children.Add(tbPort);
-                grdMain.Children.Add(cbox);
-                grdMain.UpdateLayout();
+                this.lvComputers.Items.Add(new MyListViewItem(l, tbPwd, tbPort, cbox));
+
             }));
         }
 
       
-
-
-      
-
-     
-
-
-
         //TODO: passare un'oggetto al server in modo che questo possa eseguire azione
         void keyboardHook_KeyPress(int op,RamGecTools.KeyboardHook.VKeys key ){
             try
@@ -159,7 +142,6 @@ namespace HookerClient
             this.serverManger.disconnect();
             refreshGUIonClosing();
         }
-
 
         /*
          Questo metodo è stato creato per il seguente motivo: il keyboard hooker fa in modo che gli hotkeys tipo alt-tab, non vadano al sistema operativo 
@@ -219,7 +201,7 @@ namespace HookerClient
                     this.serverManger.connect();
             });
             t.Start();
-            t.Join();
+            t.Join(); //aspetto che il thread delle connesioni termini
 
             bool allConnected = true;
             foreach(ServerEntity s in this.serverManger.selectedServers){
@@ -292,19 +274,15 @@ namespace HookerClient
             btnRefreshServers.IsEnabled = false;
             btnExit.IsEnabled = false;
             //scrivo messaggio per l'utente
-            tbStatus.Dispatcher.Invoke(DispatcherPriority.Background, new Action(() =>
+            /*tbStatus.Dispatcher.Invoke(DispatcherPriority.Background, new Action(() =>
             {
                 tbStatus.Text = "Il Client è attivo, ricordati di attivare il Server sulla/e macchina/e selezionata/e!\n"
                                 + "Per mettere in pausa la connessione premi CTRL-ALT-P\n"
                                 + "Per terminare la connessione premi CTRL-ALT-E";
             }));
+            */
 
 
-
-            lblConnectedPC.Dispatcher.Invoke(DispatcherPriority.Background, new Action(() =>
-            {
-                lblConnectedPC.Content = "Sei connesso a : " + this.serverManger.selectedServers.ElementAt(this.serverManger.serverPointer).name;
-            }));
 
 
         }
@@ -318,14 +296,7 @@ namespace HookerClient
             new Action(() => { btnContinue.IsEnabled = false; }));
             btnExit.Dispatcher.Invoke(DispatcherPriority.Background,
            new Action(() => { btnExit.IsEnabled = true; }));
-            tbStatus.Dispatcher.Invoke(DispatcherPriority.Background, new Action(() =>
-            {
-                tbStatus.Text = "Seleziona uno o più server dalla lista e connettiti!";
-            }));
-            lblConnectedPC.Dispatcher.Invoke(DispatcherPriority.Background, new Action(() =>
-            {
-                lblConnectedPC.Content = "";
-            }));
+           
         }
         private void refreshGUIOnPause()
         {
@@ -333,22 +304,14 @@ namespace HookerClient
             btnRefreshServers.IsEnabled = false;
             btnConnect.IsEnabled = false;
             btnExit.IsEnabled = true;
-            tbStatus.Dispatcher.Invoke(DispatcherPriority.Background, new Action(() =>
-            {
-                tbStatus.Text = "La comunicazione è in PAUSA, premi CONTINUA per riattivarla!";
-            }));
+           
         }
 
         private void refreshGUIOnContinue()
         {
             btnContinue.IsEnabled = false;
             btnExit.IsEnabled = false;
-            tbStatus.Dispatcher.Invoke(DispatcherPriority.Background, new Action(() =>
-            {
-                tbStatus.Text = "Il Client è attivo, ricordati di attivare il Server sulla/e macchina/e selezionata/e!\n"
-                               + "Per mettere in pausa la connessione premi CTRL-ALT-P\n"
-                               + "Per terminare la connessione premi CTRL-ALT-E";
-            }));
+            
         }
         #endregion
 
@@ -368,14 +331,6 @@ namespace HookerClient
             btnConnect.IsEnabled = true;
             btnContinue.IsEnabled = false;
             btnExit.IsEnabled = true;
-            tbStatus.Dispatcher.Invoke(DispatcherPriority.Background, new Action(() =>
-            {
-                tbStatus.Text = "Seleziona uno o più server dalla lista e connettiti!";
-            }));
-            lblConnectedPC.Dispatcher.Invoke(DispatcherPriority.Background, new Action(() =>
-            {
-                lblConnectedPC.Content = "";
-            }));
         }
 
         private void pauseCommunication(object sender , ExecutedRoutedEventArgs e)
@@ -395,20 +350,13 @@ namespace HookerClient
             InstallMouseAndKeyboard();
             //bindHotkeyCommands();
             btnContinue.IsEnabled = false;
-            tbStatus.Dispatcher.Invoke(DispatcherPriority.Background, new Action(() =>
-            {
-                tbStatus.Text = "Il Client è attivo, ricordati di attivare il Server sulla/e macchina/e selezionata/e!\n"
-                               + "Per mettere in pausa la connessione premi CTRL-ALT-P\n"
-                               + "Per terminare la connessione premi CTRL-ALT-E";
-            }));
         }
         
         #endregion
         private void btnRefreshServers_Click(object sender, RoutedEventArgs e)
         {
             //TODO: CANCELLARE LA GRID
-            grdMain.Children.Clear();
-            grdMain.RowDefinitions.Clear();
+            lvComputers.Items.Clear();
             getAvailableServers();
         }
 
@@ -460,10 +408,7 @@ namespace HookerClient
             //chiamo il metodo che realmente switcha il puntatore al sender udp 
             this.serverManger.nextSelectedServers();
             //aggiorno la label in base ai risultati effettivi dell'operazione
-            lblConnectedPC.Dispatcher.Invoke(DispatcherPriority.Background, new Action(() =>
-            {
-                lblConnectedPC.Content = this.serverManger.selectedServers.ElementAt(this.serverManger.serverPointer).name;
-            }));
+         
         }
 
         private void unbindHotkeyCommands()
@@ -483,7 +428,7 @@ namespace HookerClient
 
         private void btnClipboardMonitor_Click(object sender, RoutedEventArgs e)
         {
-            this.serverManger.testSendClipboard();
+            this.serverManger.sendClipBoardFaster(null);
         }
 
         public void sendClipboard(object sender, ExecutedRoutedEventArgs e)
@@ -552,7 +497,7 @@ namespace HookerClient
         }
         private void tryDisableConnectButton()
         {
-            foreach (CheckBox tb in FindVisualChildren<CheckBox>(grdMain))
+            foreach (CheckBox tb in FindVisualChildren<CheckBox>(lvComputers))
             {
                 if (tb.IsChecked==true)
                 {
@@ -583,11 +528,79 @@ namespace HookerClient
         }
         #endregion
 
+        #region temporaryMethods
         private void btnTemporaneo_Click(object sender, RoutedEventArgs e)
         {
             this.serverManger.sendClipBoardFaster(new TcpClient());
         }
+        public void addRandomPcToList()
+        {
+                    
+                    for(int i = 0 ; i< 10; i++){
+                        int index = lvComputers.Items.Count + 1;
+                        Label l = new Label { Content = "prova" };
+                        layout.setComputerNameLabelLayout(l);
 
+                        //create textbox for password
+                        TextBox tbPwd = new TextBox() { Name = "k" + index }; //t for the passwords
+                        layout.setPasswordTextBoxLayout(tbPwd);
+
+                        //create port field
+                        TextBox tbPort = new TextBox() { Name = "p" + index }; //p for the ports
+                        layout.setPortTextBoxLayout(tbPort);
+
+                        //create button checkin button
+                        String cbname = "cb" + index;
+                        CheckBox cbox = new CheckBox { Name = cbname };
+                        layout.setCheckBoxLayout(cbox);
+                        //add elements to the window
+                        this.lvComputers.Items.Add(new MyListViewItem(l, tbPwd, tbPort, cbox));
+                    }
+                   
+            
+        }
+
+        private void Button_Click(object sender, RoutedEventArgs e)
+        {
+            addRandomPcToList();
+        }
+        #endregion
+
+        private void Button_Click_1(object sender, RoutedEventArgs e)
+        {
+            this.serverManger.sendClipBoardFaster(null);
+        }
+
+        private void btnConnect_IsEnabledChanged(object sender, DependencyPropertyChangedEventArgs e)
+        {
+            /*
+            Button b = (Button)sender;
+            if (b.IsEnabled == false)
+            {
+                b.OverridesDefaultStyle = true;
+                b.Background = new ImageBrush(new BitmapImage(new Uri(BaseUriHelper.GetBaseUri(this), @"./icons/remote_disabled.png")));
+            }
+            else
+            {
+                b.Background = new ImageBrush(new BitmapImage(new Uri(BaseUriHelper.GetBaseUri(this), @"./icons/remote.png")));
+            }
+            */
+        }
+
+        private void btnExit_IsEnabledChanged(object sender, DependencyPropertyChangedEventArgs e)
+        {
+            /*Button b = (Button)sender;
+            if (b.IsEnabled == false)
+            {
+                b.OverridesDefaultStyle = true;
+                b.Background = new ImageBrush(new BitmapImage(new Uri(BaseUriHelper.GetBaseUri(this), @"./icons/exit_disabled.png")));
+            }
+            else
+            {
+                b.Background = new ImageBrush(new BitmapImage(new Uri(BaseUriHelper.GetBaseUri(this), @"./icons/exit.png")));
+            }
+             */
+        }
     }
 
    
