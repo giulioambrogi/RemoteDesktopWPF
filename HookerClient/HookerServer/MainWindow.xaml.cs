@@ -55,7 +55,7 @@ namespace HookerServer
             InitializeComponent();
             Console.WriteLine("Nome computer :" + System.Environment.MachineName);
             btnStart.IsEnabled = true;
-            btnClose.IsEnabled = false;
+            
             bindHotKeyCommands();
         }
 
@@ -104,14 +104,7 @@ namespace HookerServer
                 //RAMO DEL MOUSE 
                 //Metodo che setta la posizione del mouse
                 NativeMethods.SetCursorPos(x, y);
-                PointX.Dispatcher.Invoke(DispatcherPriority.Background, new Action(() =>
-                {
-                    PointX.Text = x.ToString();
-                }));
-                PointY.Dispatcher.Invoke(DispatcherPriority.Background, new Action(() =>
-                {
-                    PointY.Text = y.ToString();
-                }));
+                
                 //Console.WriteLine("Received: {0}", buffer);
             }
             else if (commands.ElementAt(0).ToString().Equals("K"))
@@ -130,18 +123,13 @@ namespace HookerServer
                     Console.WriteLine(commands.ElementAt(0) + " UP");
                     InputSimulator.SimulateKeyUp(vk);
                 }
-                //UPDATE MESSAGEBOX
-                lbMessages.Dispatcher.Invoke(DispatcherPriority.Background, new Action(() =>
+
+                else
                 {
-                    lbMessages.Items.Add(buffer);
-                }));
-             }
-            else
-            {
-                Console.WriteLine("MESSAGGIO NON CAPITO :[" + buffer + "]");
+                    Console.WriteLine("MESSAGGIO NON CAPITO :[" + buffer + "]");
+                }
+
             }
-
-
 
         }
 
@@ -157,14 +145,12 @@ namespace HookerServer
 
 
             this.runThread.Start();
-            btnClose.IsEnabled = true;
             btnStart.IsEnabled = false;
         }
 
 
         private void runServer()
         {
-
 
             this.remoteIPEndpoint = new IPEndPoint(IPAddress.Any, Properties.Settings.Default.Port);
             this.server = new TcpListener(IPAddress.Any, Properties.Settings.Default.Port); //server which accepts the connection
@@ -178,6 +164,8 @@ namespace HookerServer
                     Console.WriteLine("PASSO PER IL VIA");
                     Console.WriteLine("Provo a creare il nuovo udplistener");
                     Thread.Sleep(599);
+                    if (this.udpListener != null)
+                        this.udpListener.Close();
                     this.udpListener = new UdpClient(Properties.Settings.Default.Port); //listener which gets the commands to be executed (keyboard and mouse)
                     Console.WriteLine("Ok creato il nuovo udplistener");
                     Byte[] bytes = new Byte[128];
@@ -189,7 +177,6 @@ namespace HookerServer
                     byte[] passwordInBytes = new byte[128];
                     int receivedBytes = this.client.Client.Receive(passwordInBytes);
                     Console.WriteLine("Ricevuto password di " + receivedBytes + " bytes");
-                    
                     Boolean result;
                     String passwd = (String)ByteArrayToObject(passwordInBytes);
                     if (passwd.Equals(Properties.Settings.Default.Password))
@@ -203,7 +190,7 @@ namespace HookerServer
                         result = false;
                         this.client.Client.Send(ObjectToByteArray(result), ObjectToByteArray(result).Length, 0);
                         //this.udpListener.Send(ObjectToByteArray(result), ObjectToByteArray(result).Length, this.remoteIPEndpoint);
-                        this.client.Close();
+                        
                         continue;
                     }
 
@@ -254,14 +241,12 @@ namespace HookerServer
                 this.client.Close();
             if (this.cbSocketServer != null)
                 this.cbSocketServer.Stop();
-            if (this.cbListener != null)
-                Console.WriteLine("Killing thread " + this.cbListener.ManagedThreadId + " (cblistener)");
+            if( this.cbListener!= null && this.cbListener.IsAlive)
                 this.cbListener.Abort();
-            if (this.ConnectionChecker != null)
-                Console.WriteLine("Killing thread " + this.ConnectionChecker.ManagedThreadId + " (connectionchecker)");
+            if (this.ConnectionChecker != null && this.ConnectionChecker.IsAlive)
                 this.ConnectionChecker.Abort();
-                if (this.server != null)
-                    this.server.Server.Close();
+            if (this.server != null)
+                this.server.Server.Close();
             if(this.udpListener!= null)
                 this.udpListener.Close();
 
@@ -280,17 +265,10 @@ namespace HookerServer
         {
             btnStart.IsEnabled = true;
             stopServer();
-            btnClose.IsEnabled = false;
         }
 
 
-        private void Button_Click_2(object sender, RoutedEventArgs e)
-        {
-            lbMessages.Dispatcher.Invoke(DispatcherPriority.Background, new Action(() =>
-            {
-                lbMessages.Items.Clear();
-            }));
-        }
+       
 
 
 
@@ -298,8 +276,8 @@ namespace HookerServer
         private void ExitButton(object sender, RoutedEventArgs e)
         {
             //TODO chiudere server da tray area
-
-            this.Close();
+            icon.Visibility = Visibility.Hidden;
+            Application.Current.Shutdown();
         }
 
         private void Window_StateChanged(object sender, EventArgs e)
@@ -467,7 +445,6 @@ namespace HookerServer
             }
         }
 
-
         #region CredentialMgmt
 
         private bool checkPassword(String password)
@@ -538,6 +515,8 @@ namespace HookerServer
             }
             return false;
         }
+
+      
 
         /*public static void DeleteDirectory(string target_dir)
         {
