@@ -36,3 +36,5 @@ C:\Users\GIULIO\Documents\Git\Progetto PDS\test\HookerClient\HookerClient\obj\De
 C:\Users\GIULIO\Documents\Git\Progetto PDS\test\HookerClient\HookerClient\obj\Debug\HookerClient.exe
 C:\Users\GIULIO\Documents\Git\Progetto PDS\test\HookerClient\HookerClient\obj\Debug\HookerClient.pdb
 C:\Users\GIULIO\Documents\Git\Progetto PDS\test\HookerClient\HookerClient\obj\Debug\HookerClient.csprojResolveAssemblyReference.cache
+C:\Users\GIULIO\Documents\Git\Progetto PDS\test\HookerClient\HookerClient\obj\Debug\Window1.baml
+C:\Users\GIULIO\Documents\Git\Progetto PDS\test\HookerClient\HookerClient\obj\Debug\Window1.g.cs

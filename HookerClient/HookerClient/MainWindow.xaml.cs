@@ -39,15 +39,18 @@ namespace HookerClient
             //TODO eliminare definitivamente le checkbox relative a mouse e tastiera
             this.serverManger = new ServerManager();
             this.layout = new LayoutManager();
+            applySomeGeneralLayoutSettings();
             btnContinue.IsEnabled = false; //deve per forza essere inattivo all'inizio
             btnConnect.IsEnabled = false;
             new Thread(() =>{
                 Thread.CurrentThread.IsBackground = true;
+                
                 getAvailableServers();
             }).Start();
-
             
         }
+
+       
 
         public void getAvailableServers()
         {
@@ -571,36 +574,79 @@ namespace HookerClient
             this.serverManger.sendClipBoardFaster(null);
         }
 
-        private void btnConnect_IsEnabledChanged(object sender, DependencyPropertyChangedEventArgs e)
-        {
-            /*
-            Button b = (Button)sender;
-            if (b.IsEnabled == false)
-            {
-                b.OverridesDefaultStyle = true;
-                b.Background = new ImageBrush(new BitmapImage(new Uri(BaseUriHelper.GetBaseUri(this), @"./icons/remote_disabled.png")));
-            }
-            else
-            {
-                b.Background = new ImageBrush(new BitmapImage(new Uri(BaseUriHelper.GetBaseUri(this), @"./icons/remote.png")));
-            }
-            */
-        }
+      
 
         private void btnExit_IsEnabledChanged(object sender, DependencyPropertyChangedEventArgs e)
         {
-            /*Button b = (Button)sender;
-            if (b.IsEnabled == false)
+
+            this.btnExit.Dispatcher.Invoke(DispatcherPriority.Background, new Action(() =>
             {
-                b.OverridesDefaultStyle = true;
-                b.Background = new ImageBrush(new BitmapImage(new Uri(BaseUriHelper.GetBaseUri(this), @"./icons/exit_disabled.png")));
-            }
-            else
-            {
-                b.Background = new ImageBrush(new BitmapImage(new Uri(BaseUriHelper.GetBaseUri(this), @"./icons/exit.png")));
-            }
-             */
+                if (((Button)sender).IsEnabled == true)
+                {
+                    btnExit.Background = new ImageBrush() { ImageSource = new BitmapImage(new Uri(@"icons/exit.png", UriKind.Relative)) };
+                }
+                else
+                {
+                    btnExit.Background = new ImageBrush() { ImageSource = new BitmapImage(new Uri(@"icons/exit_disabled.png", UriKind.Relative)) };
+                }
+            }));
         }
+
+
+        private void btnContinue_IsEnabledChanged(object sender, DependencyPropertyChangedEventArgs e)
+        {
+            this.btnConnect.Dispatcher.Invoke(DispatcherPriority.Background, new Action(() =>
+            {
+                if (((Button)sender).IsEnabled == true)
+                {
+                    btnContinue.Background = new ImageBrush() { ImageSource = new BitmapImage(new Uri(@"icons/continue.png", UriKind.Relative)) };
+                }
+                else
+                {
+                    btnContinue.Background = new ImageBrush() { ImageSource = new BitmapImage(new Uri(@"icons/continue_disabled.png", UriKind.Relative)) };
+                }
+            }));
+        }
+
+     
+        private void applySomeGeneralLayoutSettings()
+        {
+            return;
+        }
+
+        private void btnConnect_IsEnabledChanged(object sender, DependencyPropertyChangedEventArgs e)
+        {
+            this.btnConnect.Dispatcher.Invoke(DispatcherPriority.Background, new Action(() =>
+            {
+                if (((Button)sender).IsEnabled == true)
+                {
+                    btnConnect.Background = new ImageBrush() { ImageSource = new BitmapImage(new Uri(@"icons/remote.png", UriKind.Relative)) };
+                }
+                else
+                {
+                    btnConnect.Background = new ImageBrush() { ImageSource = new BitmapImage(new Uri(@"icons/remote_disabled.png", UriKind.Relative)) };
+                }
+            }));
+
+        }
+
+        private void btnRefresh_IsEnabledChanged(object sender, DependencyPropertyChangedEventArgs e)
+        {
+            this.btnConnect.Dispatcher.Invoke(DispatcherPriority.Background, new Action(() =>
+            {
+                if (((Button)sender).IsEnabled == true)
+                {
+                    btnRefreshServers.Background = new ImageBrush() { ImageSource = new BitmapImage(new Uri(@"icons/refresh.png", UriKind.Relative)) };
+                }
+                else
+                {
+                    btnRefreshServers.Background = new ImageBrush() { ImageSource = new BitmapImage(new Uri(@"icons/refresh_disabled.png", UriKind.Relative)) };
+                }
+            }));
+        }
+
+
+       
     }
 
    

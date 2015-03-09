@@ -71,16 +71,6 @@ namespace HookerClient
             
         }
 
-        public void setGridRowLayout(RowDefinition r) {
-            GridLength h = new GridLength(30,GridUnitType.Star);
-           
-            r.Height = h;
-            
-
-
-
-        }
-
         public void setCheckBoxLayout(CheckBox cb)
         {
             cb.VerticalAlignment = VerticalAlignment.Center;
