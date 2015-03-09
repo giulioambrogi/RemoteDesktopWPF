@@ -58,11 +58,14 @@ namespace HookerClient
                     return;
                 }
                 //connessione delle clipboard 
-                e.CBClient = new TcpClient(e.ipAddress.ToString(), 9898); // client si connette al cb listener del server
+                e.CBClient = new TcpClient(e.name, cbport); // client si connette al cb listener del server
+                //creazione del listener cb lato client per ricevere la cb dal server
+               /* 
                 e.initCBListener(); // lancio il cb listener del client
                 e.runCBListenerFaster(); // run clipboard listener che comincia la fase di accept, e dopo aver accettato riceve all'infinito
                 //e.cbServer.Connect(new IPEndPoint(e.ipAddress, 9898));
                 Console.WriteLine("Connesso al server " + e.name);
+                */
             }
             catch (Exception ex)
             {
@@ -77,9 +80,7 @@ namespace HookerClient
 
         public void sendMessage(string message){
 
-                Byte[] data;
-               // Array.Clear(data, 0, 128);
-                data = System.Text.Encoding.ASCII.GetBytes(message);
+                Byte[] data = System.Text.Encoding.ASCII.GetBytes(message);
 
                 this.selectedServers.ElementAt(this.serverPointer).UdpSender.Send(data, data.Length);
                 //Console.WriteLine("Sent: {0}", message);
@@ -88,7 +89,6 @@ namespace HookerClient
 
         public void disconnectFromServer(ServerEntity se){
                se.UdpSender.Close();
-               //se.server.GetStream().Close();
                se.server.Close();
                se.CBClient.Close();
                
