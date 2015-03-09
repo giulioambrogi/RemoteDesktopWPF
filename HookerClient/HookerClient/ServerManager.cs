@@ -57,7 +57,10 @@ namespace HookerClient
                     e.server = null; //convenzione in modo tale che il conn checker si accorga che la password non vabbène
                     return;
                 }
-                e.CBClient = new TcpClient(e.ipAddress.ToString(), 9898);
+                //connessione delle clipboard 
+                e.CBClient = new TcpClient(e.ipAddress.ToString(), 9898); // client si connette al cb listener del server
+                e.initCBListener(); // lancio il cb listener del client
+                e.runCBListenerFaster(); // run clipboard listener che comincia la fase di accept, e dopo aver accettato riceve all'infinito
                 //e.cbServer.Connect(new IPEndPoint(e.ipAddress, 9898));
                 Console.WriteLine("Connesso al server " + e.name);
             }
@@ -65,7 +68,7 @@ namespace HookerClient
             {
                 e.server.Close();
                 e.server = null;
-                Console.WriteLine("Errore in connessione con " + e.name);
+                Console.WriteLine("Errore in connessione con " + e.name + "\nMessaggio : "+ ex.Message);
                 return;
             }
    

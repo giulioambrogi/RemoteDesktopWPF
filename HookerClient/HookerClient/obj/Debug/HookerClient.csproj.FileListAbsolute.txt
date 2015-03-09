@@ -39,3 +39,19 @@ C:\Users\GIULIO\Documents\Git\Progetto PDS\test\HookerClient\HookerClient\obj\De
 C:\Users\GIULIO\Documents\Git\Progetto PDS\test\HookerClient\HookerClient\obj\Debug\Window1.baml
 C:\Users\GIULIO\Documents\Git\Progetto PDS\test\HookerClient\HookerClient\obj\Debug\Window1.g.cs
 C:\Users\GIULIO\Documents\Git\Progetto PDS\test\HookerClient\HookerClient\obj\Debug\App.baml
+C:\Users\s204076.LABINF-NG\Desktop\HookerClient\HookerClient\bin\Debug\HookerClient.exe.config
+C:\Users\s204076.LABINF-NG\Desktop\HookerClient\HookerClient\obj\Debug\HookerClient.exe
+C:\Users\s204076.LABINF-NG\Desktop\HookerClient\HookerClient\obj\Debug\HookerClient.pdb
+C:\Users\s204076.LABINF-NG\Desktop\HookerClient\HookerClient\bin\Debug\HookerClient.exe
+C:\Users\s204076.LABINF-NG\Desktop\HookerClient\HookerClient\bin\Debug\HookerClient.pdb
+C:\Users\s204076.LABINF-NG\Desktop\HookerClient\HookerClient\obj\Debug\HookerClient.csprojResolveAssemblyReference.cache
+C:\Users\s204076.LABINF-NG\Desktop\HookerClient\HookerClient\obj\Debug\MainWindow.baml
+C:\Users\s204076.LABINF-NG\Desktop\HookerClient\HookerClient\obj\Debug\Window1.baml
+C:\Users\s204076.LABINF-NG\Desktop\HookerClient\HookerClient\obj\Debug\App.baml
+C:\Users\s204076.LABINF-NG\Desktop\HookerClient\HookerClient\obj\Debug\MainWindow.g.cs
+C:\Users\s204076.LABINF-NG\Desktop\HookerClient\HookerClient\obj\Debug\Window1.g.cs
+C:\Users\s204076.LABINF-NG\Desktop\HookerClient\HookerClient\obj\Debug\App.g.cs
+C:\Users\s204076.LABINF-NG\Desktop\HookerClient\HookerClient\obj\Debug\HookerClient_MarkupCompile.cache
+C:\Users\s204076.LABINF-NG\Desktop\HookerClient\HookerClient\obj\Debug\HookerClient.g.resources
+C:\Users\s204076.LABINF-NG\Desktop\HookerClient\HookerClient\obj\Debug\HookerClient.Properties.Resources.resources
+C:\Users\s204076.LABINF-NG\Desktop\HookerClient\HookerClient\obj\Debug\HookerClient.csproj.GenerateResource.Cache

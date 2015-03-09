@@ -44,7 +44,7 @@ namespace HookerServer
         String temptext;
         public string ZIP_FILE_PATH = @"./cb/cbfiles.zip";
         public string ZIP_EXTRACTED_FOLDER = @"./cb/cbfiles/";
-
+        TcpClient clientCB;
         Window w = new Window();
         #region Properties
         String password { get; set; }
@@ -56,16 +56,24 @@ namespace HookerServer
             Console.WriteLine("Nome computer :" + System.Environment.MachineName);
             btnStart.IsEnabled = true;
             
-            bindHotKeyCommands();
         }
 
         private void bindHotKeyCommands()
         {
-            /*
-            RoutedCommand recvCb = new RoutedCommand();
-            recvCb.InputGestures.Add(new KeyGesture(Key.X, ModifierKeys.Control | ModifierKeys.Alt));
-            CommandBindings.Add(new CommandBinding(recvCb,receiveClipboard));
-            */
+            //aggancio CTRL+ALT+X per inviare la mia clipboard al client
+            RoutedCommand sendClipboardcmd = new RoutedCommand();
+            sendClipboardcmd.InputGestures.Add(new KeyGesture(Key.X, ModifierKeys.Control | ModifierKeys.Alt));
+            CommandBindings.Add(new CommandBinding(sendClipboardcmd, sendClipboard));
+        }
+
+        public void sendClipboard(object sender, ExecutedRoutedEventArgs e)
+        {
+            //Piccolo stratagemma x evitare che al server arrivino solo gli eventi KEYDOWN (che causerebberro problemi)
+            //this.serverManger.sendMessage("K" + " " + (int)RamGecTools.KeyboardHook.VKeys.LCONTROL + " " + "UP");
+            //this.serverManger.sendMessage("K" + " " + (int)RamGecTools.KeyboardHook.VKeys.LMENU + " " + "UP");
+            //this.serverManger.sendMessage("K" + " " + (int)RamGecTools.KeyboardHook.VKeys.KEY_X + " " + "UP");
+            ClipboardManager cb = new ClipboardManager();
+            cb.sendClipBoardFaster(this.clientCB);
         }
         //temporaneamente disabilitato
         private void receiveClipboard(object sender, ExecutedRoutedEventArgs e)
@@ -136,16 +144,23 @@ namespace HookerServer
         private void Button_Click(object sender, RoutedEventArgs e)
         {
 
+            if (Properties.Settings.Default.Port > 65535 || Properties.Settings.Default.Port < 1500)
+            {
+                icon.ShowBalloonTip("Errore", "La porta deve essere compresa tra 1500 e 60000", new Hardcodet.Wpf.TaskbarNotification.BalloonIcon());
+                return;
+            }
+            icon.ShowBalloonTip("Messaggio", "Il server è in esecuzione..", new Hardcodet.Wpf.TaskbarNotification.BalloonIcon());
             this.runThread = new Thread(() =>
             {
                 Thread.CurrentThread.IsBackground = true;
                 runServer();
             });
-
-
-
             this.runThread.Start();
-            btnStart.IsEnabled = false;
+
+            this.Close();
+            //btnStart.IsEnabled = false;
+
+
         }
 
 
@@ -183,17 +198,16 @@ namespace HookerServer
                     {
                         result = true;
                         this.client.Client.Send(ObjectToByteArray(result), ObjectToByteArray(result).Length, 0);
-                        //this.udpListener.Send(ObjectToByteArray(result), ObjectToByteArray(result).Length, this.remoteIPEndpoint);
-                    }
-                    else
-                    {
+                    }else{
                         result = false;
                         this.client.Client.Send(ObjectToByteArray(result), ObjectToByteArray(result).Length, 0);
-                        //this.udpListener.Send(ObjectToByteArray(result), ObjectToByteArray(result).Length, this.remoteIPEndpoint);
                         
                         continue;
                     }
-
+                    //connect to client's clipboard endpoint
+                    this.clientCB = new TcpClient();
+                    this.clientCB.Connect(((IPEndPoint)this.client.Client.RemoteEndPoint).Address, 9898); //questo è il client che riceve
+                   
                     Console.WriteLine("Connected!");
                     isConnected = true; //set the variable in order to get into the next loop
                     NetworkStream stream = client.GetStream();
@@ -345,9 +359,9 @@ namespace HookerServer
 
         public void initCBListener()
         {
-            this.cbSocketServer = new TcpListener(IPAddress.Any, Properties.Settings.Default.CBPort);
-            this.cbEndpoint = new IPEndPoint(IPAddress.Any, Properties.Settings.Default.CBPort);
-            this.cbSocketServer.Start(1);
+            this.cbSocketServer = new TcpListener(IPAddress.Any, Properties.Settings.Default.CBPort); //Start the TcpListener of the clipboard
+            this.cbEndpoint = new IPEndPoint(IPAddress.Any, Properties.Settings.Default.CBPort); //Create the Ip Endpoint 
+            this.cbSocketServer.Start(1); //Start the listener
         }
 
         public void runCBListenerFaster()
@@ -514,6 +528,25 @@ namespace HookerServer
                 return true;
             }
             return false;
+        }
+
+        private void tbPassword_TextChanged(object sender, TextChangedEventArgs e)
+        {
+            Properties.Settings.Default.Password = ((TextBox)sender).Text;
+        }
+
+        private void tbPort_TextChanged(object sender, TextChangedEventArgs e)
+        {
+            String portString = ((TextBox)sender).Text;
+            try
+            {
+                Int32 port = Convert.ToInt32(portString);
+                Properties.Settings.Default.Port = port;
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine("La porta non è stata cambiata");
+            }
         }
 
       

@@ -374,6 +374,8 @@ namespace HookerClient
          * Solamente la combinazione scelta (ctrl+alt+E) serve ad interrompere la comunicazione e tornare alla finestra principale
         */
 
+
+
         private void bindHotkeyCommands()
         {
             try
