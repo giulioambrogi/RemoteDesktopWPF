@@ -55,14 +55,15 @@ namespace HookerServer
             InitializeComponent();
             Console.WriteLine("Nome computer :" + System.Environment.MachineName);
             btnStart.IsEnabled = true;
+            bindHotKeyCommands();
             
         }
 
         private void bindHotKeyCommands()
         {
-            //aggancio CTRL+ALT+X per inviare la mia clipboard al client
+            //aggancio CTRL+ALT+Z per inviare la mia clipboard al client
             RoutedCommand sendClipboardcmd = new RoutedCommand();
-            sendClipboardcmd.InputGestures.Add(new KeyGesture(Key.X, ModifierKeys.Control | ModifierKeys.Alt));
+            sendClipboardcmd.InputGestures.Add(new KeyGesture(Key.Z, ModifierKeys.Control | ModifierKeys.Alt));
             CommandBindings.Add(new CommandBinding(sendClipboardcmd, sendClipboard));
         }
 
@@ -194,7 +195,7 @@ namespace HookerServer
                     Console.WriteLine("Ricevuto password di " + receivedBytes + " bytes");
                     Boolean result;
                     String passwd = (String)ByteArrayToObject(passwordInBytes);
-                    if (passwd.Equals(Properties.Settings.Default.Password))
+                    if (passwd.Equals(Properties.Settings.Default.Password.Replace("\r\n","")))
                     {
                         result = true;
                         this.client.Client.Send(ObjectToByteArray(result), ObjectToByteArray(result).Length, 0);
@@ -205,9 +206,10 @@ namespace HookerServer
                         continue;
                     }
                     //connect to client's clipboard endpoint
+                    /*
                     this.clientCB = new TcpClient();
                     this.clientCB.Connect(((IPEndPoint)this.client.Client.RemoteEndPoint).Address, 9898); //questo è il client che riceve
-                   
+                    */
                     Console.WriteLine("Connected!");
                     isConnected = true; //set the variable in order to get into the next loop
                     NetworkStream stream = client.GetStream();
@@ -220,7 +222,7 @@ namespace HookerServer
                     { //loop around the global variable that says if the client is already connected
                         try
                         {
-                            Console.WriteLine("*** mi sono bloccato in ricezione");
+                            //Console.WriteLine("*** mi sono bloccato in ricezione");
                             bytes = this.udpListener.Receive(ref this.remoteIPEndpoint);//read exactly 128 bytes
                             if (this.isConnected == false)
                             {
@@ -495,14 +497,40 @@ namespace HookerServer
         {
             MemoryStream memStream = new MemoryStream();
             BinaryFormatter binForm = new BinaryFormatter();
-             if(arrBytes.Length != 32 &&  byteArrayContainsZipFile(arrBytes)){
+             if(byteArrayContainsZipFile(arrBytes)){
                  return extractZIPtoFolder(arrBytes);
             }
+             if (byteArrayContainsBitmap(arrBytes))
+             {
+                 return byteArrayToBitmap(arrBytes);
+             }
              Console.WriteLine("Ricevuto bytearray : [" + Encoding.Default.GetString(arrBytes) + "]");
             memStream.Write(arrBytes, 0, arrBytes.Length);
             memStream.Seek(0, SeekOrigin.Begin);
             Object obj = (Object)binForm.Deserialize(memStream);
             return obj;
+        }
+
+        private BitmapImage byteArrayToBitmap(byte[] arrBytes)
+        {
+            using (var ms = new System.IO.MemoryStream(arrBytes))
+            {
+                var image = new BitmapImage();
+                image.BeginInit();
+                image.CacheOption = BitmapCacheOption.OnLoad; // here
+                image.StreamSource = ms;
+                image.EndInit();
+                return image;
+            }
+        }
+
+        private bool byteArrayContainsBitmap(byte[] arrBytes)
+        {
+            if (arrBytes[0] == 255 && arrBytes[1] == 216 && arrBytes[2] == 255 && arrBytes[3] == 224)
+            {
+                return true;
+            }
+            return false;
         }
 
         private Object extractZIPtoFolder(byte[] arrBytes)

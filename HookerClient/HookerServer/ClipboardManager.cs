@@ -17,7 +17,6 @@ namespace HookerServer
         Object content;
         public string ZIP_FILE_PATH = @"./cb/cbfiles.zip"; //temporary zip file received by the client
         public string ZIP_EXTRACTED_FOLDER = @"./cb/cbfiles/"; //folder containing the files received from the client
-
         public String CB_FILES_DIRECTORY_PATH = @"./CBFILES/"; //zip folder that will be zipped 
         public String ZIP_FILE_NAME_AND_PATH = "CBFILES.zip"; //zip file to be sent to the client
         public ClipboardManager() { }
@@ -46,9 +45,9 @@ namespace HookerServer
                     foreach (String file in files)
                         Console.WriteLine("Ho aggiunto in CB : " + file);
                 }
-                else if (t == typeof(BitmapSource))
+                else if (t == typeof(BitmapImage))
                 {
-                    Clipboard.SetImage((BitmapSource)content);
+                    Clipboard.SetImage((BitmapImage)content);
                 }
                 else if (t == typeof(Stream))
                 {

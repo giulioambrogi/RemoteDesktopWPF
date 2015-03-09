@@ -58,3 +58,4 @@ C:\Users\s204076.LABINF-NG\Desktop\HookerClient\HookerServer\obj\Debug\HookerSer
 C:\Users\s204076.LABINF-NG\Desktop\HookerClient\HookerServer\obj\Debug\HookerServer.csproj.GenerateResource.Cache
 C:\Users\s204076.LABINF-NG\Desktop\HookerClient\HookerServer\obj\Debug\HookerServer.exe
 C:\Users\s204076.LABINF-NG\Desktop\HookerClient\HookerServer\obj\Debug\HookerServer.pdb
+C:\Users\Giulio\Documents\Visual Studio 2013\Projects\ProgettoC\progettopds\test\HookerClient\HookerServer\obj\Debug\HookerServer_Content.g.cs
