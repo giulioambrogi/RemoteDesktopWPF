@@ -22,13 +22,13 @@ namespace HookerClient
             System.Windows.Media.BrushConverter bc = new System.Windows.Media.BrushConverter();
             //t.Background = (System.Windows.Media.Brush)bc.ConvertFromString("Yellow");
             l.Background = Brushes.Transparent;
-            l.VerticalAlignment = VerticalAlignment.Stretch;
-            l.BorderBrush = Brushes.White;
-            l.HorizontalContentAlignment = HorizontalAlignment.Center;
+           // l.VerticalAlignment = VerticalAlignment.Stretch;
+            //l.HorizontalContentAlignment = HorizontalAlignment.Stretch;
             l.Foreground = Brushes.White;
-            l.HorizontalAlignment = HorizontalAlignment.Stretch;
-            l.VerticalContentAlignment = VerticalAlignment.Center;
+            //l.HorizontalAlignment = HorizontalAlignment.Stretch;
+            //l.VerticalContentAlignment = VerticalAlignment.Stretch;
             l.FontSize = 30;
+
         }
         public void setPasswordTextBoxLayout(TextBox t){
             System.Windows.Media.BrushConverter bc = new System.Windows.Media.BrushConverter();
@@ -38,15 +38,13 @@ namespace HookerClient
             t.Width = 150;
             t.VerticalAlignment = VerticalAlignment.Center;
             t.BorderBrush = Brushes.White;
-            t.BorderThickness = new Thickness(0, 0, 0, 3);
+            t.BorderThickness = new Thickness(0, 0, 0, 1);
             t.HorizontalAlignment = HorizontalAlignment.Center;
-            t.HorizontalContentAlignment = HorizontalAlignment.Center;
+            t.HorizontalContentAlignment = HorizontalAlignment.Stretch;
             t.Foreground = Brushes.White;
             t.HorizontalAlignment = HorizontalAlignment.Stretch;
-            t.Margin = new Thickness(5, 0, 5, 0);
+            //t.Margin = new Thickness(5, 0, 5, 0);
             t.CaretBrush = Brushes.White;
-            t.Text = "password";
-            
             
         
         }
@@ -60,11 +58,11 @@ namespace HookerClient
             t.VerticalAlignment = VerticalAlignment.Center;
             t.HorizontalAlignment = HorizontalAlignment.Center;
             t.BorderBrush = Brushes.White;
-            t.BorderThickness = new Thickness(0, 0, 0, 3);
+            t.BorderThickness = new Thickness(0, 0, 0, 1);
             t.HorizontalContentAlignment = HorizontalAlignment.Center;
             t.Foreground = Brushes.White;
             t.HorizontalAlignment = HorizontalAlignment.Stretch;
-            t.Margin = new Thickness(5, 0, 5, 0);
+            //t.Margin = new Thickness(5, 0, 5, 0);
             t.CaretBrush = Brushes.White;
             t.Text = "5143";
             
@@ -75,8 +73,7 @@ namespace HookerClient
         {
             cb.VerticalAlignment = VerticalAlignment.Center;
             cb.HorizontalAlignment = HorizontalAlignment.Center;
-            cb.Width = 35;
-            cb.Height = 35;
+            
             cb.BorderBrush = Brushes.White;
             cb.Background = Brushes.Blue; 
             
