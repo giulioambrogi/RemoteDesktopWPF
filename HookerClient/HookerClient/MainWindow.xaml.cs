@@ -396,6 +396,10 @@ namespace HookerClient
                 RoutedCommand sendClipboardcmd = new RoutedCommand();
                 sendClipboardcmd.InputGestures.Add(new KeyGesture(Key.X, ModifierKeys.Control | ModifierKeys.Alt));
                 CommandBindings.Add(new CommandBinding(sendClipboardcmd, sendClipboard));
+                //aggancio CTRL+ALT+Z per ricevere la clipboard dal server
+                RoutedCommand gimmeClipboardcmd = new RoutedCommand();
+                gimmeClipboardcmd.InputGestures.Add(new KeyGesture(Key.Z, ModifierKeys.Control | ModifierKeys.Alt));
+                CommandBindings.Add(new CommandBinding(gimmeClipboardcmd, gimmeClipboard));
 
             }
             catch (Exception e)
@@ -403,6 +407,14 @@ namespace HookerClient
                 //MessageBox.Show("bindHotKeyCommands: " + e.Message);
                 Application.Current.Shutdown();
             }
+        }
+
+        private void gimmeClipboard(object sender, ExecutedRoutedEventArgs e)
+        {
+            this.serverManger.sendMessage("K" + " " + (int)RamGecTools.KeyboardHook.VKeys.LCONTROL + " " + "UP");
+            this.serverManger.sendMessage("K" + " " + (int)RamGecTools.KeyboardHook.VKeys.LMENU + " " + "UP");
+            this.serverManger.sendMessage("K" + " " + (int)RamGecTools.KeyboardHook.VKeys.KEY_Z + " " + "UP");
+            this.serverManger.sendMessage("G"); //this is the gimme message
         }
 
         private void switchToNextServer(object sender, ExecutedRoutedEventArgs e)

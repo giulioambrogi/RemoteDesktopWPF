@@ -145,11 +145,17 @@ namespace HookerClient
                 else if (t == typeof(ZipArchive))
                 {
                     //extraction  already been done
-                    System.Collections.Specialized.StringCollection files = getFileNames(ZIP_EXTRACTED_FOLDER + @"/CBFILES/");
                     Clipboard.Clear();
-                    Clipboard.SetFileDropList(files);
-                    foreach (String file in files)
-                        Console.WriteLine("Ho aggiunto in CB : " + file);
+                    System.Collections.Specialized.StringCollection files = getFileNames(ZIP_EXTRACTED_FOLDER + @"/CBFILES/"); //add all files to list
+                    foreach (DirectoryInfo dir in new DirectoryInfo(ZIP_EXTRACTED_FOLDER + @"/CBFILES/").GetDirectories())
+                    {
+                        files.Add(dir.FullName);
+                    }
+                    if (files != null && files.Count > 0)
+                    {
+                        Clipboard.SetFileDropList(files);
+                    }
+                     
                 }
                 else if (t == typeof(BitmapSource))
                 {

@@ -8,6 +8,8 @@ using System.Net.Sockets;
 using System.Runtime.Serialization.Formatters.Binary;
 using System.IO;
 using System.Threading;
+using System.Windows.Media.Imaging;
+using System.IO.Compression;
 
 namespace HookerClient
 {
@@ -31,6 +33,8 @@ namespace HookerClient
         private TcpListener cbSocketServer; //clipboard receiver
         private IPEndPoint cbEndpoint;  //clipboardReceiverEndpoint
         private Thread cbListener;
+        public string ZIP_FILE_PATH = @"./cb/cbfiles.zip";
+        public string ZIP_EXTRACTED_FOLDER = @"./cb/cbfiles/";
         public ServerEntity( string name)
         {
             try
@@ -104,6 +108,8 @@ namespace HookerClient
 
         public void initCBListener()
         {
+            if (this.cbSocketServer != null)
+                this.cbSocketServer.Server.Close();
             this.cbSocketServer = new TcpListener(IPAddress.Any, Properties.Settings.Default.CBPort); //Start the TcpListener of the clipboard
             this.cbEndpoint = new IPEndPoint(IPAddress.Any, Properties.Settings.Default.CBPort); //Create the Ip Endpoint 
             this.cbSocketServer.Start(1); //Start the listener
@@ -119,15 +125,70 @@ namespace HookerClient
             return ms.ToArray();
         }
 
-        // Convert a byte array to an Object
         private Object ByteArrayToObject(byte[] arrBytes)
         {
             MemoryStream memStream = new MemoryStream();
             BinaryFormatter binForm = new BinaryFormatter();
+            if (byteArrayContainsZipFile(arrBytes))
+            {
+                return extractZIPtoFolder(arrBytes);
+            }
+            if (byteArrayContainsBitmap(arrBytes))
+            {
+                return byteArrayToBitmap(arrBytes);
+            }
+            Console.WriteLine("Ricevuto bytearray : [" + Encoding.Default.GetString(arrBytes) + "]");
             memStream.Write(arrBytes, 0, arrBytes.Length);
             memStream.Seek(0, SeekOrigin.Begin);
             Object obj = (Object)binForm.Deserialize(memStream);
             return obj;
+        }
+
+        private BitmapImage byteArrayToBitmap(byte[] arrBytes)
+        {
+            using (var ms = new System.IO.MemoryStream(arrBytes))
+            {
+                var image = new BitmapImage();
+                image.BeginInit();
+                image.CacheOption = BitmapCacheOption.OnLoad; // here
+                image.StreamSource = ms;
+                image.EndInit();
+                return image;
+            }
+        }
+
+        private bool byteArrayContainsBitmap(byte[] arrBytes)
+        {
+            if (arrBytes[0] == 255 && arrBytes[1] == 216 && arrBytes[2] == 255 && arrBytes[3] == 224)
+            {
+                return true;
+            }
+            return false;
+        }
+
+        private Object extractZIPtoFolder(byte[] arrBytes)
+        {
+            using (Stream ms = new MemoryStream(arrBytes))
+            {
+                Console.WriteLine("Lunghezza del buffer : " + arrBytes.Length);
+                Console.WriteLine("Lunghezza dello stream : " + ms.Length);
+                ZipArchive archive = new ZipArchive(ms);
+                if (Directory.Exists(ZIP_EXTRACTED_FOLDER))
+                {
+                    Directory.Delete(ZIP_EXTRACTED_FOLDER, true);
+                    Console.WriteLine("Cancello Vecchia cartella zip");
+                }
+                archive.ExtractToDirectory(ZIP_EXTRACTED_FOLDER);
+                return archive;
+            }
+        }
+        private bool byteArrayContainsZipFile(byte[] arrBytes)
+        {
+            if (arrBytes[0] == 80 && arrBytes[1] == 75 && arrBytes[2] == 3 && arrBytes[3] == 4)
+            {
+                return true;
+            }
+            return false;
         }
 
         public void runCBListenerFaster()
