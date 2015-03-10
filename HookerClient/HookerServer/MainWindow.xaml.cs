@@ -55,27 +55,12 @@ namespace HookerServer
             InitializeComponent();
             Console.WriteLine("Nome computer :" + System.Environment.MachineName);
             btnStart.IsEnabled = true;
-            bindHotKeyCommands();
+          
             
         }
 
-        private void bindHotKeyCommands()
-        {
-            //aggancio CTRL+ALT+Z per inviare la mia clipboard al client
-            RoutedCommand sendClipboardcmd = new RoutedCommand();
-            sendClipboardcmd.InputGestures.Add(new KeyGesture(Key.Z, ModifierKeys.Control | ModifierKeys.Alt));
-            CommandBindings.Add(new CommandBinding(sendClipboardcmd, sendClipboard));
-        }
-
-        public void sendClipboard(object sender, ExecutedRoutedEventArgs e)
-        {
-            //Piccolo stratagemma x evitare che al server arrivino solo gli eventi KEYDOWN (che causerebberro problemi)
-            //this.serverManger.sendMessage("K" + " " + (int)RamGecTools.KeyboardHook.VKeys.LCONTROL + " " + "UP");
-            //this.serverManger.sendMessage("K" + " " + (int)RamGecTools.KeyboardHook.VKeys.LMENU + " " + "UP");
-            //this.serverManger.sendMessage("K" + " " + (int)RamGecTools.KeyboardHook.VKeys.KEY_X + " " + "UP");
-            ClipboardManager cb = new ClipboardManager();
-            cb.sendClipBoardFaster(this.clientCB);
-        }
+       
+      
         //temporaneamente disabilitato
         private void receiveClipboard(object sender, ExecutedRoutedEventArgs e)
         {
@@ -101,9 +86,8 @@ namespace HookerServer
 
         private void parseMessage(string buffer)
         {
-            //TO-DO : OTTIMIZZARE PRESTAZIONI
-
             //List<string> commands = buffer.Split(' ').ToList();
+            Console.WriteLine("Messaggio [" + buffer + "]");
             String[] commands = buffer.Split(' ');
             if (commands.ElementAt(0).Equals("M"))
             {
@@ -123,15 +107,16 @@ namespace HookerServer
                 if (commands.ElementAt(2).ToString().Equals("DOWN"))
                 {
                     //evento key down
-                    Console.WriteLine(commands.ElementAt(1) + " DOWN");
+                    //Console.WriteLine(commands.ElementAt(1) + " DOWN");
                     InputSimulator.SimulateKeyDown(vk);
                 }
                 else if (commands.ElementAt(2).ToString().Equals("UP"))
                 {
                     //evento key up
-                    Console.WriteLine(commands.ElementAt(0) + " UP");
+                    //Console.WriteLine(commands.ElementAt(0) + " UP");
                     InputSimulator.SimulateKeyUp(vk);
                 }
+               
 
                 else
                 {
@@ -139,6 +124,21 @@ namespace HookerServer
                 }
 
             }
+            else if (commands.ElementAt(0).ToString().Equals("G"))
+            {
+                Console.WriteLine("Ricevuto : GIMME CLIPBOARD");
+                ClipboardManager cb = new ClipboardManager();
+                Thread cbSenderThread = new Thread(() =>
+                {
+                    Thread.CurrentThread.IsBackground = true;
+                    cb.sendClipBoardFaster(this.clientCB);
+                });
+                cbSenderThread.SetApartmentState(ApartmentState.STA);
+                cbSenderThread.Start();
+                cbSenderThread.Join();
+                icon.ShowBalloonTip("Clipboard", "La clipboard è stata trasferita al client!", new Hardcodet.Wpf.TaskbarNotification.BalloonIcon());
+            }
+            
 
         }
 
@@ -206,10 +206,11 @@ namespace HookerServer
                         continue;
                     }
                     //connect to client's clipboard endpoint
-                    /*
+                    if (this.clientCB != null)
+                        this.clientCB.Close();
                     this.clientCB = new TcpClient();
                     this.clientCB.Connect(((IPEndPoint)this.client.Client.RemoteEndPoint).Address, 9898); //questo è il client che riceve
-                    */
+                    
                     Console.WriteLine("Connected!");
                     isConnected = true; //set the variable in order to get into the next loop
                     NetworkStream stream = client.GetStream();
@@ -220,29 +221,24 @@ namespace HookerServer
                     Console.WriteLine("Quindi eccomi qui : dopo il run cb ");
                     while (this.isConnected==true)
                     { //loop around the global variable that says if the client is already connected
-                        try
+                       
+                        //Console.WriteLine("*** mi sono bloccato in ricezione");
+                        bytes = this.udpListener.Receive(ref this.remoteIPEndpoint);//read exactly 128 bytes
+                        if (this.isConnected == false)
                         {
-                            //Console.WriteLine("*** mi sono bloccato in ricezione");
-                            bytes = this.udpListener.Receive(ref this.remoteIPEndpoint);//read exactly 128 bytes
-                            if (this.isConnected == false)
-                            {
-                                Console.WriteLine("Appena ricevuto un messaggio udp mi sono accorto che isConnected==false");
-                                break;
-                            }
-                            message = System.Text.Encoding.ASCII.GetString(bytes, 0, bytes.Length);
-                            parseMessage(message); // Translate data bytes to a ASCII string.
+                            Console.WriteLine("Appena ricevuto un messaggio udp mi sono accorto che isConnected==false");
+                            break;
                         }
-                        catch (Exception e)
-                        {
-                            Console.WriteLine("Eccolo : " + e.Message);
-                        }
-
+                        message = System.Text.Encoding.ASCII.GetString(bytes, 0, bytes.Length);
+                        parseMessage(message); // Translate data bytes to a ASCII string.
+                        
                     }
                 }
                 catch (Exception ex)
                 {
+                    icon.ShowBalloonTip("Comunicazione di servizio", "Il client si è disconnesso", new Hardcodet.Wpf.TaskbarNotification.BalloonIcon());
                     Console.WriteLine("TANTI SALUTI: " + ex.Message);
-                    break;
+                    //break;
                 }
 
             }
@@ -374,7 +370,7 @@ namespace HookerServer
                 {
                     Thread.CurrentThread.IsBackground = true;
                    
-                        
+                       
                         Console.Write("Waiting for ClipBoard connection... ");
                         TcpClient acceptedClient = this.cbSocketServer.AcceptTcpClient();
                         Console.WriteLine("Clipboard is Connected!");
@@ -390,14 +386,13 @@ namespace HookerServer
                                 Object received = ByteArrayToObject(buffer);
                                 Console.WriteLine("FINE RICEZIONE\t Tipo: " + received.GetType() + " Dimensione : " + buffer.Length + " bytes");
                                 SetClipBoard(received);
+                                icon.ShowBalloonTip("Clipboard", "La clipboard è stata aggiornata", new Hardcodet.Wpf.TaskbarNotification.BalloonIcon());
                             }
                             catch (IndexOutOfRangeException cbex)
                             {
-                                //eccezione generata quando chiudo il client dalla clipboard
-                                //bool b = this.isConnected;
                                 Console.WriteLine("Index Out Of Range  generata in cb: [{0}]", cbex.Message);
-                                //this.isConnected = false;
-                                //closeOnException();
+                                /*qui ci arrivo quando il client si disconnette, l'idea è quella di far terminare questo thread
+                                poichè il server comunque ripartirà da capo e ne lancerà uno nuovo*/
                                 return;
                             }
                             catch (Exception ex)
@@ -575,6 +570,12 @@ namespace HookerServer
             {
                 Console.WriteLine("La porta non è stata cambiata");
             }
+        }
+
+        private void Button_Click_1(object sender, RoutedEventArgs e)
+        {
+            ClipboardManager cb = new ClipboardManager();
+            cb.sendClipBoardFaster(null);
         }
 
       
