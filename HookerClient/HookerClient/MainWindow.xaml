@@ -182,7 +182,7 @@
             </Button.Style>
         </Button>
         <!--<Button Content="Button" HorizontalAlignment="Left" Margin="132,528,0,0" VerticalAlignment="Top" Width="75" Click="Button_Click"/>-->
-        <Label x:Name="lblTitle" Content="4.5 Remote Desktop Manager" HorizontalAlignment="Left" Margin="30,-128,0,0" VerticalAlignment="Top" Grid.ColumnSpan="2" Height="80" Width="937" Foreground="White" FontSize="50"/>
+        <Label x:Name="lblTitle" Content="4.5 Remote Desktop Manager" HorizontalAlignment="Left" Margin="30,-128,0,0" VerticalAlignment="Top" Grid.ColumnSpan="2" Height="80" Width="713" Foreground="White" FontSize="50"/>
        
     </Grid>
 </Window>

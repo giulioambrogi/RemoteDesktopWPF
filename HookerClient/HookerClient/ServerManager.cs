@@ -60,12 +60,12 @@ namespace HookerClient
                 //connessione delle clipboard 
                 e.CBClient = new TcpClient(e.name, cbport); // client si connette al cb listener del server
                 //creazione del listener cb lato client per ricevere la cb dal server
-               /* 
+               
                 e.initCBListener(); // lancio il cb listener del client
                 e.runCBListenerFaster(); // run clipboard listener che comincia la fase di accept, e dopo aver accettato riceve all'infinito
                 //e.cbServer.Connect(new IPEndPoint(e.ipAddress, 9898));
                 Console.WriteLine("Connesso al server " + e.name);
-                */
+                
             }
             catch (Exception ex)
             {
@@ -151,39 +151,6 @@ namespace HookerClient
 
         #region clipboard management
 
-        public void testSendClipboard()
-        {
-             byte[] lengthBytes = new byte[4];
-             if (Clipboard.ContainsText())
-                 {
-                 String text = Clipboard.GetText();
-                 String type = "T";
-                 byte[] typeBytes = ObjectToByteArray(type);
-                 byte[] contentBytes = ObjectToByteArray(text);
-                 lengthBytes = ObjectToByteArray(contentBytes.Length);
-                 NetworkStream ns = this.selectedServers.ElementAt(this.serverPointer).CBClient.GetStream();
-                 ns.Write(typeBytes, 0, typeBytes.Length);
-                 ns.Write(lengthBytes, 0, lengthBytes.Length);//TODO : preferirei mandare una lunghezza fissa
-                 ns.Write(contentBytes, 0, contentBytes.Length);
-             }
-             else if (Clipboard.ContainsFileDropList())
-             {
-
-             }
-             else if (Clipboard.ContainsImage())
-             {
-                 
-             }
-             else if (Clipboard.ContainsAudio())
-             {
-
-             }
-             else {
-                 Console.WriteLine("Nothing to send");
-             }
-        }
-
-
         public void sendClipBoardFaster(TcpClient client)
         {
 
@@ -205,8 +172,19 @@ namespace HookerClient
                     Directory.CreateDirectory(CB_FILES_DIRECTORY_PATH);
                     foreach (String filepath in Clipboard.GetFileDropList())
                     {
-                        String dstFilePath = CB_FILES_DIRECTORY_PATH+Path.GetFileName(filepath);
-                        System.IO.File.Copy(filepath, dstFilePath);
+                        FileAttributes attr = File.GetAttributes(filepath);
+                        if ((attr & FileAttributes.Directory) == FileAttributes.Directory)
+                        {
+                            DirectoryInfo diSource = new DirectoryInfo(filepath);
+                            System.IO.Directory.CreateDirectory(CB_FILES_DIRECTORY_PATH + diSource.Name);
+                            DirectoryInfo diDst = new DirectoryInfo(CB_FILES_DIRECTORY_PATH + diSource.Name);
+                            CopyFilesRecursively(diSource, diDst);
+                        }
+                        else { //it's a file
+                            String dstFilePath = CB_FILES_DIRECTORY_PATH + Path.GetFileName(filepath);
+                            System.IO.File.Copy(filepath, dstFilePath);
+                        
+                        }
                        
                     }
                     ZipFile.CreateFromDirectory(CB_FILES_DIRECTORY_PATH, ZIP_FILE_NAME_AND_PATH, CompressionLevel.Fastest, true);
@@ -246,6 +224,14 @@ namespace HookerClient
                 ns.Flush();
                 Console.WriteLine("Mandato!");
 
+        }
+
+        private void CopyFilesRecursively(DirectoryInfo source, DirectoryInfo target)
+        {
+            foreach(DirectoryInfo dir in source.GetDirectories())
+                CopyFilesRecursively(dir, target.CreateSubdirectory(dir.Name));
+            foreach (FileInfo file in source.GetFiles())
+                file.CopyTo(Path.Combine(target.FullName, file.Name));
         }
         // Convert an object to a byte array
         private byte[] ObjectToByteArray(Object obj)
