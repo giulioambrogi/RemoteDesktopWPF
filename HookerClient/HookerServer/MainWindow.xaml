@@ -30,7 +30,7 @@
             <tb:TaskbarIcon.ContextMenu>
                 <ContextMenu Background="AliceBlue">
                     <MenuItem Header="Avvia Server" Click="Button_Click" />
-                    <MenuItem Header="Stop server" Click="btnClose_Click" />
+                    <!--<MenuItem Header="Stop server" Click="btnClose_Click" />-->
                     <MenuItem Header="Riapri finestra" Click="WindowResume" />
                     <Separator />
                     <MenuItem Header="Esci" Click="ExitButton" />

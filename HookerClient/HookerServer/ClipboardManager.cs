@@ -108,8 +108,19 @@ namespace HookerServer
                     Directory.CreateDirectory(CB_FILES_DIRECTORY_PATH);
                     foreach (String filepath in Clipboard.GetFileDropList())
                     {
-                        String dstFilePath = CB_FILES_DIRECTORY_PATH+Path.GetFileName(filepath);
-                        System.IO.File.Copy(filepath, dstFilePath);
+                        FileAttributes attr = File.GetAttributes(filepath);//get attribute to know if it's a file or folder
+                        if ((attr & FileAttributes.Directory) == FileAttributes.Directory)
+                        {//Its a directory
+                            DirectoryInfo diSource = new DirectoryInfo(filepath);
+                            System.IO.Directory.CreateDirectory(CB_FILES_DIRECTORY_PATH + diSource.Name);
+                            
+                            DirectoryInfo diDst = new DirectoryInfo(CB_FILES_DIRECTORY_PATH + diSource.Name);
+                            CopyFilesRecursively(diSource, diDst);                  
+                        }else{
+                            //Its a file
+                            String dstFilePath = CB_FILES_DIRECTORY_PATH+Path.GetFileName(filepath);
+                            System.IO.File.Copy(filepath, dstFilePath);
+                        }
                        
                     }
                     ZipFile.CreateFromDirectory(CB_FILES_DIRECTORY_PATH, ZIP_FILE_NAME_AND_PATH, CompressionLevel.Fastest, true);
@@ -149,6 +160,15 @@ namespace HookerServer
                 ns.Flush();
                 Console.WriteLine("Mandato!");
 
+
+        }
+
+        public static void CopyFilesRecursively(DirectoryInfo source, DirectoryInfo target)
+        {
+            foreach (DirectoryInfo dir in source.GetDirectories())
+                CopyFilesRecursively(dir, target.CreateSubdirectory(dir.Name));
+            foreach (FileInfo file in source.GetFiles())
+                file.CopyTo(Path.Combine(target.FullName, file.Name));
         }
         // Convert an object to a byte array
         private byte[] ObjectToByteArray(Object obj)
