@@ -217,6 +217,10 @@ namespace HookerClient
             }
             if (allConnected != false)
             {
+                this.lblMessage.Dispatcher.Invoke(DispatcherPriority.Background, new Action(() =>
+                {
+                    this.lblMessage.Content = "Sono connesso al server " + this.serverManger.selectedServers.ElementAt(serverManger.serverPointer).name;
+                }));
                 //se le connessioni sono andate a buon fine
                 InstallMouseAndKeyboard();
                 //Questo bind vale solo mentre si è connessi
@@ -425,7 +429,9 @@ namespace HookerClient
             //chiamo il metodo che realmente switcha il puntatore al sender udp 
             this.serverManger.nextSelectedServers();
             //aggiorno la label in base ai risultati effettivi dell'operazione
-         
+            this.lblMessage.Dispatcher.Invoke(DispatcherPriority.Background, new Action(() => {
+                this.lblMessage.Content = "Sono connesso al server "+this.serverManger.selectedServers.ElementAt(serverManger.serverPointer).name;
+            }));
         }
 
         private void unbindHotkeyCommands()
