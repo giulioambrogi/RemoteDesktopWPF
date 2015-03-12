@@ -26,6 +26,10 @@ namespace HookerClient
         public Socket ClipboardEndpoint;
         public String CB_FILES_DIRECTORY_PATH = @"./CBFILES/";
         public String ZIP_FILE_NAME_AND_PATH = "CBFILES.zip";
+
+        public TcpListener cbSocketServer; //clipboard receiver
+        private IPEndPoint cbEndpoint;  //clipboardReceiverEndpoint
+        private Thread cbListener;
         public ServerManager()
         {
             this.availableServers = new List<ServerEntity>();
@@ -35,8 +39,112 @@ namespace HookerClient
             serverPointer = 0;
         }
 
-        
+        public void initCBListener()
+        {
+            if (this.cbSocketServer != null)
+                this.cbSocketServer.Server.Close();
+            this.cbSocketServer = new TcpListener(IPAddress.Any, Properties.Settings.Default.CBPort); //Start the TcpListener of the clipboard
+            this.cbEndpoint = new IPEndPoint(IPAddress.Any, Properties.Settings.Default.CBPort); //Create the Ip Endpoint 
+            this.cbSocketServer.Start(Properties.Settings.Default.MaximumAllowedServers); //Start the listener
+        }
 
+        public void runCBListenerFaster()
+        {
+            this.cbListener = new Thread(() =>
+            {
+                try
+                {
+                    Thread.CurrentThread.IsBackground = true;
+
+
+                    Console.Write("Waiting for ClipBoard connection... ");
+                    TcpClient acceptedClient = this.cbSocketServer.AcceptTcpClient();
+                    Console.WriteLine("Clipboard is Connected!");
+                    while (true)
+                    {
+                        Thread.Sleep(100);
+                        try
+                        {
+                            Console.WriteLine("Aspettando un messaggio dalla clipboard");
+                            NetworkStream stream = acceptedClient.GetStream();
+                            byte[] buffer = receiveAllData(stream);
+                            Object received = AmbrUtils.ByteArrayToObject(buffer);
+                            Console.WriteLine("FINE RICEZIONE\t Tipo: " + received.GetType() + " Dimensione : " + buffer.Length + " bytes");
+                            SetClipBoard(received);
+                        }
+                        catch (IndexOutOfRangeException cbex)
+                        {
+                            //eccezione generata quando chiudo il client dalla clipboard
+                            //bool b = this.isConnected;
+                            Console.WriteLine("Index Out Of Range  generata in cb: [{0}]", cbex.Message);
+                            //this.isConnected = false;
+                            //closeOnException();
+                            return;
+                        }
+                        catch (Exception ex)
+                        {
+                            Console.WriteLine("ECCEZIONE GENERATA IN RICEZIONE CB : [{0}]", ex.Message);
+                            return;
+                            //closeOnException();
+                            //return;
+                            // restartServer();
+                        }
+
+                    }
+                }
+
+                catch (Exception e)
+                {
+                    Console.WriteLine("Eccezione generica in cblistener " + e.Message);
+                    return;
+                }
+            });
+            this.cbListener.Start();
+        }
+
+
+        private byte[] receiveAllData(NetworkStream stream)
+        {
+            byte[] tmp = new byte[512]; //temporary buffer
+            byte[] sizeOfBuf = new byte[4]; //init the buffer containing the size
+            stream.Read(sizeOfBuf, 0, 4);
+            //if (BitConverter.IsLittleEndian)
+            //    Array.Reverse(sizeOfBuf);
+            Int32 dim = BitConverter.ToInt32(sizeOfBuf, 0); //dimensione del buffer;
+            //byte[] buffer = new byte[dim]; //init bufferone
+            byte[] buffer = new byte[0];
+            Console.WriteLine("La dimensione del bufferone è : {0}", dim);
+            int counter = dim;
+            while (counter > 0)
+            {
+                int r = stream.Read(tmp, 0, 512);
+                Console.WriteLine("Ricevuto " + r + " bytes");
+                int oldBufLen = buffer.Length;
+                Array.Resize(ref buffer, oldBufLen + r);
+                Buffer.BlockCopy(tmp, 0, buffer, oldBufLen, r);
+                counter = counter - r;
+            }
+            return buffer;
+        }
+
+        private void SetClipBoard(object received)
+        {
+            try
+            {
+                //ClipboardManager cbm = new ClipboardManager(received); //passo l'oggetto al costruttore della classe
+                //non so perchè forse perchè non sapevo in che altro modo lanciare il thread 
+                ClipboardMgmt cbm = new ClipboardMgmt(received);
+                Thread runThread = new Thread(new ThreadStart(cbm.setData));
+                runThread.SetApartmentState(ApartmentState.STA);
+                runThread.Start();
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine(ex.Message);
+            }
+        }
+    
+    
         public void connectToServer( ServerEntity e){
             try
             {
@@ -49,7 +157,6 @@ namespace HookerClient
                 e.UdpSender = new UdpClient();
                 e.UdpSender.Connect(e.ipAddress, e.port_base);
                 //connect to clipboard
-               // Thread.Sleep(2000);
                 if (e.authenticateWithPassword() == false)
                 {
                     Console.WriteLine("Password errata");
@@ -57,12 +164,11 @@ namespace HookerClient
                     e.server = null; //convenzione in modo tale che il conn checker si accorga che la password non vabbène
                     return;
                 }
+                //e.initCBListener(); // lancio il cb listener del client
                 //connessione delle clipboard 
                 e.CBClient = new TcpClient(e.name, cbport); // client si connette al cb listener del server
                 //creazione del listener cb lato client per ricevere la cb dal server
-               
-                e.initCBListener(); // lancio il cb listener del client
-                e.runCBListenerFaster(); // run clipboard listener che comincia la fase di accept, e dopo aver accettato riceve all'infinito
+                //e.runCBListenerFaster(); // run clipboard listener che comincia la fase di accept, e dopo aver accettato riceve all'infinito
                 //e.cbServer.Connect(new IPEndPoint(e.ipAddress, 9898));
                 Console.WriteLine("Connesso al server " + e.name);
                 
@@ -88,10 +194,14 @@ namespace HookerClient
         }
 
         public void disconnectFromServer(ServerEntity se){
-               se.UdpSender.Close();
-               se.server.Close();
-               se.CBClient.Close();
-               
+               if(se.UdpSender!=null)
+                    se.UdpSender.Close();
+               if(se.server != null)
+                    se.server.Close();
+               if(se.CBClient!= null)
+                   se.CBClient.Close();
+               if(this.cbSocketServer!=null )
+                   this.cbSocketServer.Server.Close();        
         }
 
         public void nextSelectedServers(){
@@ -110,19 +220,24 @@ namespace HookerClient
 
         internal void connect()
         {
+            initCBListener();
             foreach ( ServerEntity se in selectedServers)
             {
                 connectToServer( se);
             }
+            this.runCBListenerFaster();
         }
 
-      
         internal void disconnect()
         {
             foreach (ServerEntity se in selectedServers)
             {
                 disconnectFromServer(se);
             }
+            if (this.cbSocketServer != null)
+                this.cbSocketServer.Server.Close();
+            if (this.cbListener != null && this.cbListener.IsAlive)
+                this.cbListener.Abort();
         }
 
         public ServerEntity getSrvByName(String name)
@@ -149,8 +264,6 @@ namespace HookerClient
             return null;
         }
 
-        #region clipboard management
-
         public void sendClipBoardFaster(TcpClient client)
         {
 
@@ -159,7 +272,7 @@ namespace HookerClient
 
                 if (Clipboard.ContainsText())
                 {
-                   content= ObjectToByteArray(Clipboard.GetText());
+                    content = AmbrUtils.ObjectToByteArray(Clipboard.GetText());
                 }
                 else if (Clipboard.ContainsFileDropList())
                 {
@@ -178,7 +291,7 @@ namespace HookerClient
                             DirectoryInfo diSource = new DirectoryInfo(filepath);
                             System.IO.Directory.CreateDirectory(CB_FILES_DIRECTORY_PATH + diSource.Name);
                             DirectoryInfo diDst = new DirectoryInfo(CB_FILES_DIRECTORY_PATH + diSource.Name);
-                            CopyFilesRecursively(diSource, diDst);
+                            AmbrUtils.CopyFilesRecursively(diSource, diDst);
                         }
                         else { //it's a file
                             String dstFilePath = CB_FILES_DIRECTORY_PATH + Path.GetFileName(filepath);
@@ -202,11 +315,11 @@ namespace HookerClient
                 else if (Clipboard.ContainsImage())
                 {
                     //content = imageToByteArray(Clipboard.GetImage());
-                    content = bitmapSourceToByteArray(Clipboard.GetImage());
+                    content = AmbrUtils.bitmapSourceToByteArray(Clipboard.GetImage());
                 }
                 else if (Clipboard.ContainsAudio())
                 {
-                    content = ObjectToByteArray(Clipboard.GetAudioStream());
+                    content = AmbrUtils.ObjectToByteArray(Clipboard.GetAudioStream());
                 }
                 else
                 {
@@ -226,68 +339,6 @@ namespace HookerClient
 
         }
 
-        private void CopyFilesRecursively(DirectoryInfo source, DirectoryInfo target)
-        {
-            foreach(DirectoryInfo dir in source.GetDirectories())
-                CopyFilesRecursively(dir, target.CreateSubdirectory(dir.Name));
-            foreach (FileInfo file in source.GetFiles())
-                file.CopyTo(Path.Combine(target.FullName, file.Name));
-        }
-        // Convert an object to a byte array
-        private byte[] ObjectToByteArray(Object obj)
-        {
-            if (obj == null)
-                return null;
-            BinaryFormatter bf = new BinaryFormatter();
-            MemoryStream ms = new MemoryStream();
-            bf.Serialize(ms, obj);
-            return ms.ToArray();
-        }
-
-        // Convert a byte array to an Object
-        private Object ByteArrayToObject(byte[] arrBytes)
-        {
-            MemoryStream memStream = new MemoryStream();
-            BinaryFormatter binForm = new BinaryFormatter();
-            memStream.Write(arrBytes, 0, arrBytes.Length);
-            memStream.Seek(0, SeekOrigin.Begin);
-            Object obj = (Object)binForm.Deserialize(memStream);
-            return obj;
-        }
-
-        public byte[] imageToByteArray(System.Windows.Media.Imaging.BitmapSource imageIn)
-        {
-            byte[] data;
-            JpegBitmapEncoder encoder = new JpegBitmapEncoder();
-            encoder.Frames.Add(BitmapFrame.Create(imageIn));
-            using (MemoryStream ms = new MemoryStream())
-            {
-                encoder.Save(ms);
-                data = ms.ToArray();
-            }
-            return data;
-        }
-
-        public byte[] bitmapSourceToByteArray(BitmapSource bms)
-        {
-             MemoryStream memStream = new MemoryStream();              
-            JpegBitmapEncoder encoder = new JpegBitmapEncoder();
-            encoder.Frames.Add(BitmapFrame.Create(bms));
-            encoder.Save(memStream);
-            return memStream.GetBuffer();
-        }
-        public BitmapImage byteArrayToBitMapImage(byte[] byteArrayIn)
-        {
-
-            MemoryStream strmImg = new MemoryStream(byteArrayIn);
-            BitmapImage myBitmapImage = new BitmapImage();
-            myBitmapImage.BeginInit();
-            myBitmapImage.StreamSource = strmImg;
-            myBitmapImage.DecodePixelWidth = 200;
-            myBitmapImage.EndInit();
-            return myBitmapImage;
-        }
-
-        #endregion
+       
     }
 }

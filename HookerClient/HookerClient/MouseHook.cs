@@ -113,12 +113,14 @@ namespace RamGecTools
         /// </summary>
         private IntPtr HookFunc(int nCode, IntPtr wParam, IntPtr lParam)
         {
-            if(nCode >= 0)
+            if(nCode >= 0 && (MouseMessages)wParam !=(MouseMessages.WM_MOUSEWHEEL)) //non gestisco la rotella che viene gestita da un handler a parte
             {
                 int type = 0; // Mouse movement
-                if ((MouseMessages)wParam == MouseMessages.WM_MOUSEMOVE)
-                    type++;
-                MouseEvent(type, (MSLLHOOKSTRUCT)Marshal.PtrToStructure(lParam, typeof(MSLLHOOKSTRUCT)), (MouseMessages)wParam);
+
+                if ((MouseMessages)wParam == (MouseMessages.WM_MOUSEMOVE)) //do priorità ai movimenti mouse
+                    type = 1;
+                    
+                MouseEvent(type, (MSLLHOOKSTRUCT)Marshal.PtrToStructure(lParam, typeof(MSLLHOOKSTRUCT)), (MouseMessages)wParam); //tutto il resto
             }
 
             /*

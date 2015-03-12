@@ -32,6 +32,7 @@ namespace HookerClient
         public Thread ConnectionChecker;
         private ServerManager serverManger;
         private LayoutManager layout;
+
         public MainWindow()
         {
             Console.WriteLine("Screen resolution : "+(int)System.Windows.SystemParameters.PrimaryScreenWidth+" "+(int)System.Windows.SystemParameters.FullPrimaryScreenHeight);
@@ -44,10 +45,8 @@ namespace HookerClient
             btnConnect.IsEnabled = false;
             new Thread(() =>{
                 Thread.CurrentThread.IsBackground = true;
-                
                 getAvailableServers();
             }).Start();
-            
         }
 
        
@@ -58,12 +57,28 @@ namespace HookerClient
             this.serverManger.selectedServers.Clear();
             List<ServerEntity> servers = new List<ServerEntity>();
             DirectoryEntry root = new DirectoryEntry("WinNT:");
+            
             int index = 1;
+            NetworkBrowser nw = new NetworkBrowser();
+            foreach (String computerName in nw.getNetworkComputers())
+            {
+                if (computerName != System.Environment.MachineName) ///*&& computer.Name != System.Environment.MachineName*
+                {
+                    Console.WriteLine("Found new computer : " + computerName);
+                    processFoundComputer(computerName, index);
+                    index++;
+
+
+                }
+             
+            }
+            /*
             foreach (DirectoryEntry computers in root.Children)
             {
                 foreach (DirectoryEntry computer in computers.Children)
                 {
-                    if (computer.Name != "Schema" /*&& computer.Name != System.Environment.MachineName*/)
+                   
+                    if (computer.Name != "Schema" ) ///*&& computer.Name != System.Environment.MachineName*
                     {
                         Console.WriteLine("Found new computer : " + computer.Name);
                         processFoundComputer(computer.Name, index);
@@ -73,6 +88,7 @@ namespace HookerClient
                     }
                 }
             }
+           */
         }
 
         private void processFoundComputer(string computerName, int index)
@@ -160,8 +176,9 @@ namespace HookerClient
         {
             switch(type)
             {
-                case 0: // Mouse click
-                    this.serverManger.sendMessage(move.ToString());
+                case 0:  //mouse click
+                        this.serverManger.sendMessage("C" + " " + move.ToString());
+                    
                     break;
                 case 1: // Mouse movement
                     double x = Math.Round((mouse.pt.x / System.Windows.SystemParameters.PrimaryScreenWidth),4); //must send relative position REAL/RESOLUTION
@@ -184,6 +201,12 @@ namespace HookerClient
             //Installo Mouse
             mouseHook.MouseEvent += new RamGecTools.MouseHook.myMouseHookCallback(mouseHook_MouseEvent);
             mouseHook.Install();
+            this.MouseWheel += MouseWheelEventHandler;
+        }
+
+        private void MouseWheelEventHandler(object sender, MouseWheelEventArgs e)
+        {
+            this.serverManger.sendMessage("W" + " " + ((int) e.Delta/120).ToString());
         }
 
         private void UnistallMouseAndKeyboard()
@@ -192,6 +215,7 @@ namespace HookerClient
             mouseHook.MouseEvent -= new RamGecTools.MouseHook.myMouseHookCallback(mouseHook_MouseEvent);
             keyboardHook.Uninstall();
             mouseHook.Uninstall();
+            this.MouseWheel += MouseWheelEventHandler;
             
         }
 
@@ -210,6 +234,7 @@ namespace HookerClient
             foreach(ServerEntity s in this.serverManger.selectedServers){
                 if(s.server== null ){
                     //almeno un server non è connesso 
+                    this.serverManger.disconnect();
                     allConnected = false;
                     MessageBox.Show("Non sono riuscito a connettermi a "+s.name);
                     refreshGUIonClosing();
@@ -217,10 +242,6 @@ namespace HookerClient
             }
             if (allConnected != false)
             {
-                this.lblMessage.Dispatcher.Invoke(DispatcherPriority.Background, new Action(() =>
-                {
-                    this.lblMessage.Content = "Sono connesso al server " + this.serverManger.selectedServers.ElementAt(serverManger.serverPointer).name;
-                }));
                 //se le connessioni sono andate a buon fine
                 InstallMouseAndKeyboard();
                 //Questo bind vale solo mentre si è connessi
@@ -280,6 +301,9 @@ namespace HookerClient
             btnConnect.IsEnabled = false;
             btnRefreshServers.IsEnabled = false;
             btnExit.IsEnabled = false;
+            lvComputers.IsEnabled = false;
+            lblMessages.Dispatcher.Invoke(DispatcherPriority.Background,
+               new Action(() => { lblMessages.Content = "Connesso al server : " + this.serverManger.selectedServers.ElementAt(this.serverManger.serverPointer).name; }));
             //scrivo messaggio per l'utente
             /*tbStatus.Dispatcher.Invoke(DispatcherPriority.Background, new Action(() =>
             {
@@ -302,8 +326,11 @@ namespace HookerClient
             btnContinue.Dispatcher.Invoke(DispatcherPriority.Background,
             new Action(() => { btnContinue.IsEnabled = false; }));
             btnExit.Dispatcher.Invoke(DispatcherPriority.Background,
-           new Action(() => { btnExit.IsEnabled = true; }));
-           
+            new Action(() => { btnExit.IsEnabled = true; }));
+            lvComputers.Dispatcher.Invoke(DispatcherPriority.Background,
+            new Action(() => { lvComputers.IsEnabled = true; }));
+            lblMessages.Dispatcher.Invoke(DispatcherPriority.Background,
+            new Action(() => { lblMessages.Content = ""; }));
         }
         private void refreshGUIOnPause()
         {
@@ -333,7 +360,11 @@ namespace HookerClient
             UnistallMouseAndKeyboard();
             unbindHotkeyCommands(); //rimuovo vincoli su hotkeys
             this.serverManger.disconnect();
+            
 
+            lblMessages.Dispatcher.Invoke(DispatcherPriority.Background,
+            new Action(() => { lblMessages.Content = ""; })); //aggiorno la label 
+            lvComputers.IsEnabled = true;
             btnRefreshServers.IsEnabled = true;
             btnConnect.IsEnabled = true;
             btnContinue.IsEnabled = false;
@@ -429,9 +460,9 @@ namespace HookerClient
             //chiamo il metodo che realmente switcha il puntatore al sender udp 
             this.serverManger.nextSelectedServers();
             //aggiorno la label in base ai risultati effettivi dell'operazione
-            this.lblMessage.Dispatcher.Invoke(DispatcherPriority.Background, new Action(() => {
-                this.lblMessage.Content = "Sono connesso al server "+this.serverManger.selectedServers.ElementAt(serverManger.serverPointer).name;
-            }));
+            lblMessages.Dispatcher.Invoke(DispatcherPriority.Background,
+             new Action(() => { lblMessages.Content = "Connesso al server : " + this.serverManger.selectedServers.ElementAt(this.serverManger.serverPointer).name; }));
+         
         }
 
         private void unbindHotkeyCommands()
@@ -441,6 +472,8 @@ namespace HookerClient
     
         private void btnExit_Click(object sender, RoutedEventArgs e)
         {
+            if (this.ConnectionChecker != null && this.ConnectionChecker.IsAlive)
+                this.ConnectionChecker.Abort();
             Application.Current.Shutdown();
         }
 

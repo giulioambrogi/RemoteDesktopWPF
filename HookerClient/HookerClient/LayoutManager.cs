@@ -45,6 +45,7 @@ namespace HookerClient
             t.HorizontalAlignment = HorizontalAlignment.Stretch;
             //t.Margin = new Thickness(5, 0, 5, 0);
             t.CaretBrush = Brushes.White;
+            t.Text = "password";
             
         
         }
@@ -59,7 +60,7 @@ namespace HookerClient
             t.HorizontalAlignment = HorizontalAlignment.Center;
             t.BorderBrush = Brushes.White;
             t.BorderThickness = new Thickness(0, 0, 0, 1);
-            t.HorizontalContentAlignment = HorizontalAlignment.Center;
+            //t.HorizontalContentAlignment = HorizontalAlignment.Center;
             t.Foreground = Brushes.White;
             t.HorizontalAlignment = HorizontalAlignment.Stretch;
             //t.Margin = new Thickness(5, 0, 5, 0);

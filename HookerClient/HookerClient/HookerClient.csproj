@@ -56,9 +56,11 @@
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </ApplicationDefinition>
+    <Compile Include="AmbrUtils.cs" />
     <Compile Include="ClipboardMgmt.cs" />
     <Compile Include="LayoutManager.cs" />
     <Compile Include="MyListViewItem.cs" />
+    <Compile Include="NetWorkBrowser.cs" />
     <Compile Include="ServerEntity.cs" />
     <Compile Include="ServerManager.cs" />
     <Compile Include="Win32.cs" />

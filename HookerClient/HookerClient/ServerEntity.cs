@@ -30,11 +30,7 @@ namespace HookerClient
         public int Id; //id usato per creare gli oggetti dinamici 
         public int port_base;
         private int DEFAULT_BASE_PORT = 5143;
-        private TcpListener cbSocketServer; //clipboard receiver
-        private IPEndPoint cbEndpoint;  //clipboardReceiverEndpoint
         private Thread cbListener;
-        public string ZIP_FILE_PATH = @"./cb/cbfiles.zip";
-        public string ZIP_EXTRACTED_FOLDER = @"./cb/cbfiles/";
         public ServerEntity( string name)
         {
             try
@@ -93,179 +89,17 @@ namespace HookerClient
 
         internal bool authenticateWithPassword()
         {
-            byte[] b =ObjectToByteArray(this.password);
+            byte[] b = AmbrUtils.ObjectToByteArray(this.password);
             Console.WriteLine("Mandato password : [" + this.password + "]");
             
             //UdpSender.Send(b, b.Length);
             server.Client.Send(b, b.Length, 0);
 
             //byte[] receivedResponse = UdpSender.Receive(ref remoteIPEndPoint);
-            byte[] receivedResponse = new byte[ObjectToByteArray(new Boolean()).Length];
+            byte[] receivedResponse = new byte[AmbrUtils.ObjectToByteArray(new Boolean()).Length];
             server.Client.Receive(receivedResponse);
-            Boolean result = (Boolean)ByteArrayToObject(receivedResponse);
+            Boolean result = (Boolean)AmbrUtils.ByteArrayToObject(receivedResponse);
             return result;
-        }
-
-        public void initCBListener()
-        {
-            if (this.cbSocketServer != null)
-                this.cbSocketServer.Server.Close();
-            this.cbSocketServer = new TcpListener(IPAddress.Any, Properties.Settings.Default.CBPort); //Start the TcpListener of the clipboard
-            this.cbEndpoint = new IPEndPoint(IPAddress.Any, Properties.Settings.Default.CBPort); //Create the Ip Endpoint 
-            this.cbSocketServer.Start(1); //Start the listener
-        }
-
-        private byte[] ObjectToByteArray(Object obj)
-        {
-            if (obj == null)
-                return null;
-            BinaryFormatter bf = new BinaryFormatter();
-            MemoryStream ms = new MemoryStream();
-            bf.Serialize(ms, obj);
-            return ms.ToArray();
-        }
-
-        private Object ByteArrayToObject(byte[] arrBytes)
-        {
-            MemoryStream memStream = new MemoryStream();
-            BinaryFormatter binForm = new BinaryFormatter();
-            if (byteArrayContainsZipFile(arrBytes))
-            {
-                return extractZIPtoFolder(arrBytes);
-            }
-            if (byteArrayContainsBitmap(arrBytes))
-            {
-                return byteArrayToBitmap(arrBytes);
-            }
-            Console.WriteLine("Ricevuto bytearray : [" + Encoding.Default.GetString(arrBytes) + "]");
-            memStream.Write(arrBytes, 0, arrBytes.Length);
-            memStream.Seek(0, SeekOrigin.Begin);
-            Object obj = (Object)binForm.Deserialize(memStream);
-            return obj;
-        }
-
-        private BitmapImage byteArrayToBitmap(byte[] arrBytes)
-        {
-            using (var ms = new System.IO.MemoryStream(arrBytes))
-            {
-                var image = new BitmapImage();
-                image.BeginInit();
-                image.CacheOption = BitmapCacheOption.OnLoad; // here
-                image.StreamSource = ms;
-                image.EndInit();
-                return image;
-            }
-        }
-
-        private bool byteArrayContainsBitmap(byte[] arrBytes)
-        {
-            if (arrBytes[0] == 255 && arrBytes[1] == 216 && arrBytes[2] == 255 && arrBytes[3] == 224)
-            {
-                return true;
-            }
-            return false;
-        }
-
-        private Object extractZIPtoFolder(byte[] arrBytes)
-        {
-            using (Stream ms = new MemoryStream(arrBytes))
-            {
-                Console.WriteLine("Lunghezza del buffer : " + arrBytes.Length);
-                Console.WriteLine("Lunghezza dello stream : " + ms.Length);
-                ZipArchive archive = new ZipArchive(ms);
-                if (Directory.Exists(ZIP_EXTRACTED_FOLDER))
-                {
-                    Directory.Delete(ZIP_EXTRACTED_FOLDER, true);
-                    Console.WriteLine("Cancello Vecchia cartella zip");
-                }
-                archive.ExtractToDirectory(ZIP_EXTRACTED_FOLDER);
-                return archive;
-            }
-        }
-        private bool byteArrayContainsZipFile(byte[] arrBytes)
-        {
-            if (arrBytes[0] == 80 && arrBytes[1] == 75 && arrBytes[2] == 3 && arrBytes[3] == 4)
-            {
-                return true;
-            }
-            return false;
-        }
-
-        public void runCBListenerFaster()
-        {
-            this.cbListener = new Thread(() =>
-            {
-                try
-                {
-                    Thread.CurrentThread.IsBackground = true;
-
-
-                    Console.Write("Waiting for ClipBoard connection... ");
-                    TcpClient acceptedClient = this.cbSocketServer.AcceptTcpClient();
-                    Console.WriteLine("Clipboard is Connected!");
-                    while (true)
-                    {
-                        Thread.Sleep(1000);
-                        try
-                        {
-                            Console.WriteLine("Aspettando un messaggio dalla clipboard");
-                            NetworkStream stream = acceptedClient.GetStream();
-                            byte[] buffer = receiveAllData(stream);
-                            Object received = ByteArrayToObject(buffer);
-                            Console.WriteLine("FINE RICEZIONE\t Tipo: " + received.GetType() + " Dimensione : " + buffer.Length + " bytes");
-                            SetClipBoard(received);
-                        }
-                        catch (IndexOutOfRangeException cbex)
-                        {
-                            //eccezione generata quando chiudo il client dalla clipboard
-                            //bool b = this.isConnected;
-                            Console.WriteLine("Index Out Of Range  generata in cb: [{0}]", cbex.Message);
-                            //this.isConnected = false;
-                            //closeOnException();
-                            return;
-                        }
-                        catch (Exception ex)
-                        {
-                            Console.WriteLine("ECCEZIONE GENERATA IN RICEZIONE CB : [{0}]", ex.Message);
-                            return;
-                            //closeOnException();
-                            //return;
-                            // restartServer();
-                        }
-
-                    }
-                }
-
-                catch (Exception e)
-                {
-                    Console.WriteLine("Eccezione generica in cblistener " + e.Message);
-                    return;
-                }
-            });
-            this.cbListener.Start();
-        }
-        private byte[] receiveAllData(NetworkStream stream)
-        {
-            byte[] tmp = new byte[512]; //temporary buffer
-            byte[] sizeOfBuf = new byte[4]; //init the buffer containing the size
-            stream.Read(sizeOfBuf, 0, 4);
-            //if (BitConverter.IsLittleEndian)
-            //    Array.Reverse(sizeOfBuf);
-            Int32 dim = BitConverter.ToInt32(sizeOfBuf, 0); //dimensione del buffer;
-            //byte[] buffer = new byte[dim]; //init bufferone
-            byte[] buffer = new byte[0];
-            Console.WriteLine("La dimensione del bufferone è : {0}", dim);
-            int counter = dim;
-            while (counter > 0)
-            {
-                int r = stream.Read(tmp, 0, 512);
-                Console.WriteLine("Ricevuto " + r + " bytes");
-                int oldBufLen = buffer.Length;
-                Array.Resize(ref buffer, oldBufLen + r);
-                Buffer.BlockCopy(tmp, 0, buffer, oldBufLen, r);
-                counter = counter - r;
-            }
-            return buffer;
         }
 
         private void SetClipBoard(object received)
