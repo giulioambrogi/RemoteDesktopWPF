@@ -698,6 +698,12 @@ namespace HookerClient
             }));
         }
 
+        private void btnHelp_Click(object sender, RoutedEventArgs e)
+        {
+            if (System.IO.File.Exists(@"help.txt"))
+                System.Diagnostics.Process.Start(@"help.txt");
+        }
+
 
        
     }
