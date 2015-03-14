@@ -111,13 +111,14 @@
     <None Include="App.config" />
   </ItemGroup>
   <ItemGroup>
-    <Resource Include="Icons\Connected.ico" />
-  </ItemGroup>
-  <ItemGroup>
     <Resource Include="Images\Remote-DEsktop.jpg" />
   </ItemGroup>
   <ItemGroup>
     <Content Include="Hardcodet.Wpf.TaskbarNotification.dll" />
+    <Resource Include="Icons\Connected.png" />
+    <Resource Include="Icons\Disconnected.png" />
+    <Resource Include="Icons\Connected.ico" />
+    <Resource Include="Icons\Disconnected.ico" />
     <Content Include="InputSimulator.dll" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
