@@ -46,6 +46,9 @@ namespace HookerServer
         String temptext;
         public string ZIP_FILE_PATH = @"./cb/cbfiles.zip";
         public string ZIP_EXTRACTED_FOLDER = @"./cb/cbfiles/";
+        public string DISCONNECTED_ICON_PATH = @"Icons/Disconnected.ico";
+        public string CONNECTED_ICON_PATH = @"Icons/Connected.ico";
+
         TcpClient clientCB;
         Window w = new Window();
         InputSimulator inputSimulator;
@@ -56,40 +59,23 @@ namespace HookerServer
         public MainWindow()
         {
             InitializeComponent();
+            if(Properties.Settings.Default.Port != -1)
+                this.tbPort.Text = Properties.Settings.Default.Port.ToString();
+            this.tbPassword.Text = Properties.Settings.Default.Password;
             Console.WriteLine("Nome computer :" + System.Environment.MachineName);
             btnStart.IsEnabled = true;
             inputSimulator = new InputSimulator();
+            refreshGuiAtInitialization();
         }
+       
 
        
       
-        //temporaneamente disabilitato
-        private void receiveClipboard(object sender, ExecutedRoutedEventArgs e)
-        {
-            /* InputSimulator.SimulateKeyUp(VirtualKeyCode.CONTROL);
-             InputSimulator.SimulateKeyUp(VirtualKeyCode.MENU);
-             InputSimulator.SimulateKeyUp(VirtualKeyCode.VK_X);
-             try
-             {
-                 Console.WriteLine("INTERRUPT CLIPBOARD");
-                 if (isConnected)
-                 {
-                     byte[] msg = new byte[128];
-                     this.cbSocketServer.Receive(msg);
-                     String msgString = (String)ByteArrayToObject(msg);
-                     Console.WriteLine(msgString);
-                 }
-             }
-             catch (SocketException ex)
-             {
-                 Console.WriteLine("Non riesco a ricevere la clipboard");
-             }*/
-        }
-
+        
         private void parseMessage(string buffer)
         {
             //List<string> commands = buffer.Split(' ').ToList();
-            Console.WriteLine("Messaggio [" + buffer + "]");
+            Console.WriteLine("[ [" + buffer + "]");
             String[] commands = buffer.Split(' ');
             if (commands.ElementAt(0).Equals("M"))
             {
@@ -175,7 +161,9 @@ namespace HookerServer
                 icon.ShowBalloonTip("Errore", "La porta deve essere compresa tra 1500 e 60000", new Hardcodet.Wpf.TaskbarNotification.BalloonIcon());
                 return;
             }
-            icon.ShowBalloonTip("Messaggio", "Il server è in esecuzione..", new Hardcodet.Wpf.TaskbarNotification.BalloonIcon());
+            icon.ShowBalloonTip("Server", "Il server è stato lanciato sulla porta " + Properties.Settings.Default.Port + ".\n(Password : " + Properties.Settings.Default.Password + " )", Hardcodet.Wpf.TaskbarNotification.BalloonIcon.Info);
+            
+            //icon.ShowBalloonTip("Messaggio", "Il server è in esecuzione..", new Hardcodet.Wpf.TaskbarNotification.BalloonIcon());
             this.runThread = new Thread(() =>
             {
                 Thread.CurrentThread.IsBackground = true;
@@ -196,15 +184,18 @@ namespace HookerServer
             this.remoteIPEndpoint = new IPEndPoint(IPAddress.Any, Properties.Settings.Default.Port);
             this.server = new TcpListener(IPAddress.Any, Properties.Settings.Default.Port); //server which accepts the connection
             this.server.Start(1);
-            
+            icon.ShowBalloonTip("Server", "Il server è stato lanciato sulla porta " + Properties.Settings.Default.Port + ".\n(Password : " + Properties.Settings.Default.Password + " )",Hardcodet.Wpf.TaskbarNotification.BalloonIcon.Info);
             // Enter the listening loop.
             while (true)
             {
                 try
                 {
+                   
+
                     Console.WriteLine("PASSO PER IL VIA");
                     Console.WriteLine("Provo a creare il nuovo udplistener");
-                    Thread.Sleep(599);
+                    ChangeGuiEveryRestarting();
+                    //Thread.Sleep(599);
                     if (this.udpListener != null)
                         this.udpListener.Close();
                     this.udpListener = new UdpClient(Properties.Settings.Default.Port); //listener which gets the commands to be executed (keyboard and mouse)
@@ -237,8 +228,8 @@ namespace HookerServer
                         this.clientCB.Close();
                     this.clientCB = new TcpClient();
                     this.clientCB.Connect(((IPEndPoint)this.client.Client.RemoteEndPoint).Address, 9898); //questo è il client che riceve
-                    
                     Console.WriteLine("Connected!");
+                    refreshGuiAfterConnecting();
                     isConnected = true; //set the variable in order to get into the next loop
                     NetworkStream stream = client.GetStream();
                     //connection checker
@@ -290,10 +281,13 @@ namespace HookerServer
 
         }
 
+      
+
 
         private void stopServer()
         {
-            
+            //in realtà non dovrebbe chiamarsi così perchè questo stop server solo a chiudere tutto tranne il ciclo
+            //princiapale
             if (this.client != null)
                 this.client.Close();
             if (this.cbSocketServer != null)
@@ -309,6 +303,20 @@ namespace HookerServer
 
         }
 
+
+        private void  killServer(object sender, RoutedEventArgs args)
+        {
+            stopServer();
+            if (this.server != null)
+                this.server.Server.Close();
+            if (this.runThread != null && this.runThread.IsAlive)
+                this.runThread.Abort();
+           
+            refreshGuiAfterKilling();
+            
+              
+
+        }
         private void restartServer()
         {
             stopServer();
@@ -372,6 +380,7 @@ namespace HookerServer
                                 Console.WriteLine("Ho chiuso il listener UDP");
                                 //stopServer();
                                 //closeOnException();
+                                ChangeTaskbarIcon(DISCONNECTED_ICON_PATH);
                                 return;
                                 
                             }
@@ -383,6 +392,7 @@ namespace HookerServer
                         //closeOnException();
                         Console.WriteLine("La connessione è stata interrotta\n" + se.Message);
                         this.isConnected = false;
+                        ChangeTaskbarIcon(DISCONNECTED_ICON_PATH);
                         return;
                     }
                 }
@@ -617,7 +627,27 @@ namespace HookerServer
             cb.sendClipBoardFaster(null);
         }
 
-      
+
+        private void ChangeTaskbarIcon(String img)
+        {
+            try
+            {
+                this.icon.Dispatcher.Invoke(DispatcherPriority.Background,
+                    new Action(() =>
+                    {
+                        if (img.Equals(CONNECTED_ICON_PATH))
+                            icon.ToolTipText = "Sotto controllo da remoto";
+                        else if (img.Equals(DISCONNECTED_ICON_PATH))
+                            icon.ToolTipText = "In attesa di una connessione";
+                        String fullpath = @"../../" + img;
+                        this.icon.Icon = new System.Drawing.Icon(fullpath);
+                    }));
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine(e.Message);
+           }
+        }
 
         /*public static void DeleteDirectory(string target_dir)
         {
@@ -638,8 +668,61 @@ namespace HookerServer
             Directory.Delete(target_dir, false);
         }*/
 
- 
-            
+        public void reOpenMainWindow(object sender, RoutedEventArgs rea)
+        {
+            this.Dispatcher.Invoke(DispatcherPriority.Background,
+                 new Action(() =>
+                 {
+                     Window w = new MainWindow();
+                     w.Show();
+                 }));
+        }
+        private void refreshGuiAfterKilling()
+        {
+            this.icon.Dispatcher.Invoke(DispatcherPriority.Background,
+                  new Action(() =>
+                  {
+                      this.icon.ShowBalloonTip("Sever", "Esecuzione terminata.", Hardcodet.Wpf.TaskbarNotification.BalloonIcon.Info);
+                      ((MenuItem)this.icon.ContextMenu.Items.GetItemAt(0)).IsEnabled = true;
+                      ((MenuItem)this.icon.ContextMenu.Items.GetItemAt(1)).IsEnabled = false;
+                  }));
+        }
+        private void refreshGuiAfterConnecting()
+        {
+            ChangeTaskbarIcon(CONNECTED_ICON_PATH); //aggiorno messaggio nuvoletta
+            this.icon.Dispatcher.Invoke(DispatcherPriority.Background,
+                  new Action(() =>
+                  {
+                      this.icon.ShowBalloonTip("Sever", "Sotto controllo", Hardcodet.Wpf.TaskbarNotification.BalloonIcon.Info);
+                      ((MenuItem)this.icon.ContextMenu.Items.GetItemAt(0)).IsEnabled = false;
+                      ((MenuItem)this.icon.ContextMenu.Items.GetItemAt(1)).IsEnabled = true;
+                  }));
+        }
+
+        private void refreshGuiAtInitialization()
+        {
+            this.icon.Dispatcher.Invoke(DispatcherPriority.Background,
+                  new Action(() =>
+                  {
+                      this.icon.ShowBalloonTip("Sever", "In attesa di un client.", Hardcodet.Wpf.TaskbarNotification.BalloonIcon.Info);
+                      ((MenuItem)this.icon.ContextMenu.Items.GetItemAt(0)).IsEnabled = false;
+                      ((MenuItem)this.icon.ContextMenu.Items.GetItemAt(1)).IsEnabled = false;
+                  }));
+        }
+
+        private void ChangeGuiEveryRestarting()
+        {
+
+            ChangeTaskbarIcon(DISCONNECTED_ICON_PATH);
+            this.icon.Dispatcher.Invoke(DispatcherPriority.Background,
+                  new Action(() =>
+                  {
+                      this.icon.ShowBalloonTip("Sever", "In attesa di un client.", Hardcodet.Wpf.TaskbarNotification.BalloonIcon.Info);
+                      ((MenuItem)this.icon.ContextMenu.Items.GetItemAt(0)).IsEnabled = false;
+                      ((MenuItem)this.icon.ContextMenu.Items.GetItemAt(1)).IsEnabled = true;
+                  }));
+
+        }
             
         }
 

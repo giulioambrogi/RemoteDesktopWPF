@@ -21,17 +21,16 @@
             </Button.Background>
         </Button>
 
-        <tb:TaskbarIcon Name="icon" IconSource="/Icons/Connected.ico" ToolTipText="Server running..." Grid.ColumnSpan="2" >
-            <tb:TaskbarIcon.TrayToolTip>
+        <tb:TaskbarIcon Name="icon" IconSource="/Icons/Disconnected.ico" ToolTipText="Server running..." Grid.ColumnSpan="2" >
+            <!--<tb:TaskbarIcon.TrayToolTip>
                 <Border Background="White" BorderBrush="AliceBlue" BorderThickness="2" CornerRadius="4" Opacity="1.0" Width="160" Height="40">
-                    <TextBlock Text="Server running..." HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                    <TextBlock Name="txtIcon" Text="Server running..." HorizontalAlignment="Center" VerticalAlignment="Center"/>
                 </Border>
-            </tb:TaskbarIcon.TrayToolTip>
+            </tb:TaskbarIcon.TrayToolTip>-->
             <tb:TaskbarIcon.ContextMenu>
                 <ContextMenu Background="AliceBlue">
-                    <MenuItem Header="Avvia Server" Click="Button_Click" />
-                    <!--<MenuItem Header="Stop server" Click="btnClose_Click" />-->
-                    <MenuItem Header="Riapri finestra" Click="WindowResume" />
+                    <MenuItem Header="Avvia Server" Click="reOpenMainWindow" />
+                    <MenuItem Header="Stop server" Click="killServer" />
                     <Separator />
                     <MenuItem Header="Esci" Click="ExitButton" />
                 </ContextMenu>
