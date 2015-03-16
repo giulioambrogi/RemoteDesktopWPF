@@ -26,19 +26,64 @@
                 </Style>
 
             </ListView.Resources>
-
+            <ListView.Style>
+                <Style TargetType="{x:Type ListView}">
+                    <Style.Triggers>
+                        <Trigger Property="IsEnabled" Value="False">
+                            <Setter Property="Foreground" Value="Black" />
+                            <Setter Property="Background" Value="Yellow" />
+                        </Trigger>
+                    </Style.Triggers>
+                </Style>
+            </ListView.Style>
             <ListView.ItemContainerStyle>
-
                 <Style TargetType="{x:Type ListViewItem}">
-                    <Setter Property="Height" Value="60"/>
+                    <Setter Property="Background" Value="Transparent" />
+                    <Setter Property="Template">
+                        <Setter.Value>
+                            <ControlTemplate TargetType="{x:Type ListViewItem}">
+                                <Border
+                         BorderBrush="Transparent"
+                         BorderThickness="0,0,0,0"
+                         Background="{TemplateBinding Background}">
+                                    <GridViewRowPresenter HorizontalAlignment="Stretch" VerticalAlignment="{TemplateBinding VerticalContentAlignment}" Width="Auto" Margin="0" Content="{TemplateBinding Content}"/>
+                                </Border>
+                            </ControlTemplate>
+                        </Setter.Value>
+                    </Setter>
+                    <!--
+                    <Style.Triggers>
+                        <Trigger Property="IsMouseOver" Value="True">
+
+                            <Setter Property="Template">
+                                <Setter.Value>
+                                    <ControlTemplate TargetType="{x:Type ListViewItem}">
+                                        <Border
+                         BorderBrush="Yellow"
+                         BorderThickness="1,0,0,0"
+                         Background="{TemplateBinding Background}">
+                                            <GridViewRowPresenter HorizontalAlignment="Stretch" VerticalAlignment="{TemplateBinding VerticalContentAlignment}" Width="Auto" Margin="0" Content="{TemplateBinding Content}"/>
+                                        </Border>
+                                    </ControlTemplate>
+                                </Setter.Value>
+                            </Setter>
+                        </Trigger>
+
+                    </Style.Triggers>
+                    </Style> -->
+
+
+                    <!--<Setter Property="Height" Value="60"/>-->
                     <Setter Property="BorderThickness" Value="0" />
                     <Setter Property="HorizontalContentAlignment" Value="Stretch"/>
                     <Style.Triggers>
-                        <Trigger Property="IsMouseOver" Value="True">
-                            <Setter Property="Background" Value="{x:Null}"/>
+
+                        <!--<Trigger Property="IsMouseOver" Value="True">
+                            <Setter Property="OverridesDefaultStyle" Value="True"/>
+                            <Setter Property="Background" Value="Transparent"/>
                             <Setter Property="BorderBrush" Value="Yellow"/>
                             <Setter Property="BorderThickness" Value="1,0,0,0"/>
-                        </Trigger>
+                        </>-->
                         <Trigger Property="IsSelected" Value="True">
                             <Setter Property="Background" Value="{x:Null}"/>
                         </Trigger>
@@ -187,6 +232,7 @@
         <!--<Button Content="Button" HorizontalAlignment="Left" Margin="132,528,0,0" VerticalAlignment="Top" Width="75" Click="Button_Click"/>-->
         <Label x:Name="lblTitle" Content="4.5 Remote Desktop Manager" HorizontalAlignment="Left" Margin="30,-128,0,0" VerticalAlignment="Top" Grid.ColumnSpan="2" Height="80" Width="713" Foreground="White" FontSize="50"/>
         <Label x:Name="lblMessages" Content="" Grid.Column="1" HorizontalAlignment="Left" Margin="50,0,0,22" VerticalAlignment="Bottom" Height="64" Width="1586" FontSize="25" Foreground="White" BorderBrush="#FFF7F2F2" BorderThickness="0,1,0,0"/>
+        <Button x:Name="btnHelp" Content="?" Grid.Column="1" HorizontalAlignment="Right" Margin="1561,-110,30,30" VerticalAlignment="Top" Width="75" Height="47" Foreground="White" BorderBrush="White" FontSize="20" Background="{x:Null}" Click="btnHelp_Click"/>
 
     </Grid>
 </Window>

@@ -35,17 +35,18 @@ namespace HookerClient
             //t.Background = (System.Windows.Media.Brush)bc.ConvertFromString("Yellow");
             t.Background = Brushes.Transparent;
             t.Height = 30;
-            t.Width = 150;
+            //t.Width = 150;
             t.VerticalAlignment = VerticalAlignment.Center;
             t.BorderBrush = Brushes.White;
-            t.BorderThickness = new Thickness(0, 0, 0, 1);
+            t.BorderThickness = new Thickness(0, 0, 1, 1);
             t.HorizontalAlignment = HorizontalAlignment.Center;
-            t.HorizontalContentAlignment = HorizontalAlignment.Stretch;
+            //t.HorizontalContentAlignment = HorizontalAlignment.Stretch;
             t.Foreground = Brushes.White;
             t.HorizontalAlignment = HorizontalAlignment.Stretch;
             //t.Margin = new Thickness(5, 0, 5, 0);
             t.CaretBrush = Brushes.White;
-            t.Text = "password";
+            t.Cursor = System.Windows.Input.Cursors.Hand;
+            //t.Text = "password";
             
         
         }
@@ -55,17 +56,18 @@ namespace HookerClient
             //t.Background = (System.Windows.Media.Brush)bc.ConvertFromString("Yellow");
             t.Background = Brushes.Transparent;
             t.Height = 30;
-            t.Width = 150;
+            //t.Width = 150;
             t.VerticalAlignment = VerticalAlignment.Center;
             t.HorizontalAlignment = HorizontalAlignment.Center;
             t.BorderBrush = Brushes.White;
-            t.BorderThickness = new Thickness(0, 0, 0, 1);
-            //t.HorizontalContentAlignment = HorizontalAlignment.Center;
+            t.BorderThickness = new Thickness(0, 0, 1, 1);
+           //t.HorizontalContentAlignment = HorizontalAlignment.Center;
             t.Foreground = Brushes.White;
             t.HorizontalAlignment = HorizontalAlignment.Stretch;
             //t.Margin = new Thickness(5, 0, 5, 0);
             t.CaretBrush = Brushes.White;
-            t.Text = "5143";
+            t.Cursor = System.Windows.Input.Cursors.Hand;
+            //t.Text = "5143";
             
             
         }
@@ -76,7 +78,8 @@ namespace HookerClient
             cb.HorizontalAlignment = HorizontalAlignment.Center;
             
             cb.BorderBrush = Brushes.White;
-            cb.Background = Brushes.Blue; 
+            cb.BorderThickness = new Thickness(2, 2, 2, 2);
+            cb.Background = Brushes.Transparent; 
             
         }
 

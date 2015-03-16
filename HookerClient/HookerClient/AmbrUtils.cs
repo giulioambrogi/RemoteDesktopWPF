@@ -5,7 +5,10 @@ using System.IO.Compression;
 using System.Linq;
 using System.Runtime.Serialization.Formatters.Binary;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
+using System.Windows;
+using System.Windows.Media;
 using System.Windows.Media.Imaging;
 
 namespace HookerClient
@@ -91,6 +94,22 @@ namespace HookerClient
                 CopyFilesRecursively(dir, target.CreateSubdirectory(dir.Name));
             foreach (FileInfo file in source.GetFiles())
                 file.CopyTo(Path.Combine(target.FullName, file.Name));
+        }
+
+        public static void showPopUpMEssage(String message, int millis)
+        {
+            Window w = new Window();
+            w.Content = message;
+            w.Foreground = Brushes.White;
+            w.Background = Brushes.Red;
+            w.WindowStyle = WindowStyle.None;
+            w.SizeToContent = SizeToContent.WidthAndHeight ;// Automatically resize height and width relative to content
+            w.HorizontalAlignment = System.Windows.HorizontalAlignment.Center;
+            w.VerticalAlignment = VerticalAlignment.Center;
+            w.WindowStartupLocation = WindowStartupLocation.CenterScreen;
+            w.Show(); //show the windows
+            Thread.Sleep(millis);
+
         }
 
         #region nonGeneriMethods
