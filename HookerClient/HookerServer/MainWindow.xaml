@@ -3,7 +3,7 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:tb="http://www.hardcodet.net/taskbar"
         Title="4.5 Remote Desktop Server" Height="556.134" Width="449.836"
-        StateChanged="Window_StateChanged" WindowStyle="None" VerticalAlignment="Center" HorizontalAlignment="Center" Margin="0">
+        StateChanged="Window_StateChanged" WindowStyle="None" VerticalAlignment="Center" HorizontalAlignment="Center" Margin="0" WindowStartupLocation="CenterScreen">
     <Window.Background>
         <LinearGradientBrush EndPoint="0.5,1" MappingMode="RelativeToBoundingBox" StartPoint="0.5,0">
             <GradientStop Color="#FF9E0E0E" Offset="0.126"/>
