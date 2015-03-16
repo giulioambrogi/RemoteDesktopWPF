@@ -307,7 +307,7 @@ namespace RamGecTools
                 int iwParam = wParam.ToInt32();
                 int ilParam = lParam.ToInt32();
 
-                Console.WriteLine("iw: " + iwParam + " key: " + Marshal.ReadInt32(lParam));
+                //Console.WriteLine("iw: " + iwParam + " key: " + Marshal.ReadInt32(lParam));
                 /* VECCHIA IDEA (NON CANCELLARE
                  switch (iwParam){
                     case 260:

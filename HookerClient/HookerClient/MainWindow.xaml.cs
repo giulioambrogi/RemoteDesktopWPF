@@ -221,6 +221,8 @@ namespace HookerClient
 
         private void btnConnect_Click(object sender, RoutedEventArgs e)
         {
+            Window connWindow = new Window() { Background = Brushes.Red, Foreground = Brushes.White, Width = 200, Height = 100, Content = "In connessione..." , WindowStyle= WindowStyle.None, WindowStartupLocation = WindowStartupLocation.CenterScreen};
+            connWindow.Show();
             Thread t = new Thread(() =>
             {
                     Thread.CurrentThread.IsBackground = true;
@@ -236,6 +238,7 @@ namespace HookerClient
                     //almeno un server non è connesso 
                     this.serverManger.disconnect();
                     allConnected = false;
+                    connWindow.Close();
                     MessageBox.Show("Non sono riuscito a connettermi a "+s.name);
                     refreshGUIonClosing();
                 }
@@ -246,6 +249,7 @@ namespace HookerClient
                 InstallMouseAndKeyboard();
                 //Questo bind vale solo mentre si è connessi
                 bindHotkeyCommands();
+                connWindow.Close();
                 refreshGUIonConnection();
                 this.ConnectionChecker = new Thread(() =>
                 {
@@ -304,6 +308,8 @@ namespace HookerClient
             lvComputers.IsEnabled = false;
             lblMessages.Dispatcher.Invoke(DispatcherPriority.Background,
                new Action(() => { lblMessages.Content = "Connesso al server : " + this.serverManger.selectedServers.ElementAt(this.serverManger.serverPointer).name; }));
+            btnHelp.Dispatcher.Invoke(DispatcherPriority.Background,
+             new Action(() => { btnHelp.IsEnabled = false; }));
             //scrivo messaggio per l'utente
             /*tbStatus.Dispatcher.Invoke(DispatcherPriority.Background, new Action(() =>
             {
@@ -331,6 +337,8 @@ namespace HookerClient
             new Action(() => { lvComputers.IsEnabled = true; }));
             lblMessages.Dispatcher.Invoke(DispatcherPriority.Background,
             new Action(() => { lblMessages.Content = ""; }));
+               btnHelp.Dispatcher.Invoke(DispatcherPriority.Background,
+             new Action(() => { btnHelp.IsEnabled = true;  }));
         }
         private void refreshGUIOnPause()
         {
@@ -338,13 +346,21 @@ namespace HookerClient
             btnRefreshServers.IsEnabled = false;
             btnConnect.IsEnabled = false;
             btnExit.IsEnabled = true;
+               btnHelp.Dispatcher.Invoke(DispatcherPriority.Background,
+             new Action(() => { btnHelp.IsEnabled = true;  }));
            
         }
 
         private void refreshGUIOnContinue()
         {
-            btnContinue.IsEnabled = false;
-            btnExit.IsEnabled = false;
+            btnRefreshServers.Dispatcher.Invoke(DispatcherPriority.Background,
+                new Action(() => { btnRefreshServers.IsEnabled = false; }));
+            btnConnect.Dispatcher.Invoke(DispatcherPriority.Background,
+             new Action(() => { btnConnect.IsEnabled = false; }));
+            btnContinue.Dispatcher.Invoke(DispatcherPriority.Background,
+            new Action(() => { btnContinue.IsEnabled = false; }));
+            btnExit.Dispatcher.Invoke(DispatcherPriority.Background,
+            new Action(() => { btnExit.IsEnabled = true; }));
             
         }
         #endregion
@@ -378,7 +394,7 @@ namespace HookerClient
             this.serverManger.sendMessage("K" + " " + (int)RamGecTools.KeyboardHook.VKeys.LMENU + " " + "UP");
             this.serverManger.sendMessage("K" + " " + (int)RamGecTools.KeyboardHook.VKeys.KEY_P + " " + "UP");
             UnistallMouseAndKeyboard();
-            //unbindHotkeyCommands();
+            unbindHotkeyCommands();
             refreshGUIOnPause();
 
         }
@@ -386,8 +402,8 @@ namespace HookerClient
         private void continueCommunication()
         {
             InstallMouseAndKeyboard();
-            //bindHotkeyCommands();
-            btnContinue.IsEnabled = false;
+            bindHotkeyCommands();
+            refreshGUIOnContinue();
         }
         
         #endregion
@@ -444,6 +460,13 @@ namespace HookerClient
             }
         }
 
+
+        private void unbindHotkeyCommands()
+        {
+            CommandBindings.Clear();
+        }
+
+
         private void gimmeClipboard(object sender, ExecutedRoutedEventArgs e)
         {
             this.serverManger.sendMessage("K" + " " + (int)RamGecTools.KeyboardHook.VKeys.LCONTROL + " " + "UP");
@@ -465,10 +488,6 @@ namespace HookerClient
          
         }
 
-        private void unbindHotkeyCommands()
-        {
-          //TODO
-        }
     
         private void btnExit_Click(object sender, RoutedEventArgs e)
         {
@@ -700,8 +719,28 @@ namespace HookerClient
 
         private void btnHelp_Click(object sender, RoutedEventArgs e)
         {
-            if (System.IO.File.Exists(@"help.txt"))
-                System.Diagnostics.Process.Start(@"help.txt");
+            String filepath = @"help.txt";
+            Window w = new Window();
+            if (System.IO.File.Exists(filepath))
+            {
+                w.Title = "Help";
+               
+                string[] content = System.IO.File.ReadAllLines(filepath, Encoding.ASCII);
+                foreach (string s in content)
+                {
+                    w.Content += s+"\n";
+                }
+                //w.Content = content ;
+                w.Foreground = Brushes.White;
+                w.Background = Brushes.Red;
+                w.WindowStartupLocation = WindowStartupLocation.CenterScreen;
+            }
+            else
+            {
+                w.Content = "Helper file not found";
+            }
+            w.Show();
+                
         }
 
 
