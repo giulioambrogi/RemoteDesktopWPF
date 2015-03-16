@@ -142,6 +142,11 @@ namespace HookerServer
                 Thread cbSenderThread = new Thread(() =>
                 {
                     Thread.CurrentThread.IsBackground = true;
+                    //mi connetto al volo 
+                    if (this.clientCB != null)
+                        this.clientCB.Client.Close();
+                    this.clientCB = new TcpClient();
+                    this.clientCB.Connect(((IPEndPoint)this.client.Client.RemoteEndPoint).Address, 9898); //questo è il client che riceve
                     cb.sendClipBoardFaster(this.clientCB);
                 });
                 cbSenderThread.SetApartmentState(ApartmentState.STA);
@@ -224,10 +229,13 @@ namespace HookerServer
                     }
                     initCBListener(); //init clipboard socket
                     //connect to client's clipboard endpoint
-                    if (this.clientCB != null)
-                        this.clientCB.Close();
-                    this.clientCB = new TcpClient();
-                    this.clientCB.Connect(((IPEndPoint)this.client.Client.RemoteEndPoint).Address, 9898); //questo è il client che riceve
+
+
+                    //GRAVE commento queste due righe che poi le uso per mandare la cb ogni volta
+                    //if (this.clientCB != null)
+                     //   this.clientCB.Close();
+                    //this.clientCB = new TcpClient();
+                    //this.clientCB.Connect(((IPEndPoint)this.client.Client.RemoteEndPoint).Address, 9898); //questo è il client che riceve
                     Console.WriteLine("Connected!");
                     refreshGuiAfterConnecting();
                     isConnected = true; //set the variable in order to get into the next loop

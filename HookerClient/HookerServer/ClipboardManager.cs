@@ -165,7 +165,6 @@ namespace HookerServer
                 ns.Flush();
                 Console.WriteLine("Mandato!");
 
-
         }
 
         public static void CopyFilesRecursively(DirectoryInfo source, DirectoryInfo target)
