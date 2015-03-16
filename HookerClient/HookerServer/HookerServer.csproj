@@ -121,6 +121,12 @@
     <Resource Include="Icons\Disconnected.ico" />
     <Content Include="InputSimulator.dll" />
   </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\HookerClient\HookerClient.csproj">
+      <Project>{c2371132-fe08-453e-b2d7-b05d5e2bbd76}</Project>
+      <Name>HookerClient</Name>
+    </ProjectReference>
+  </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
        Other similar extension points exist, see Microsoft.Common.targets.

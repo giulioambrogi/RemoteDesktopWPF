@@ -111,3 +111,5 @@ C:\Users\Giulio\Documents\Visual Studio 2013\Projects\ProgettoC\progettopds\test
 C:\Users\Giulio\Documents\Visual Studio 2013\Projects\ProgettoC\progettopds\test\HookerClient\HookerServer\obj\Debug\HookerServer.csproj.GenerateResource.Cache
 C:\Users\Giulio\Documents\Visual Studio 2013\Projects\ProgettoC\progettopds\test\HookerClient\HookerServer\obj\Debug\HookerServer.exe
 C:\Users\Giulio\Documents\Visual Studio 2013\Projects\ProgettoC\progettopds\test\HookerClient\HookerServer\obj\Debug\HookerServer.pdb
+C:\Users\Giulio\Documents\Visual Studio 2013\Projects\ProgettoC\progettopds\test\HookerClient\HookerServer\bin\Debug\HookerClient.exe
+C:\Users\Giulio\Documents\Visual Studio 2013\Projects\ProgettoC\progettopds\test\HookerClient\HookerServer\bin\Debug\HookerClient.pdb

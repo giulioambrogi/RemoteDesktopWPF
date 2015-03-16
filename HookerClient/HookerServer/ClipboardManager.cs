@@ -17,7 +17,7 @@ namespace HookerServer
         Object content;
         public string ZIP_FILE_PATH = @"./cb/cbfiles.zip"; //temporary zip file received by the client
         public string ZIP_EXTRACTED_FOLDER = @"./cb/cbfiles/"; //folder containing the files received from the client
-        public String CB_FILES_DIRECTORY_PATH = @"./CBFILES/"; //zip folder that will be zipped 
+        public String CB_FILES_DIRECTORY_PATH = @"./CBFILES/"; //folder that will be zipped 
         public String ZIP_FILE_NAME_AND_PATH = "CBFILES.zip"; //zip file to be sent to the client
         public ClipboardManager() { }
         public ClipboardManager(Object content)
@@ -40,7 +40,7 @@ namespace HookerServer
                 {
                     //extraction  already been done
                     Clipboard.Clear();
-                    System.Collections.Specialized.StringCollection files = getFileNames(ZIP_EXTRACTED_FOLDER + @"/CBFILES/"); //add all files to list
+                    System.Collections.Specialized.StringCollection files = HookerClient.AmbrUtils.getFileNames(ZIP_EXTRACTED_FOLDER + @"/CBFILES/"); //add all files to list
                     foreach (DirectoryInfo dir in new DirectoryInfo(ZIP_EXTRACTED_FOLDER + @"/CBFILES/").GetDirectories())
                     {
                         files.Add(dir.FullName);
@@ -67,40 +67,15 @@ namespace HookerServer
             }
         }
 
-        private System.Collections.Specialized.StringCollection getFileNames(string p)
-        {
-            string[] filenames = Directory.GetFiles(p);
-            System.Collections.Specialized.StringCollection sc = new System.Collections.Specialized.StringCollection();
-            foreach (string s in filenames)
-            {
-                sc.Add(System.IO.Path.GetFullPath(s));
-            }
-            return sc;
-        }
-
-        private void UnzipArchive()
-        {
-            string zipPath = ZIP_FILE_PATH;
-            string extractPath = ZIP_EXTRACTED_FOLDER;
-
-            using (ZipArchive archive = ZipFile.OpenRead(zipPath))
-            {
-                foreach (ZipArchiveEntry entry in archive.Entries)
-                {
-                    entry.ExtractToFile(System.IO.Path.Combine(extractPath, entry.FullName));
-                }
-            }
-        }
-
         public void sendClipBoardFaster(TcpClient client)
         {
-
+                
                 byte[] content = new byte[0]; //byte array that will contain the clipboard
                 byte[] sizeInBytes = new byte[4]; //byte array that will contain the size
 
                 if (Clipboard.ContainsText())
                 {
-                   content= ObjectToByteArray(Clipboard.GetText());
+                   content= HookerClient.AmbrUtils.ObjectToByteArray(Clipboard.GetText());
                 }
                 else if (Clipboard.ContainsFileDropList())
                 {
@@ -120,7 +95,7 @@ namespace HookerServer
                             System.IO.Directory.CreateDirectory(CB_FILES_DIRECTORY_PATH + diSource.Name);
                             
                             DirectoryInfo diDst = new DirectoryInfo(CB_FILES_DIRECTORY_PATH + diSource.Name);
-                            CopyFilesRecursively(diSource, diDst);                  
+                            HookerClient.AmbrUtils.CopyFilesRecursively(diSource, diDst);                  
                         }else{
                             //Its a file
                             String dstFilePath = CB_FILES_DIRECTORY_PATH+Path.GetFileName(filepath);
@@ -143,11 +118,11 @@ namespace HookerServer
                 else if (Clipboard.ContainsImage())
                 {
                     //content = imageToByteArray(Clipboard.GetImage());
-                    content = bitmapSourceToByteArray(Clipboard.GetImage());
+                    content = HookerClient.AmbrUtils.bitmapSourceToByteArray(Clipboard.GetImage());
                 }
                 else if (Clipboard.ContainsAudio())
                 {
-                    content = ObjectToByteArray(Clipboard.GetAudioStream());
+                    content = HookerClient.AmbrUtils.audioSourceToByteArray(Clipboard.GetAudioStream());
                 }
                 else
                 {
@@ -165,68 +140,6 @@ namespace HookerServer
                 ns.Flush();
                 Console.WriteLine("Mandato!");
 
-        }
-
-        public static void CopyFilesRecursively(DirectoryInfo source, DirectoryInfo target)
-        {
-            foreach (DirectoryInfo dir in source.GetDirectories())
-                CopyFilesRecursively(dir, target.CreateSubdirectory(dir.Name));
-            foreach (FileInfo file in source.GetFiles())
-                file.CopyTo(Path.Combine(target.FullName, file.Name));
-        }
-        // Convert an object to a byte array
-        private byte[] ObjectToByteArray(Object obj)
-        {
-            if (obj == null)
-                return null;
-            BinaryFormatter bf = new BinaryFormatter();
-            MemoryStream ms = new MemoryStream();
-            bf.Serialize(ms, obj);
-            return ms.ToArray();
-        }
-
-        // Convert a byte array to an Object
-        private Object ByteArrayToObject(byte[] arrBytes)
-        {
-            MemoryStream memStream = new MemoryStream();
-            BinaryFormatter binForm = new BinaryFormatter();
-            memStream.Write(arrBytes, 0, arrBytes.Length);
-            memStream.Seek(0, SeekOrigin.Begin);
-            Object obj = (Object)binForm.Deserialize(memStream);
-            return obj;
-        }
-
-        public byte[] imageToByteArray(System.Windows.Media.Imaging.BitmapSource imageIn)
-        {
-            byte[] data;
-            JpegBitmapEncoder encoder = new JpegBitmapEncoder();
-            encoder.Frames.Add(BitmapFrame.Create(imageIn));
-            using (MemoryStream ms = new MemoryStream())
-            {
-                encoder.Save(ms);
-                data = ms.ToArray();
-            }
-            return data;
-        }
-
-        public byte[] bitmapSourceToByteArray(BitmapSource bms)
-        {
-             MemoryStream memStream = new MemoryStream();              
-            JpegBitmapEncoder encoder = new JpegBitmapEncoder();
-            encoder.Frames.Add(BitmapFrame.Create(bms));
-            encoder.Save(memStream);
-            return memStream.GetBuffer();
-        }
-        public BitmapImage byteArrayToBitMapImage(byte[] byteArrayIn)
-        {
-
-            MemoryStream strmImg = new MemoryStream(byteArrayIn);
-            BitmapImage myBitmapImage = new BitmapImage();
-            myBitmapImage.BeginInit();
-            myBitmapImage.StreamSource = strmImg;
-            myBitmapImage.DecodePixelWidth = 200;
-            myBitmapImage.EndInit();
-            return myBitmapImage;
         }
 
     }

@@ -67,10 +67,6 @@ namespace HookerServer
             inputSimulator = new InputSimulator();
             refreshGuiAtInitialization();
         }
-       
-
-       
-      
         
         private void parseMessage(string buffer)
         {
@@ -216,22 +212,19 @@ namespace HookerServer
                     int receivedBytes = this.client.Client.Receive(passwordInBytes);
                     Console.WriteLine("Ricevuto password di " + receivedBytes + " bytes");
                     Boolean result;
-                    String passwd = (String)ByteArrayToObject(passwordInBytes);
+                    String passwd = (String)HookerClient.AmbrUtils.ByteArrayToObject(passwordInBytes);
                     if (passwd.Equals(Properties.Settings.Default.Password.Replace("\r\n","")))
                     {
                         result = true;
-                        this.client.Client.Send(ObjectToByteArray(result), ObjectToByteArray(result).Length, 0);
+                        this.client.Client.Send(HookerClient.AmbrUtils.ObjectToByteArray(result), HookerClient.AmbrUtils.ObjectToByteArray(result).Length, 0);
                     }else{
                         result = false;
-                        this.client.Client.Send(ObjectToByteArray(result), ObjectToByteArray(result).Length, 0);
-                        
+                        this.client.Client.Send(HookerClient.AmbrUtils.ObjectToByteArray(result), HookerClient.AmbrUtils.ObjectToByteArray(result).Length, 0);
                         continue;
                     }
                     initCBListener(); //init clipboard socket
                     //connect to client's clipboard endpoint
-
-
-                    //GRAVE commento queste due righe che poi le uso per mandare la cb ogni volta
+                    //IMPORTANTISSIMO commento queste due righe che poi le uso per mandare la cb ogni volta
                     //if (this.clientCB != null)
                      //   this.clientCB.Close();
                     //this.clientCB = new TcpClient();
@@ -325,15 +318,7 @@ namespace HookerServer
               
 
         }
-        private void restartServer()
-        {
-            stopServer();
-            /*this.runThread = new Thread(() =>
-            {
-                Thread.CurrentThread.IsBackground = true;
-                runServer();
-            });*/
-        }
+
         private void btnClose_Click(object sender, RoutedEventArgs e)
         {
             btnStart.IsEnabled = true;
@@ -408,10 +393,6 @@ namespace HookerServer
             this.ConnectionChecker.Start();
         }
 
-        private void closeOnException()
-        {
-            restartServer();
-        }
 
         public void initCBListener()
         {
@@ -440,7 +421,7 @@ namespace HookerServer
                                 Console.WriteLine("Aspettando un messaggio dalla clipboard");
                                 NetworkStream stream = acceptedClient.GetStream();
                                 byte[] buffer = receiveAllData(stream);
-                                Object received = ByteArrayToObject(buffer);
+                                Object received = HookerClient.AmbrUtils.ByteArrayToObject(buffer);
                                 Console.WriteLine("FINE RICEZIONE\t Tipo: " + received.GetType() + " Dimensione : " + buffer.Length + " bytes");
                                 SetClipBoard(received);
                                 icon.ShowBalloonTip("Clipboard", "La clipboard è stata aggiornata", new Hardcodet.Wpf.TaskbarNotification.BalloonIcon());
@@ -533,57 +514,8 @@ namespace HookerServer
 
 
 
-        // Convert an object to a byte array
-        private byte[] ObjectToByteArray(Object obj)
-        {
-            if (obj == null)
-                return null;
-            BinaryFormatter bf = new BinaryFormatter();
-            MemoryStream ms = new MemoryStream();
-            bf.Serialize(ms, obj);
-            return ms.ToArray();
-        }
-
-        // Convert a byte array to an Object
-        private Object ByteArrayToObject(byte[] arrBytes)
-        {
-            MemoryStream memStream = new MemoryStream();
-            BinaryFormatter binForm = new BinaryFormatter();
-             if(byteArrayContainsZipFile(arrBytes)){
-                 return extractZIPtoFolder(arrBytes);
-            }
-             if (byteArrayContainsBitmap(arrBytes))
-             {
-                 return byteArrayToBitmap(arrBytes);
-             }
-             Console.WriteLine("Ricevuto bytearray : [" + Encoding.Default.GetString(arrBytes) + "]");
-            memStream.Write(arrBytes, 0, arrBytes.Length);
-            memStream.Seek(0, SeekOrigin.Begin);
-            Object obj = (Object)binForm.Deserialize(memStream);
-            return obj;
-        }
-
-        private BitmapImage byteArrayToBitmap(byte[] arrBytes)
-        {
-            using (var ms = new System.IO.MemoryStream(arrBytes))
-            {
-                var image = new BitmapImage();
-                image.BeginInit();
-                image.CacheOption = BitmapCacheOption.OnLoad; // here
-                image.StreamSource = ms;
-                image.EndInit();
-                return image;
-            }
-        }
-
-        private bool byteArrayContainsBitmap(byte[] arrBytes)
-        {
-            if (arrBytes[0] == 255 && arrBytes[1] == 216 && arrBytes[2] == 255 && arrBytes[3] == 224)
-            {
-                return true;
-            }
-            return false;
-        }
+    
+     
 
         private Object extractZIPtoFolder(byte[] arrBytes)
         {
@@ -602,13 +534,7 @@ namespace HookerServer
             } 
         }
 
-        private bool byteArrayContainsZipFile(byte[] arrBytes)
-        {
-            if( arrBytes[0]==80 && arrBytes[1]==75 && arrBytes[2] == 3 && arrBytes[3] == 4){
-                return true;
-            }
-            return false;
-        }
+   
 
         private void tbPassword_TextChanged(object sender, TextChangedEventArgs e)
         {
