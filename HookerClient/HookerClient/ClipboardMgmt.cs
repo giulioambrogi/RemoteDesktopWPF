@@ -158,13 +158,17 @@ namespace HookerClient
                     }
                      
                 }
-                else if (t == typeof(BitmapSource))
+                else if ( t == typeof(BitmapImage))
                 {
-                    Clipboard.SetImage((BitmapSource)content);
+                    Clipboard.SetImage((BitmapImage)content);
                 }
                 else if (t == typeof(Stream))
                 {
                     Clipboard.SetAudio((Stream)content);
+                }
+                else
+                {
+                    Console.WriteLine("Non sono riuscito ad identificare il tipo");
                 }
                 int millis = 3000;
                 AmbrUtils.showPopUpMEssage("La clipboard è stata aggiornata!\n(Questa finestra si chiuderà in "+((int)millis/1000)+" secondi", millis);

@@ -102,23 +102,8 @@ namespace HookerClient
             return result;
         }
 
-        private void SetClipBoard(object received)
-        {
-            try
-            {
-                //ClipboardManager cbm = new ClipboardManager(received); //passo l'oggetto al costruttore della classe
-                //non so perchè forse perchè non sapevo in che altro modo lanciare il thread 
-                ClipboardMgmt cbm = new ClipboardMgmt(received);
-                Thread runThread = new Thread(new ThreadStart(cbm.setData));
-                runThread.SetApartmentState(ApartmentState.STA);
-                runThread.Start();
-            }
-            catch (Exception ex)
-            {
-                Console.WriteLine(ex.Message);
-            }
-        }
-    
+        
+
     
     }
 }

@@ -57,20 +57,25 @@ namespace HookerClient
                     Thread.CurrentThread.IsBackground = true;
 
 
-                    Console.Write("Waiting for ClipBoard connection... ");
-                    TcpClient acceptedClient = this.cbSocketServer.AcceptTcpClient();
-                    Console.WriteLine("Clipboard is Connected!");
+                    
                     while (true)
                     {
+                        //ho spostato qui queste tre righe per evitare il prob che ogni volta va tutto a puttane 
+                        Console.Write("Waiting for ClipBoard connection... ");
+                        TcpClient acceptedClient = this.cbSocketServer.AcceptTcpClient();
+                        Console.WriteLine("Clipboard is Connected!");
+
                         Thread.Sleep(100);
                         try
                         {
                             Console.WriteLine("Aspettando un messaggio dalla clipboard");
                             NetworkStream stream = acceptedClient.GetStream();
                             byte[] buffer = receiveAllData(stream);
+                            
                             Object received = AmbrUtils.ByteArrayToObject(buffer);
                             Console.WriteLine("FINE RICEZIONE\t Tipo: " + received.GetType() + " Dimensione : " + buffer.Length + " bytes");
                             SetClipBoard(received);
+                            Console.WriteLine("CBLISTENER : clipboard settata");
                         }
                         catch (IndexOutOfRangeException cbex)
                         {
@@ -113,12 +118,12 @@ namespace HookerClient
             Int32 dim = BitConverter.ToInt32(sizeOfBuf, 0); //dimensione del buffer;
             //byte[] buffer = new byte[dim]; //init bufferone
             byte[] buffer = new byte[0];
-            Console.WriteLine("La dimensione del bufferone è : {0}", dim);
+            Console.WriteLine("La dimensione che mi aspetto è : {0}", dim);
             int counter = dim;
             while (counter > 0)
             {
                 int r = stream.Read(tmp, 0, 512);
-                Console.WriteLine("Ricevuto " + r + " bytes");
+                //Console.WriteLine("Ricevuto " + r + " bytes");
                 int oldBufLen = buffer.Length;
                 Array.Resize(ref buffer, oldBufLen + r);
                 Buffer.BlockCopy(tmp, 0, buffer, oldBufLen, r);
