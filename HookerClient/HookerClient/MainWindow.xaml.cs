@@ -353,8 +353,14 @@ namespace HookerClient
 
         private void refreshGUIOnContinue()
         {
-            btnContinue.IsEnabled = false;
-            btnExit.IsEnabled = false;
+            btnRefreshServers.Dispatcher.Invoke(DispatcherPriority.Background,
+                new Action(() => { btnRefreshServers.IsEnabled = false; }));
+            btnConnect.Dispatcher.Invoke(DispatcherPriority.Background,
+             new Action(() => { btnConnect.IsEnabled = false; }));
+            btnContinue.Dispatcher.Invoke(DispatcherPriority.Background,
+            new Action(() => { btnContinue.IsEnabled = false; }));
+            btnExit.Dispatcher.Invoke(DispatcherPriority.Background,
+            new Action(() => { btnExit.IsEnabled = true; }));
             
         }
         #endregion
@@ -397,7 +403,7 @@ namespace HookerClient
         {
             InstallMouseAndKeyboard();
             bindHotkeyCommands();
-            btnContinue.IsEnabled = false;
+            refreshGUIOnContinue();
         }
         
         #endregion

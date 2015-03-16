@@ -35,7 +35,6 @@ namespace HookerClient
             this.availableServers = new List<ServerEntity>();
             //populate server list on GUI and update list
             this.selectedServers = new List<ServerEntity>();
-           
             serverPointer = 0;
         }
 
