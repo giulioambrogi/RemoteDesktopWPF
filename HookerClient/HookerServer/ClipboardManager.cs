@@ -15,10 +15,10 @@ namespace HookerServer
     class ClipboardManager
     {
         Object content;
-        public string ZIP_FILE_PATH = @"./cb/cbfiles.zip"; //temporary zip file received by the client
-        public string ZIP_EXTRACTED_FOLDER = @"./cb/cbfiles/"; //folder containing the files received from the client
-        public String CB_FILES_DIRECTORY_PATH = @"./CBFILES/"; //folder that will be zipped 
-        public String ZIP_FILE_NAME_AND_PATH = "CBFILES.zip"; //zip file to be sent to the client
+        public string ZIP_FILE_PATH = @"C:/tmp/cb/cbfiles.zip"; //temporary zip file received by the client
+        public string ZIP_EXTRACTED_FOLDER = @"C:/tmp/cb/cbfiles/"; //folder containing the files received from the client
+        public String CB_FILES_DIRECTORY_PATH = @"C:/tmp/CBFILES/"; //folder that will be zipped 
+        public String ZIP_FILE_NAME_AND_PATH = @"C:/tmp/CBFILES.zip"; //zip file to be sent to the client
         public ClipboardManager() { }
         public ClipboardManager(Object content)
         {
@@ -82,7 +82,7 @@ namespace HookerServer
                     //finalized when the using 
                     if (Directory.Exists(CB_FILES_DIRECTORY_PATH))
                          Directory.Delete(CB_FILES_DIRECTORY_PATH, true);
-                    if (File.Exists("CBFILES.zip"))
+                    if (File.Exists(ZIP_FILE_NAME_AND_PATH))
                         File.Delete(ZIP_FILE_NAME_AND_PATH);
                     Directory.CreateDirectory(CB_FILES_DIRECTORY_PATH);
                     foreach (String filepath in Clipboard.GetFileDropList())

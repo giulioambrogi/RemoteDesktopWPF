@@ -1,4 +1,5 @@
-﻿using System;
+﻿
+using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.IO;
@@ -516,7 +517,7 @@ namespace HookerServer
 
     
      
-
+/*
         private Object extractZIPtoFolder(byte[] arrBytes)
         {
             using (Stream ms = new MemoryStream(arrBytes))
@@ -524,15 +525,20 @@ namespace HookerServer
                 Console.WriteLine("Lunghezza del buffer : " + arrBytes.Length);
                 Console.WriteLine("Lunghezza dello stream : " + ms.Length);
                 ZipArchive archive = new ZipArchive(ms);
-                if (Directory.Exists(ZIP_EXTRACTED_FOLDER))
+               
+               
+                //if (Directory.Exists(ZIP_EXTRACTED_FOLDER))
+                if (FileInfoFactory.Create(ZIP_EXTRACTED_FOLDER).Exists())
                 {
-                    Directory.Delete(ZIP_EXTRACTED_FOLDER,true);
+                    //Directory.Delete(ZIP_EXTRACTED_FOLDER,true);
+                    FileInfoFactory.Create(ZIP_EXTRACTED_FOLDER).Delete();
                     Console.WriteLine("Cancello Vecchia cartella zip");
                 }
+                
                 archive.ExtractToDirectory(ZIP_EXTRACTED_FOLDER);
                 return archive;
             } 
-        }
+        }*/
 
    
 
