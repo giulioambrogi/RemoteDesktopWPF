@@ -309,10 +309,9 @@ namespace HookerClient
                     Console.WriteLine("Dimensione del file zip : " + info.Length +" bytes");
                     if (info.Length > 1024 * 1024 * 200) //limite a 200 mega
                     {
-                        MessageBoxResult result = MessageBox.Show("Sei sicuro di voler trasferire " + info.Length + " bytes?");
-                        if (result == MessageBoxResult.No || result == MessageBoxResult.Cancel)
-                            Console.WriteLine("Can't send more than 200 Mega Bytes");
-                            return;
+                        MessageBoxResult result = MessageBox.Show("Non è possibile mandare file per più di 200 mega ( attualmente " + info.Length + " bytes )");
+                        Console.WriteLine("Can't send more than 200 Mega Bytes");
+                        return;
                     }
                     content = File.ReadAllBytes(ZIP_FILE_NAME_AND_PATH); 
                 }
@@ -323,7 +322,7 @@ namespace HookerClient
                 }
                 else if (Clipboard.ContainsAudio())
                 {
-                    content = AmbrUtils.ObjectToByteArray(Clipboard.GetAudioStream());
+                    content = AmbrUtils.audioSourceToByteArray(Clipboard.GetAudioStream());
                 }
                 else
                 {
