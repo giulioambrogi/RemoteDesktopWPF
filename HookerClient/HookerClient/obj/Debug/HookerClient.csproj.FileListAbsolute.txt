@@ -103,3 +103,7 @@ C:\Users\GIULIO\Downloads\net2ftp-1426188604\SYNC\HookerClient\obj\Debug\HookerC
 C:\Users\GIULIO\Downloads\net2ftp-1426188604\SYNC\HookerClient\obj\Debug\HookerClient.g.resources
 C:\Users\GIULIO\Downloads\net2ftp-1426188604\SYNC\HookerClient\obj\Debug\HookerClient.Properties.Resources.resources
 C:\Users\GIULIO\Downloads\net2ftp-1426188604\SYNC\HookerClient\obj\Debug\HookerClient.csproj.GenerateResource.Cache
+C:\Users\Giulio\Documents\Visual Studio 2013\Projects\ProgettoC\progettopds\test\HookerClient\HookerClient\obj\Debug\HookerClient.csprojResolveAssemblyReference.cache
+C:\Users\Giulio\Documents\Visual Studio 2013\Projects\ProgettoC\progettopds\test\HookerClient\HookerClient\obj\Debug\Window1.baml
+C:\Users\Giulio\Documents\Visual Studio 2013\Projects\ProgettoC\progettopds\test\HookerClient\HookerClient\obj\Debug\App.baml
+C:\Users\Giulio\Documents\Visual Studio 2013\Projects\ProgettoC\progettopds\test\HookerClient\HookerClient\obj\Debug\Window1.g.cs
