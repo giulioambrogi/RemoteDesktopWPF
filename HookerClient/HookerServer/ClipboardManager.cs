@@ -31,12 +31,11 @@ namespace HookerServer
             Type t = this.content.GetType();
             try
             {
-                if ( t== typeof(String))
+                if ( t== typeof(String)) //text
                 {
-                    //setta il file di testo nella clipboard
                      Clipboard.SetText((String)this.content);
                 }
-                else if (t == typeof(ZipArchive))
+                else if (t == typeof(ZipArchive)) //set of files
                 {
                     //extraction  already been done
                     Clipboard.Clear();
@@ -50,11 +49,11 @@ namespace HookerServer
                         Clipboard.SetFileDropList(files);
                     }
                 }
-                else if (t == typeof(BitmapImage))
+                else if (t == typeof(BitmapImage)) //image
                 {
                     Clipboard.SetImage((BitmapImage)content);
                 }
-                else if (t == typeof(Stream))
+                else if (t == typeof(Stream)) //audio is represented as stream
                 {
                     Clipboard.SetAudio((Stream)content);
                 }

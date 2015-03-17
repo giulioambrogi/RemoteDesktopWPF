@@ -13,7 +13,7 @@ using System.Windows.Media.Imaging;
 
 namespace HookerClient
 {
-    class AmbrUtils
+    public class AmbrUtils
     {
 
         private static string ZIP_FILE_PATH = @"./cb/cbfiles.zip";
@@ -110,6 +110,31 @@ namespace HookerClient
             w.Show(); //show the windows
             Thread.Sleep(millis);
 
+        }
+
+        public static System.Collections.Specialized.StringCollection getFileNames(string p)
+        {
+            string[] filenames = Directory.GetFiles(p);
+            System.Collections.Specialized.StringCollection sc = new System.Collections.Specialized.StringCollection();
+            foreach (string s in filenames)
+            {
+                sc.Add(System.IO.Path.GetFullPath(s));
+            }
+            return sc;
+        }
+
+
+        public static byte[]  audioSourceToByteArray(Stream audioStream)
+        {
+            return streamToByteArray(audioStream);
+        }
+
+        public static byte[] streamToByteArray(Stream sourceStream){
+            using(var memoryStream = new MemoryStream())
+            {
+              sourceStream.CopyTo(memoryStream);
+              return memoryStream.ToArray();
+            }
         }
 
         #region nonGeneriMethods
