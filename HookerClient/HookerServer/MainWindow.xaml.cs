@@ -33,6 +33,7 @@ namespace HookerServer
     /// </summary>
     public partial class MainWindow : Window
     {
+        #region Variables
         public bool isConnected = false;
         public IPAddress localAddr = IPAddress.Parse("127.0.0.1");
         public TcpListener server = null;
@@ -44,19 +45,15 @@ namespace HookerServer
         Thread ConnectionChecker;
         Thread cbListener;
         public TcpListener cbSocketServer;
-        String temptext;
-        public string ZIP_FILE_PATH = @"./cb/cbfiles.zip";
-        public string ZIP_EXTRACTED_FOLDER = @"./cb/cbfiles/";
         public string DISCONNECTED_ICON_PATH = @"Icons/Disconnected.ico";
         public string CONNECTED_ICON_PATH = @"Icons/Connected.ico";
-
         TcpClient clientCB;
         Window w = new Window();
         InputSimulator inputSimulator;
-        #region Properties
-        String password { get; set; }
-
         #endregion
+
+        #region Core
+       
         public MainWindow()
         {
             InitializeComponent();
@@ -70,29 +67,22 @@ namespace HookerServer
         }
         
         private void parseMessage(string buffer)
-        {
-            //List<string> commands = buffer.Split(' ').ToList();
-            Console.WriteLine("[ [" + buffer + "]");
-            String[] commands = buffer.Split(' ');
-            if (commands.ElementAt(0).Equals("M"))
+        {   
+            //Console.WriteLine("[ [" + buffer + "]");
+            String[] commands = buffer.Split(' '); //split incoming message
+            if (commands.ElementAt(0).Equals("M")) //mouse movement
             {
-                //è un movimento del mouse
                 //16 bit è più veloce di 32
                 int x = Convert.ToInt16(Double.Parse(commands[1]) * System.Windows.SystemParameters.PrimaryScreenWidth);
                 int y = Convert.ToInt16(Double.Parse(commands[2]) * System.Windows.SystemParameters.PrimaryScreenHeight);
-                //RAMO DEL MOUSE 
-                //Metodo che setta la posizione del mouse
                 NativeMethods.SetCursorPos(x, y);
-                //Console.WriteLine("Received: {0}", buffer);
             }
-            else if(commands.ElementAt(0).ToString().Equals("W")){
+            else if(commands.ElementAt(0).ToString().Equals("W")){ //scroll
                 int scroll = Convert.ToInt32(commands.ElementAt(1).ToString());
-                 inputSimulator.Mouse.VerticalScroll(scroll);
-                 
+                inputSimulator.Mouse.VerticalScroll(scroll);
             }
-            else if (commands.ElementAt(0).ToString().Equals("C"))
+            else if (commands.ElementAt(0).ToString().Equals("C")) //click
             {
-                //è un click p rotella
                 if( commands.ElementAt(1).ToString().Equals("WM_LBUTTONDOWN")){
                     inputSimulator.Mouse.LeftButtonDown();
                 }
@@ -108,31 +98,19 @@ namespace HookerServer
                 }
                 
             }
-            else if (commands.ElementAt(0).ToString().Equals("K"))
+            else if (commands.ElementAt(0).ToString().Equals("K")) //keyboard
             {
-                //RAMO DELLA TASTIERA
                 VirtualKeyCode vk = (VirtualKeyCode)Convert.ToInt32(commands.ElementAt(1).ToString());
                 if (commands.ElementAt(2).ToString().Equals("DOWN"))
                 {
-                    //evento key down
-                    //Console.WriteLine(commands.ElementAt(1) + " DOWN");
-                    inputSimulator.Keyboard.KeyDown(vk);
+                    inputSimulator.Keyboard.KeyDown(vk); //keydown
                 }
                 else if (commands.ElementAt(2).ToString().Equals("UP"))
                 {
-                    //evento key up
-                    //Console.WriteLine(commands.ElementAt(0) + " UP");
-                    inputSimulator.Keyboard.KeyUp(vk);
+                    inputSimulator.Keyboard.KeyUp(vk); //keyup
                 }
-
-
-                else
-                {
-                    Console.WriteLine("MESSAGGIO NON CAPITO :[" + buffer + "]");
-                }
-
             }
-            else if (commands.ElementAt(0).ToString().Equals("G"))
+            else if (commands.ElementAt(0).ToString().Equals("G")) //used as callback for the clipboard
             {
                 Console.WriteLine("Ricevuto : GIMME CLIPBOARD");
                 ClipboardManager cb = new ClipboardManager();
@@ -155,34 +133,8 @@ namespace HookerServer
 
         }
 
-        private void Button_Click(object sender, RoutedEventArgs e)
+        private void runServer() //main thread
         {
-
-            if (Properties.Settings.Default.Port > 65535 || Properties.Settings.Default.Port < 1500)
-            {
-                icon.ShowBalloonTip("Errore", "La porta deve essere compresa tra 1500 e 60000", new Hardcodet.Wpf.TaskbarNotification.BalloonIcon());
-                return;
-            }
-            icon.ShowBalloonTip("Server", "Il server è stato lanciato sulla porta " + Properties.Settings.Default.Port + ".\n(Password : " + Properties.Settings.Default.Password + " )", Hardcodet.Wpf.TaskbarNotification.BalloonIcon.Info);
-            
-            //icon.ShowBalloonTip("Messaggio", "Il server è in esecuzione..", new Hardcodet.Wpf.TaskbarNotification.BalloonIcon());
-            this.runThread = new Thread(() =>
-            {
-                Thread.CurrentThread.IsBackground = true;
-                runServer();
-            });
-            this.runThread.Start();
-
-            this.Close();
-            //btnStart.IsEnabled = false;
-
-
-        }
-
-
-        private void runServer()
-        {
-
             this.remoteIPEndpoint = new IPEndPoint(IPAddress.Any, Properties.Settings.Default.Port);
             this.server = new TcpListener(IPAddress.Any, Properties.Settings.Default.Port); //server which accepts the connection
             this.server.Start(1);
@@ -192,26 +144,20 @@ namespace HookerServer
             {
                 try
                 {
-                   
-
-                    Console.WriteLine("PASSO PER IL VIA");
-                    Console.WriteLine("Provo a creare il nuovo udplistener");
+                    //Console.WriteLine("PASSO PER IL VIA");
                     ChangeGuiEveryRestarting();
                     //Thread.Sleep(599);
                     if (this.udpListener != null)
                         this.udpListener.Close();
                     this.udpListener = new UdpClient(Properties.Settings.Default.Port); //listener which gets the commands to be executed (keyboard and mouse)
-                    this.udpListener.Client.ReceiveTimeout = 2000;
-                    Console.WriteLine("Ok creato il nuovo udplistener");
+                    this.udpListener.Client.ReceiveTimeout = 2000; //set a timeout for the client to avoid blocking
                     Byte[] bytes = new Byte[128];
                     String message = null;
                     Console.Write("Waiting for a connection... ");
                     this.client = this.server.AcceptTcpClient();
-                    //now check the credentials
-                    //byte[] passwordInBytes = this.udpListener.Receive(ref this.remoteIPEndpoint);
                     byte[] passwordInBytes = new byte[128];
-                    int receivedBytes = this.client.Client.Receive(passwordInBytes);
-                    Console.WriteLine("Ricevuto password di " + receivedBytes + " bytes");
+                    int receivedBytes = this.client.Client.Receive(passwordInBytes); //receive password
+                    //Console.WriteLine("Ricevuto password di " + receivedBytes + " bytes");
                     Boolean result;
                     String passwd = (String)HookerClient.AmbrUtils.ByteArrayToObject(passwordInBytes);
                     if (passwd.Equals(Properties.Settings.Default.Password.Replace("\r\n","")))
@@ -224,21 +170,14 @@ namespace HookerServer
                         continue;
                     }
                     initCBListener(); //init clipboard socket
-                    //connect to client's clipboard endpoint
-                    //IMPORTANTISSIMO commento queste due righe che poi le uso per mandare la cb ogni volta
-                    //if (this.clientCB != null)
-                     //   this.clientCB.Close();
-                    //this.clientCB = new TcpClient();
-                    //this.clientCB.Connect(((IPEndPoint)this.client.Client.RemoteEndPoint).Address, 9898); //questo è il client che riceve
+                    //ho tolto la possibilità di connettersi qui alla cb del client 
                     Console.WriteLine("Connected!");
                     refreshGuiAfterConnecting();
                     isConnected = true; //set the variable in order to get into the next loop
                     NetworkStream stream = client.GetStream();
                     //connection checker
                     this.runConnectionChecker(); //run thread  which checks connection
-                    Console.WriteLine("Quindi eccomi qui : dopo il conn checker ");
                     this.runCBListenerFaster(); //run thread which handle clipboard
-                    Console.WriteLine("Quindi eccomi qui : dopo il run cb ");
                     while (true)
                     { //loop around the global variable that says if the client is already connected
                         if (this.isConnected == false)
@@ -246,7 +185,6 @@ namespace HookerServer
                             stopServer();
                             break;
                         }
-                        //Console.WriteLine("*** mi sono bloccato in ricezione");
                         try
                         {
                             bytes = this.udpListener.Receive(ref this.remoteIPEndpoint);//read exactly 128 bytes
@@ -283,13 +221,9 @@ namespace HookerServer
 
         }
 
-      
-
-
         private void stopServer()
         {
             //in realtà non dovrebbe chiamarsi così perchè questo stop server solo a chiudere tutto tranne il ciclo
-            //princiapale
             if (this.client != null)
                 this.client.Close();
             if (this.cbSocketServer != null)
@@ -305,7 +239,6 @@ namespace HookerServer
 
         }
 
-
         private void  killServer(object sender, RoutedEventArgs args)
         {
             stopServer();
@@ -313,43 +246,7 @@ namespace HookerServer
                 this.server.Server.Close();
             if (this.runThread != null && this.runThread.IsAlive)
                 this.runThread.Abort();
-           
             refreshGuiAfterKilling();
-            
-              
-
-        }
-
-        private void btnClose_Click(object sender, RoutedEventArgs e)
-        {
-            btnStart.IsEnabled = true;
-            stopServer();
-        }
-
-        private void ExitButton(object sender, RoutedEventArgs e)
-        {
-            //TODO chiudere server da tray area
-            icon.Visibility = Visibility.Hidden;
-            Application.Current.Shutdown();
-        }
-
-        private void Window_StateChanged(object sender, EventArgs e)
-        {
-            switch (this.WindowState)
-            {
-                case WindowState.Minimized:
-                    this.ShowInTaskbar = false;
-                    break;
-            }
-        }
-
-        // metodo temporaneo
-        private void WindowResume(object sender, EventArgs e)
-        {
-            if (this.ShowInTaskbar == false)
-            {
-                this.ShowInTaskbar = true;
-            }
         }
 
         public void runConnectionChecker()
@@ -376,7 +273,7 @@ namespace HookerServer
                                 //closeOnException();
                                 ChangeTaskbarIcon(DISCONNECTED_ICON_PATH);
                                 return;
-                                
+
                             }
                         }
                         Thread.Sleep(1000);
@@ -393,8 +290,7 @@ namespace HookerServer
             });
             this.ConnectionChecker.Start();
         }
-
-
+        
         public void initCBListener()
         {
             if (cbSocketServer != null)
@@ -410,12 +306,10 @@ namespace HookerServer
             {
                 try{
                     Thread.CurrentThread.IsBackground = true;
-                   
-                       
-                        Console.Write("Waiting for ClipBoard connection... ");
-                        TcpClient acceptedClient = this.cbSocketServer.AcceptTcpClient();
-                        Console.WriteLine("Clipboard is Connected!");
-                        while (this.isConnected)
+                    Console.Write("Waiting for ClipBoard connection... ");
+                    TcpClient acceptedClient = this.cbSocketServer.AcceptTcpClient();
+                    Console.WriteLine("Clipboard is Connected!");
+                    while (this.isConnected)
                         {
                             try{
                             
@@ -442,7 +336,6 @@ namespace HookerServer
                                 //return;
                                 // restartServer();
                             }
-
                         }
                     }
                 
@@ -454,7 +347,6 @@ namespace HookerServer
             });
             this.cbListener.Start();
         }
-
 
         private byte[] receiveAllData(NetworkStream stream)
         {
@@ -470,7 +362,7 @@ namespace HookerServer
             int counter = dim;
             while (counter > 0 ){
                 int r = stream.Read(tmp, 0, 512);
-                Console.WriteLine("Ricevuto " + r + " bytes");
+                //Console.WriteLine("Ricevuto " + r + " bytes");
                 int oldBufLen = buffer.Length;
                 Array.Resize(ref buffer, oldBufLen + r);
                 Buffer.BlockCopy(tmp, 0, buffer, oldBufLen, r);
@@ -495,124 +387,47 @@ namespace HookerServer
             }
         }
 
-        #region CredentialMgmt
+        #endregion
 
-        private bool checkPassword(String password)
+        #region ButtonClicks
+
+        private void Button_Click(object sender, RoutedEventArgs e)
         {
-            if (Properties.Settings.Default.Password.Equals(password))
-                return true;
-            else
-                return false;
+
+            if (Properties.Settings.Default.Port > 65535 || Properties.Settings.Default.Port < 1500)
+            {
+                icon.ShowBalloonTip("Errore", "La porta deve essere compresa tra 1500 e 60000", new Hardcodet.Wpf.TaskbarNotification.BalloonIcon());
+                return;
+            }
+            icon.ShowBalloonTip("Server", "Il server è stato lanciato sulla porta " + Properties.Settings.Default.Port + ".\n(Password : " + Properties.Settings.Default.Password + " )", Hardcodet.Wpf.TaskbarNotification.BalloonIcon.Info);
+            this.runThread = new Thread(() =>
+            {
+                Thread.CurrentThread.IsBackground = true;
+                runServer();
+            });
+            this.runThread.Start();
+            this.Close(); //disappear
         }
 
-        private void setPassword(String password)
+        private void btnClose_Click(object sender, RoutedEventArgs e)
         {
-            Properties.Settings.Default.Password = password;
-            Properties.Settings.Default.Save();
+            btnStart.IsEnabled = true;
+            stopServer();
         }
+
+        private void ExitButton(object sender, RoutedEventArgs e)
+        {
+            icon.Visibility = Visibility.Hidden;
+            Application.Current.Shutdown();
+        }
+
+
+
 
         #endregion
 
+        #region GenericEvents
 
-
-    
-     
-/*
-        private Object extractZIPtoFolder(byte[] arrBytes)
-        {
-            using (Stream ms = new MemoryStream(arrBytes))
-            {
-                Console.WriteLine("Lunghezza del buffer : " + arrBytes.Length);
-                Console.WriteLine("Lunghezza dello stream : " + ms.Length);
-                ZipArchive archive = new ZipArchive(ms);
-               
-               
-                //if (Directory.Exists(ZIP_EXTRACTED_FOLDER))
-                if (FileInfoFactory.Create(ZIP_EXTRACTED_FOLDER).Exists())
-                {
-                    //Directory.Delete(ZIP_EXTRACTED_FOLDER,true);
-                    FileInfoFactory.Create(ZIP_EXTRACTED_FOLDER).Delete();
-                    Console.WriteLine("Cancello Vecchia cartella zip");
-                }
-                
-                archive.ExtractToDirectory(ZIP_EXTRACTED_FOLDER);
-                return archive;
-            } 
-        }*/
-
-   
-
-        private void tbPassword_TextChanged(object sender, TextChangedEventArgs e)
-        {
-            Properties.Settings.Default.Password = ((TextBox)sender).Text;
-        }
-
-        private void tbPort_TextChanged(object sender, TextChangedEventArgs e)
-        {
-            String portString = ((TextBox)sender).Text;
-            try
-            {
-                Int32 port = Convert.ToInt32(portString);
-                Properties.Settings.Default.Port = port;
-            }
-            catch (Exception ex)
-            {
-                Console.WriteLine("La porta non è stata cambiata");
-            }
-        }
-
-       
-
-
-        private void ChangeTaskbarIcon(String img)
-        {
-            try
-            {
-                this.icon.Dispatcher.Invoke(DispatcherPriority.Background,
-                    new Action(() =>
-                    {
-                        if (img.Equals(CONNECTED_ICON_PATH))
-                            icon.ToolTipText = "Sotto controllo da remoto";
-                        else if (img.Equals(DISCONNECTED_ICON_PATH))
-                            icon.ToolTipText = "In attesa di una connessione";
-                        String fullpath = @"../../" + img;
-                        this.icon.Icon = new System.Drawing.Icon(fullpath);
-                    }));
-            }
-            catch (Exception e)
-            {
-                Console.WriteLine(e.Message);
-           }
-        }
-
-        /*public static void DeleteDirectory(string target_dir)
-        {
-            string[] files = Directory.GetFiles(target_dir);
-            string[] dirs = Directory.GetDirectories(target_dir);
-
-            foreach (string file in files)
-            {
-                File.SetAttributes(file, FileAttributes.Normal);
-                File.Delete(file);
-            }
-
-            foreach (string dir in dirs)
-            {
-                DeleteDirectory(dir);
-            }
-
-            Directory.Delete(target_dir, false);
-        }*/
-
-        public void reOpenMainWindow(object sender, RoutedEventArgs rea)
-        {
-            this.Dispatcher.Invoke(DispatcherPriority.Background,
-                 new Action(() =>
-                 {
-                     Window w = new MainWindow();
-                     w.Show();
-                 }));
-        }
         private void refreshGuiAfterKilling()
         {
             this.icon.Dispatcher.Invoke(DispatcherPriority.Background,
@@ -623,6 +438,7 @@ namespace HookerServer
                       ((MenuItem)this.icon.ContextMenu.Items.GetItemAt(1)).IsEnabled = false;
                   }));
         }
+        
         private void refreshGuiAfterConnecting()
         {
             ChangeTaskbarIcon(CONNECTED_ICON_PATH); //aggiorno messaggio nuvoletta
@@ -659,8 +475,78 @@ namespace HookerServer
                   }));
 
         }
-            
+      
+        private void tbPassword_TextChanged(object sender, TextChangedEventArgs e)
+        {  //updates property PASSWORD
+            Properties.Settings.Default.Password = ((TextBox)sender).Text;
         }
+
+        private void tbPort_TextChanged(object sender, TextChangedEventArgs e)
+        {
+            //updates property TXT
+            String portString = ((TextBox)sender).Text;
+            try
+            {
+                Int32 port = Convert.ToInt32(portString);
+                Properties.Settings.Default.Port = port;
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine("La porta non è stata cambiata");
+            }
+        }
+
+        private void Window_StateChanged(object sender, EventArgs e)
+        {
+            switch (this.WindowState)
+            {
+                case WindowState.Minimized:
+                    this.ShowInTaskbar = false;
+                    break;
+            }
+        }
+      
+        private void WindowResume(object sender, EventArgs e)
+        {
+            if (this.ShowInTaskbar == false)
+            {
+                this.ShowInTaskbar = true;
+            }
+        }
+
+        public void reOpenMainWindow(object sender, RoutedEventArgs rea)
+        {
+            this.Dispatcher.Invoke(DispatcherPriority.Background,
+                 new Action(() =>
+                 {
+                     Window w = new MainWindow();
+                     w.Show();
+                 }));
+        }
+
+        private void ChangeTaskbarIcon(String img)
+        {
+            try
+            {
+                this.icon.Dispatcher.Invoke(DispatcherPriority.Background,
+                    new Action(() =>
+                    {
+                        if (img.Equals(CONNECTED_ICON_PATH))
+                            icon.ToolTipText = "Sotto controllo da remoto";
+                        else if (img.Equals(DISCONNECTED_ICON_PATH))
+                            icon.ToolTipText = "In attesa di una connessione";
+                        String fullpath = @"../../" + img;
+                        this.icon.Icon = new System.Drawing.Icon(fullpath);
+                    }));
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine(e.Message);
+            }
+        }
+
+        #endregion
+    }
 
     
 

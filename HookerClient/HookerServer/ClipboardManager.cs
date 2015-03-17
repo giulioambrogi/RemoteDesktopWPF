@@ -14,17 +14,22 @@ namespace HookerServer
 {
     class ClipboardManager
     {
+        #region Variables
         Object content;
-        public string ZIP_FILE_PATH = @"C:/tmp/cb/cbfiles.zip"; //temporary zip file received by the client
-        public string ZIP_EXTRACTED_FOLDER = @"C:/tmp/cb/cbfiles/"; //folder containing the files received from the client
-        public String CB_FILES_DIRECTORY_PATH = @"C:/tmp/CBFILES/"; //folder that will be zipped 
-        public String ZIP_FILE_NAME_AND_PATH = @"C:/tmp/CBFILES.zip"; //zip file to be sent to the client
+        string ZIP_FILE_PATH = HookerClient.AmbrUtils.ZIP_FILE_PATH; //temporary zip file received by the client
+        string ZIP_EXTRACTED_FOLDER = HookerClient.AmbrUtils.ZIP_EXTRACTED_FOLDER; //folder containing the files received from the client
+        string CB_FILES_DIRECTORY_PATH =HookerClient.AmbrUtils.CB_FILES_DIRECTORY_PATH; //folder that will be zipped 
+        string ZIP_FILE_NAME_AND_PATH = HookerClient.AmbrUtils.ZIP_FILE_NAME_AND_PATH;//zip file to be sent to the client
+        #endregion
+
+        #region Core
+
         public ClipboardManager() { }
+        
         public ClipboardManager(Object content)
         {
             this.content = content; 
         }
-
 
         public void setData()
         {
@@ -68,78 +73,77 @@ namespace HookerServer
 
         public void sendClipBoardFaster(TcpClient client)
         {
-                
-                byte[] content = new byte[0]; //byte array that will contain the clipboard
-                byte[] sizeInBytes = new byte[4]; //byte array that will contain the size
+            byte[] content = new byte[0]; //byte array that will contain the clipboard
+            byte[] sizeInBytes = new byte[4]; //byte array that will contain the size
 
-                if (Clipboard.ContainsText())
+            if (Clipboard.ContainsText())
+            {
+                content= HookerClient.AmbrUtils.ObjectToByteArray(Clipboard.GetText());
+            }
+            else if (Clipboard.ContainsFileDropList())
+            {
+                //Creates a new, blank zip file to work with - the file will be
+                //finalized when the using 
+                if (Directory.Exists(CB_FILES_DIRECTORY_PATH))
+                        Directory.Delete(CB_FILES_DIRECTORY_PATH, true);
+                if (File.Exists(ZIP_FILE_NAME_AND_PATH))
+                    File.Delete(ZIP_FILE_NAME_AND_PATH);
+                Directory.CreateDirectory(CB_FILES_DIRECTORY_PATH);
+                foreach (String filepath in Clipboard.GetFileDropList())
                 {
-                   content= HookerClient.AmbrUtils.ObjectToByteArray(Clipboard.GetText());
-                }
-                else if (Clipboard.ContainsFileDropList())
-                {
-                    //Creates a new, blank zip file to work with - the file will be
-                    //finalized when the using 
-                    if (Directory.Exists(CB_FILES_DIRECTORY_PATH))
-                         Directory.Delete(CB_FILES_DIRECTORY_PATH, true);
-                    if (File.Exists(ZIP_FILE_NAME_AND_PATH))
-                        File.Delete(ZIP_FILE_NAME_AND_PATH);
-                    Directory.CreateDirectory(CB_FILES_DIRECTORY_PATH);
-                    foreach (String filepath in Clipboard.GetFileDropList())
-                    {
-                        FileAttributes attr = File.GetAttributes(filepath);//get attribute to know if it's a file or folder
-                        if ((attr & FileAttributes.Directory) == FileAttributes.Directory)
-                        {//Its a directory
-                            DirectoryInfo diSource = new DirectoryInfo(filepath);
-                            System.IO.Directory.CreateDirectory(CB_FILES_DIRECTORY_PATH + diSource.Name);
+                    FileAttributes attr = File.GetAttributes(filepath);//get attribute to know if it's a file or folder
+                    if ((attr & FileAttributes.Directory) == FileAttributes.Directory)
+                    {//Its a directory
+                        DirectoryInfo diSource = new DirectoryInfo(filepath);
+                        System.IO.Directory.CreateDirectory(CB_FILES_DIRECTORY_PATH + diSource.Name);
                             
-                            DirectoryInfo diDst = new DirectoryInfo(CB_FILES_DIRECTORY_PATH + diSource.Name);
-                            HookerClient.AmbrUtils.CopyFilesRecursively(diSource, diDst);                  
-                        }else{
-                            //Its a file
-                            String dstFilePath = CB_FILES_DIRECTORY_PATH+Path.GetFileName(filepath);
-                            System.IO.File.Copy(filepath, dstFilePath);
-                        }
+                        DirectoryInfo diDst = new DirectoryInfo(CB_FILES_DIRECTORY_PATH + diSource.Name);
+                        HookerClient.AmbrUtils.CopyFilesRecursively(diSource, diDst);                  
+                    }else{
+                        //Its a file
+                        String dstFilePath = CB_FILES_DIRECTORY_PATH+Path.GetFileName(filepath);
+                        System.IO.File.Copy(filepath, dstFilePath);
+                    }
                        
-                    }
-                    ZipFile.CreateFromDirectory(CB_FILES_DIRECTORY_PATH, ZIP_FILE_NAME_AND_PATH, CompressionLevel.Fastest, true);
-                    FileInfo info = new FileInfo(ZIP_FILE_NAME_AND_PATH);
-                    Console.WriteLine("Dimensione del file zip : " + info.Length +" bytes");
-                    if (info.Length > 1024 * 1024 * 200) //limite a 200 mega
-                    {
-                        MessageBoxResult result = MessageBox.Show("Sei sicuro di voler trasferire " + info.Length + " bytes?");
-                        if (result == MessageBoxResult.No || result == MessageBoxResult.Cancel)
-                            Console.WriteLine("Can't send more than 200 Mega Bytes");
-                            return;
-                    }
-                    content = File.ReadAllBytes(ZIP_FILE_NAME_AND_PATH); 
                 }
-                else if (Clipboard.ContainsImage())
+                ZipFile.CreateFromDirectory(CB_FILES_DIRECTORY_PATH, ZIP_FILE_NAME_AND_PATH, CompressionLevel.Fastest, true);
+                FileInfo info = new FileInfo(ZIP_FILE_NAME_AND_PATH);
+                Console.WriteLine("Dimensione del file zip : " + info.Length +" bytes");
+                if (info.Length > 1024 * 1024 * 200) //limite a 200 mega
                 {
-                    //content = imageToByteArray(Clipboard.GetImage());
-                    content = HookerClient.AmbrUtils.bitmapSourceToByteArray(Clipboard.GetImage());
+                    MessageBoxResult result = MessageBox.Show("Sei sicuro di voler trasferire " + info.Length + " bytes?");
+                    if (result == MessageBoxResult.No || result == MessageBoxResult.Cancel)
+                        Console.WriteLine("Can't send more than 200 Mega Bytes");
+                        return;
                 }
-                else if (Clipboard.ContainsAudio())
-                {
-                    content = HookerClient.AmbrUtils.audioSourceToByteArray(Clipboard.GetAudioStream());
-                }
-                else
-                {
-                    Console.WriteLine("Nothing to send");
-                    return;
-                }
+                content = File.ReadAllBytes(ZIP_FILE_NAME_AND_PATH); 
+            }
+            else if (Clipboard.ContainsImage())
+            {
+                //content = imageToByteArray(Clipboard.GetImage());
+                content = HookerClient.AmbrUtils.bitmapSourceToByteArray(Clipboard.GetImage());
+            }
+            else if (Clipboard.ContainsAudio())
+            {
+                content = HookerClient.AmbrUtils.audioSourceToByteArray(Clipboard.GetAudioStream());
+            }
+            else
+            {
+                Console.WriteLine("Nothing to send");
+                return;
+            }
                 
-                NetworkStream ns = client.GetStream();
-                Int32 len = content.Length;
-                sizeInBytes = BitConverter.GetBytes(len); //convert size of content into byte array
-                Console.WriteLine("Mando size: " + len);
-                ns.Write(sizeInBytes, 0, 4); //write 
-                Console.WriteLine("Mando buffer...");
-                ns.Write(content, 0, content.Length);
-                ns.Flush();
-                Console.WriteLine("Mandato!");
-
+            NetworkStream ns = client.GetStream();
+            Int32 len = content.Length;
+            sizeInBytes = BitConverter.GetBytes(len); //convert size of content into byte array
+            Console.WriteLine("Mando size: " + len);
+            ns.Write(sizeInBytes, 0, 4); //write 
+            Console.WriteLine("Mando buffer...");
+            ns.Write(content, 0, content.Length);
+            ns.Flush();
+            Console.WriteLine("Mandato!");
         }
 
+        #endregion
     }
 }
