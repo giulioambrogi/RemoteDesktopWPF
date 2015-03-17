@@ -148,14 +148,15 @@ namespace HookerClient
             }
             catch (Exception ex)
             {
-                closeOnException();
+                closeOnException(ex.Message);
                 MessageBox.Show("La connessione si è interrotta");
                 
             }
         }
 
-        public void closeOnException()
+        public void closeOnException(String s)
         {
+            MessageBox.Show(s);
             UnistallMouseAndKeyboard();
             unbindHotkeyCommands(); //rimuovo vincoli su hotkeys
             this.serverManger.disconnect();
@@ -263,8 +264,7 @@ namespace HookerClient
                             {
                                 if (se.server == null) //questo ciclo serve a non testare connessione nel caso la pasword fosse sbagliata ( password sbagliata-> chiude server e lo setta a null)
                                 {
-                                    closeOnException();
-                                    closeOnException();
+                                    closeOnException("Password sbagliata");
                                     MessageBox.Show("La connessione è stata interrotta");
                                     break;
                                 }
@@ -276,7 +276,7 @@ namespace HookerClient
                                         // Client disconnected
                                         bClosed = true;
                                         MessageBox.Show("La connessione è stata interrotta");
-                                        closeOnException();
+                                        closeOnException("Connessione interrotta");
                                         return;
                                     }
                                 }
@@ -286,7 +286,7 @@ namespace HookerClient
                         }
                         catch (SocketException se)
                         {
-                            closeOnException();
+                            closeOnException(se.Message);
                             MessageBox.Show("La connessione è stata interrotta");
                             break;
                         }
@@ -348,9 +348,9 @@ namespace HookerClient
             btnContinue.Dispatcher.Invoke(DispatcherPriority.Background,
             new Action(() => { btnContinue.IsEnabled = true; }));
             btnExit.Dispatcher.Invoke(DispatcherPriority.Background,
-            new Action(() => { btnExit.IsEnabled = true; }));
+            new Action(() => { btnExit.IsEnabled = false; }));
             btnHelp.Dispatcher.Invoke(DispatcherPriority.Background,
-            new Action(() => { btnHelp.IsEnabled = true;  }));
+            new Action(() => { btnHelp.IsEnabled = false;  }));
             lblMessages.Dispatcher.Invoke(DispatcherPriority.Background,
             new Action(() => { lblMessages.IsEnabled =  false; }));
            
@@ -468,7 +468,14 @@ namespace HookerClient
 
         private void unbindHotkeyCommands()
         {
-            CommandBindings.Clear();
+            try
+            {
+                CommandBindings.Clear();
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine("Cannot unbind : " + ex.Message);
+            }
         }
 
 

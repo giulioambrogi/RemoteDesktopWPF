@@ -24,8 +24,8 @@ namespace HookerClient
         public TcpClient client ;
         public NetworkStream stream;
         public Socket ClipboardEndpoint;
-        public String CB_FILES_DIRECTORY_PATH = @"./CBFILES/";
-        public String ZIP_FILE_NAME_AND_PATH = "CBFILES.zip";
+        //public String CB_FILES_DIRECTORY_PATH = @"C:/CBFILES/";
+        //public String ZIP_FILE_NAME_AND_PATH = @"C:/CBFILES.zip";
 
         public TcpListener cbSocketServer; //clipboard receiver
         private IPEndPoint cbEndpoint;  //clipboardReceiverEndpoint
@@ -282,30 +282,30 @@ namespace HookerClient
                 {
                     //Creates a new, blank zip file to work with - the file will be
                     //finalized when the using 
-                    if (Directory.Exists(CB_FILES_DIRECTORY_PATH))
-                         Directory.Delete(CB_FILES_DIRECTORY_PATH, true);
-                    if (File.Exists("CBFILES.zip"))
-                        File.Delete(ZIP_FILE_NAME_AND_PATH);
-                    Directory.CreateDirectory(CB_FILES_DIRECTORY_PATH);
+                    if (Directory.Exists(AmbrUtils.CB_FILES_DIRECTORY_PATH))
+                        Directory.Delete(AmbrUtils.CB_FILES_DIRECTORY_PATH, true);
+                    if (File.Exists(AmbrUtils.ZIP_FILE_NAME_AND_PATH))
+                        File.Delete(AmbrUtils.ZIP_FILE_NAME_AND_PATH);
+                    Directory.CreateDirectory(AmbrUtils.CB_FILES_DIRECTORY_PATH);
                     foreach (String filepath in Clipboard.GetFileDropList())
                     {
                         FileAttributes attr = File.GetAttributes(filepath);
                         if ((attr & FileAttributes.Directory) == FileAttributes.Directory)
                         {
                             DirectoryInfo diSource = new DirectoryInfo(filepath);
-                            System.IO.Directory.CreateDirectory(CB_FILES_DIRECTORY_PATH + diSource.Name);
-                            DirectoryInfo diDst = new DirectoryInfo(CB_FILES_DIRECTORY_PATH + diSource.Name);
+                            System.IO.Directory.CreateDirectory(AmbrUtils.CB_FILES_DIRECTORY_PATH + diSource.Name);
+                            DirectoryInfo diDst = new DirectoryInfo(AmbrUtils.CB_FILES_DIRECTORY_PATH + diSource.Name);
                             AmbrUtils.CopyFilesRecursively(diSource, diDst);
                         }
                         else { //it's a file
-                            String dstFilePath = CB_FILES_DIRECTORY_PATH + Path.GetFileName(filepath);
+                            String dstFilePath = AmbrUtils.CB_FILES_DIRECTORY_PATH + Path.GetFileName(filepath);
                             System.IO.File.Copy(filepath, dstFilePath);
                         
                         }
                        
                     }
-                    ZipFile.CreateFromDirectory(CB_FILES_DIRECTORY_PATH, ZIP_FILE_NAME_AND_PATH, CompressionLevel.Fastest, true);
-                    FileInfo info = new FileInfo(ZIP_FILE_NAME_AND_PATH);
+                    ZipFile.CreateFromDirectory(AmbrUtils.CB_FILES_DIRECTORY_PATH, AmbrUtils.ZIP_FILE_NAME_AND_PATH, CompressionLevel.Fastest, true);
+                    FileInfo info = new FileInfo(AmbrUtils.ZIP_FILE_NAME_AND_PATH);
                     Console.WriteLine("Dimensione del file zip : " + info.Length +" bytes");
                     if (info.Length > 1024 * 1024 * 200) //limite a 200 mega
                     {
@@ -313,7 +313,7 @@ namespace HookerClient
                         Console.WriteLine("Can't send more than 200 Mega Bytes");
                         return;
                     }
-                    content = File.ReadAllBytes(ZIP_FILE_NAME_AND_PATH); 
+                    content = File.ReadAllBytes(AmbrUtils.ZIP_FILE_NAME_AND_PATH); 
                 }
                 else if (Clipboard.ContainsImage())
                 {
