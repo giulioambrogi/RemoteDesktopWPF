@@ -555,11 +555,7 @@ namespace HookerServer
             }
         }
 
-        private void Button_Click_1(object sender, RoutedEventArgs e)
-        {
-            ClipboardManager cb = new ClipboardManager();
-            cb.sendClipBoardFaster(null);
-        }
+       
 
 
         private void ChangeTaskbarIcon(String img)
