@@ -319,9 +319,6 @@ namespace HookerClient
             }));
             */
 
-
-
-
         }
         public void refreshGUIonClosing()
         {
@@ -335,6 +332,8 @@ namespace HookerClient
             new Action(() => { btnExit.IsEnabled = true; }));
             lvComputers.Dispatcher.Invoke(DispatcherPriority.Background,
             new Action(() => { lvComputers.IsEnabled = true; }));
+            btnHelp.Dispatcher.Invoke(DispatcherPriority.Background,
+            new Action(() => { btnHelp.IsEnabled = true; }));
             lblMessages.Dispatcher.Invoke(DispatcherPriority.Background,
             new Action(() => { lblMessages.Content = ""; }));
                btnHelp.Dispatcher.Invoke(DispatcherPriority.Background,
@@ -342,12 +341,18 @@ namespace HookerClient
         }
         private void refreshGUIOnPause()
         {
-            btnContinue.IsEnabled = true;
-            btnRefreshServers.IsEnabled = false;
-            btnConnect.IsEnabled = false;
-            btnExit.IsEnabled = true;
-               btnHelp.Dispatcher.Invoke(DispatcherPriority.Background,
-             new Action(() => { btnHelp.IsEnabled = true;  }));
+            btnRefreshServers.Dispatcher.Invoke(DispatcherPriority.Background,
+                new Action(() => { btnRefreshServers.IsEnabled = false; }));
+            btnConnect.Dispatcher.Invoke(DispatcherPriority.Background,
+             new Action(() => { btnConnect.IsEnabled = false; }));
+            btnContinue.Dispatcher.Invoke(DispatcherPriority.Background,
+            new Action(() => { btnContinue.IsEnabled = true; }));
+            btnExit.Dispatcher.Invoke(DispatcherPriority.Background,
+            new Action(() => { btnExit.IsEnabled = true; }));
+            btnHelp.Dispatcher.Invoke(DispatcherPriority.Background,
+            new Action(() => { btnHelp.IsEnabled = true;  }));
+            lblMessages.Dispatcher.Invoke(DispatcherPriority.Background,
+            new Action(() => { lblMessages.IsEnabled =  false; }));
            
         }
 
