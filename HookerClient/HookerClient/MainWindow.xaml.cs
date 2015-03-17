@@ -306,19 +306,13 @@ namespace HookerClient
             btnRefreshServers.IsEnabled = false;
             btnExit.IsEnabled = false;
             lvComputers.IsEnabled = false;
+            String serverName = "";
+            if(this.serverManger.selectedServers.Count > 0 )
+                serverName = this.serverManger.selectedServers.ElementAt(this.serverManger.serverPointer).name; 
             lblMessages.Dispatcher.Invoke(DispatcherPriority.Background,
-               new Action(() => { lblMessages.Content = "Connesso al server : " + this.serverManger.selectedServers.ElementAt(this.serverManger.serverPointer).name; }));
+               new Action(() => { lblMessages.Content = "Connesso al server : " + serverName; }));
             btnHelp.Dispatcher.Invoke(DispatcherPriority.Background,
              new Action(() => { btnHelp.IsEnabled = false; }));
-            //scrivo messaggio per l'utente
-            /*tbStatus.Dispatcher.Invoke(DispatcherPriority.Background, new Action(() =>
-            {
-                tbStatus.Text = "Il Client è attivo, ricordati di attivare il Server sulla/e macchina/e selezionata/e!\n"
-                                + "Per mettere in pausa la connessione premi CTRL-ALT-P\n"
-                                + "Per terminare la connessione premi CTRL-ALT-E";
-            }));
-            */
-
         }
         public void refreshGUIonClosing()
         {

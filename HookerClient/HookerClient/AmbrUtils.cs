@@ -17,10 +17,10 @@ namespace HookerClient
     public class AmbrUtils
     {
 
-        public static string ZIP_FILE_PATH = @"C:/tmp/cb/cbfiles.zip";
-        public static string ZIP_EXTRACTED_FOLDER = @"C:/tmp/cb/cbfiles/";
-        public static string CB_FILES_DIRECTORY_PATH = @"C:/tmp/CBFILES/";
-        public static string ZIP_FILE_NAME_AND_PATH = @"C:/tmp/CBFILES.zip";
+        public static string ZIP_FILE_PATH = @"C:/tmp/cb/cbfiles.zip"; //temporary zip file received  (really it's never saved on disk)
+        public static string ZIP_EXTRACTED_FOLDER = @"C:/tmp/cb/cbfiles/"; //folder in  wich extract received zip
+        public static string CB_FILES_DIRECTORY_PATH = @"C:/tmp/CBFILES/"; // folder in wich i copy all file in cb droplist to be zipped and sent
+        public static string ZIP_FILE_NAME_AND_PATH = @"C:/tmp/CBFILES.zip";//temp zip created by me, to be sent to the other part
 
         public static byte[] ObjectToByteArray(Object obj)
         {

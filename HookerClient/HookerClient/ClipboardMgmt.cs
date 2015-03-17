@@ -191,19 +191,7 @@ namespace HookerClient
             return sc;
         }
 
-        private void UnzipArchive()
-        {
-            string zipPath = AmbrUtils.ZIP_FILE_PATH;
-            string extractPath = AmbrUtils.ZIP_EXTRACTED_FOLDER;
-
-            using (ZipArchive archive = ZipFile.OpenRead(zipPath))
-            {
-                foreach (ZipArchiveEntry entry in archive.Entries)
-                {
-                    entry.ExtractToFile(System.IO.Path.Combine(extractPath, entry.FullName));
-                }
-            }
-        }
+      
 
       
     }

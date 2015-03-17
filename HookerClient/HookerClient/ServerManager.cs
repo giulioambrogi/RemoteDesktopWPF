@@ -24,8 +24,6 @@ namespace HookerClient
         public TcpClient client ;
         public NetworkStream stream;
         public Socket ClipboardEndpoint;
-        //public String CB_FILES_DIRECTORY_PATH = @"C:/CBFILES/";
-        //public String ZIP_FILE_NAME_AND_PATH = @"C:/CBFILES.zip";
 
         public TcpListener cbSocketServer; //clipboard receiver
         private IPEndPoint cbEndpoint;  //clipboardReceiverEndpoint
