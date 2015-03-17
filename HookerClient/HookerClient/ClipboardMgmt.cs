@@ -22,8 +22,8 @@ namespace HookerClient
         private HwndSource hWndSource;
         public bool isViewing;
         private object content;
-        public string ZIP_FILE_PATH = @"./cb/cbfiles.zip"; //temporary zip file received by the server
-        public string ZIP_EXTRACTED_FOLDER = @"./cb/cbfiles/"; //folder containing the files received from the server
+        //public string ZIP_FILE_PATH = @"C:/cb/cbfiles.zip"; //temporary zip file received by the server
+        //public string ZIP_EXTRACTED_FOLDER = @"C:/cb/cbfiles/"; //folder containing the files received from the server
         #endregion
 
         public ClipboardMgmt(Object content)
@@ -55,7 +55,6 @@ namespace HookerClient
         public void DrawContent()
         {
            
-
             if (Clipboard.ContainsText())
             {
                 String content = Clipboard.GetText();
@@ -64,7 +63,6 @@ namespace HookerClient
             else if (Clipboard.ContainsFileDropList())
             {
                 // we have a file drop list in the clipboard
-             
                 foreach(String f in Clipboard.GetFileDropList()){
                     Console.WriteLine("CB FILEDROPLIST : "+f);
                 }
@@ -147,8 +145,8 @@ namespace HookerClient
                 {
                     //extraction  already been done
                     Clipboard.Clear();
-                    System.Collections.Specialized.StringCollection files = getFileNames(ZIP_EXTRACTED_FOLDER + @"/CBFILES/"); //add all files to list
-                    foreach (DirectoryInfo dir in new DirectoryInfo(ZIP_EXTRACTED_FOLDER + @"/CBFILES/").GetDirectories())
+                    System.Collections.Specialized.StringCollection files = getFileNames(AmbrUtils.ZIP_EXTRACTED_FOLDER + @"/CBFILES/"); //add all files to list
+                    foreach (DirectoryInfo dir in new DirectoryInfo(AmbrUtils.ZIP_EXTRACTED_FOLDER + @"/CBFILES/").GetDirectories())
                     {
                         files.Add(dir.FullName);
                     }
@@ -195,8 +193,8 @@ namespace HookerClient
 
         private void UnzipArchive()
         {
-            string zipPath = ZIP_FILE_PATH;
-            string extractPath = ZIP_EXTRACTED_FOLDER;
+            string zipPath = AmbrUtils.ZIP_FILE_PATH;
+            string extractPath = AmbrUtils.ZIP_EXTRACTED_FOLDER;
 
             using (ZipArchive archive = ZipFile.OpenRead(zipPath))
             {

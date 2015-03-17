@@ -1,4 +1,5 @@
-﻿using System;
+﻿
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.IO.Compression;
@@ -16,8 +17,10 @@ namespace HookerClient
     public class AmbrUtils
     {
 
-        private static string ZIP_FILE_PATH = @"./cb/cbfiles.zip";
-        private static string ZIP_EXTRACTED_FOLDER = @"./cb/cbfiles/";
+        public static string ZIP_FILE_PATH = @"C:/tmp/cb/cbfiles.zip";
+        public static string ZIP_EXTRACTED_FOLDER = @"C:/tmp/cb/cbfiles/";
+        public static string CB_FILES_DIRECTORY_PATH = @"C:/tmp/CBFILES/";
+        public static string ZIP_FILE_NAME_AND_PATH = @"C:/tmp/CBFILES.zip";
 
         public static byte[] ObjectToByteArray(Object obj)
         {
@@ -94,6 +97,8 @@ namespace HookerClient
                 CopyFilesRecursively(dir, target.CreateSubdirectory(dir.Name));
             foreach (FileInfo file in source.GetFiles())
                 file.CopyTo(Path.Combine(target.FullName, file.Name));
+                //FileInfoFactory.Create(file.FullName).CopyTo(target.FullName + file.Name);
+
         }
 
         public static void showPopUpMEssage(String message, int millis)
