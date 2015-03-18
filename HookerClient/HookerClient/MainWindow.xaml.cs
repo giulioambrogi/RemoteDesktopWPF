@@ -19,6 +19,7 @@ using System.DirectoryServices;
 using System.Windows.Threading;
 using System.IO;
 using System.Net.Sockets;
+using System.Net.NetworkInformation;
 
 namespace HookerClient
 {
@@ -40,7 +41,6 @@ namespace HookerClient
             //TODO eliminare definitivamente le checkbox relative a mouse e tastiera
             this.serverManger = new ServerManager();
             this.layout = new LayoutManager();
-            applySomeGeneralLayoutSettings();
             btnContinue.IsEnabled = false; //deve per forza essere inattivo all'inizio
             btnConnect.IsEnabled = false;
             new Thread(() =>{
@@ -49,322 +49,7 @@ namespace HookerClient
             }).Start();
         }
 
-       
-
-        public void getAvailableServers()
-        {
-            this.serverManger.availableServers.Clear();
-            this.serverManger.selectedServers.Clear();
-            List<ServerEntity> servers = new List<ServerEntity>();
-            DirectoryEntry root = new DirectoryEntry("WinNT:");
-            
-            int index = 1;
-            NetworkBrowser nw = new NetworkBrowser();
-            foreach (String computerName in nw.getNetworkComputers())
-            {
-                if (computerName != System.Environment.MachineName) ///*&& computer.Name != System.Environment.MachineName*
-                {
-                    Console.WriteLine("Found new computer : " + computerName);
-                    processFoundComputer(computerName, index);
-                    index++;
-
-
-                }
-             
-            }
-            /*
-            foreach (DirectoryEntry computers in root.Children)
-            {
-                foreach (DirectoryEntry computer in computers.Children)
-                {
-                   
-                    if (computer.Name != "Schema" ) ///*&& computer.Name != System.Environment.MachineName*
-                    {
-                        Console.WriteLine("Found new computer : " + computer.Name);
-                        processFoundComputer(computer.Name, index);
-                        index++;
-                                           
-
-                    }
-                }
-            }
-           */
-        }
-
-        private void processFoundComputer(string computerName, int index)
-        {
-            //aggiungo il server alla lista dei server disponibili
-            //costruisco server Entity
-            ServerEntity se = new ServerEntity(computerName);
-            se.setId(index);
-            this.serverManger.availableServers.Add(se);
-
-           
-            this.lvComputers.Dispatcher.Invoke(DispatcherPriority.Background, new Action(() =>
-            {
-                
-
-                Label l = new Label { Content = computerName };
-                layout.setComputerNameLabelLayout(l);
-                
-                //create textbox for password
-                TextBox tbPwd = new TextBox() { Name = "k" + index }; //t for the passwords
-                tbPwd.TextChanged += tbPassword_Changed;
-                layout.setPasswordTextBoxLayout(tbPwd);
-
-                //create port field
-                TextBox tbPort = new TextBox() { Name = "p" + index }; //p for the ports
-                tbPort.TextChanged += tbPort_Changed;
-                layout.setPortTextBoxLayout(tbPort);
-
-                //create button checkin button
-                String cbname = "cb" + index;
-                CheckBox cbox = new CheckBox { Name=cbname };
-                cbox.Checked += checkbox_Checked; //ADD EVENT 
-                cbox.Unchecked += checkbox_Unchecked;
-                layout.setCheckBoxLayout(cbox);
-                //add elements to the window
-                this.lvComputers.Items.Add(new MyListViewItem(l, tbPwd, tbPort, cbox));
-
-            }));
-        }
-
-      
-        //TODO: passare un'oggetto al server in modo che questo possa eseguire azione
-        void keyboardHook_KeyPress(int op,RamGecTools.KeyboardHook.VKeys key ){
-            try
-            {
-                if (op == 0)
-                {
-                    //key is down
-                    this.serverManger.sendMessage("K" + " " + (int)key + " " + "DOWN");
-
-                }
-                else
-                {
-                    //key is up
-                    this.serverManger.sendMessage("K" + " " + (int)key + " " + "UP");
-                }
-            }
-            catch (Exception ex)
-            {
-                closeOnException(ex.Message);
-                MessageBox.Show("La connessione si è interrotta");
-                
-            }
-        }
-
-        public void closeOnException(String s)
-        {
-            MessageBox.Show(s);
-            UnistallMouseAndKeyboard();
-            unbindHotkeyCommands(); //rimuovo vincoli su hotkeys
-            this.serverManger.disconnect();
-            refreshGUIonClosing();
-        }
-
-        /*
-         Questo metodo è stato creato per il seguente motivo: il keyboard hooker fa in modo che gli hotkeys tipo alt-tab, non vadano al sistema operativo 
-         * del client: in pratica è come se l'hooker si "mangiasse" gli eventi key_down, di conseguenza bisogna
-         * generarli "artificialmente" in questo modo, per far sì che il server li riceva
-         */
-        void keyboardHook_HotKeyPress(int virtualKeyCode)
-        {
-            this.serverManger.sendMessage("K" + " " + (int)virtualKeyCode + " " + "DOWN");
-        }
-
-        void mouseHook_MouseEvent(int type, RamGecTools.MouseHook.MSLLHOOKSTRUCT mouse, RamGecTools.MouseHook.MouseMessages move)
-        {
-            switch(type)
-            {
-                case 0:  //mouse click
-                        this.serverManger.sendMessage("C" + " " + move.ToString());
-                    
-                    break;
-                case 1: // Mouse movement
-                    double x = Math.Round((mouse.pt.x / System.Windows.SystemParameters.PrimaryScreenWidth),4); //must send relative position REAL/RESOLUTION
-                    double y = Math.Round((mouse.pt.y / System.Windows.SystemParameters.PrimaryScreenHeight),4) ;
-
-                    this.serverManger.sendMessage("M" + " " + x.ToString() + " " + y.ToString());
-                    break;
-                default:
-                    break;
-            }
-        }
-
-        private void InstallMouseAndKeyboard()
-        {
-            //Insatllo keyboard 
-            keyboardHook.KeyPress += new RamGecTools.KeyboardHook.myKeyboardHookCallback(keyboardHook_KeyPress);
-            //Questo qui sotto era un vecchio handler che usavo per i problemi degli shortcut, momentaneamente lascio commentato
-            //keyboardHook.HotKeyPress += new RamGecTools.KeyboardHook.myKeyboardHotkeyCallback(keyboardHook_HotKeyPress);
-            keyboardHook.Install();  
-            //Installo Mouse
-            mouseHook.MouseEvent += new RamGecTools.MouseHook.myMouseHookCallback(mouseHook_MouseEvent);
-            mouseHook.Install();
-            this.MouseWheel += MouseWheelEventHandler;
-        }
-
-        private void MouseWheelEventHandler(object sender, MouseWheelEventArgs e)
-        {
-            this.serverManger.sendMessage("W" + " " + ((int) e.Delta/120).ToString());
-        }
-
-        private void UnistallMouseAndKeyboard()
-        {
-            keyboardHook.KeyPress -= new RamGecTools.KeyboardHook.myKeyboardHookCallback(keyboardHook_KeyPress);
-            mouseHook.MouseEvent -= new RamGecTools.MouseHook.myMouseHookCallback(mouseHook_MouseEvent);
-            keyboardHook.Uninstall();
-            mouseHook.Uninstall();
-            this.MouseWheel += MouseWheelEventHandler;
-            
-        }
-
-        private void btnConnect_Click(object sender, RoutedEventArgs e)
-        {
-            Window connWindow = new Window() { Background = Brushes.Red, Foreground = Brushes.White, Width = 200, Height = 100, Content = "In connessione..." , WindowStyle= WindowStyle.None, WindowStartupLocation = WindowStartupLocation.CenterScreen};
-            connWindow.Show();
-            Thread t = new Thread(() =>
-            {
-                    Thread.CurrentThread.IsBackground = true;
-                    //this.serverManger.connectToServer(this.serverManger.selectedServers.ElementAt(this.serverManger.serverPointer), "TODO");
-                    this.serverManger.connect();
-            });
-            t.Start();
-            t.Join(); //aspetto che il thread delle connesioni termini
-
-            bool allConnected = true;
-            foreach(ServerEntity s in this.serverManger.selectedServers){
-                if(s.server== null ){
-                    //almeno un server non è connesso 
-                    this.serverManger.disconnect();
-                    allConnected = false;
-                    connWindow.Close();
-                    MessageBox.Show("Non sono riuscito a connettermi a "+s.name);
-                    refreshGUIonClosing();
-                }
-            }
-            if (allConnected != false)
-            {
-                //se le connessioni sono andate a buon fine
-                InstallMouseAndKeyboard();
-                //Questo bind vale solo mentre si è connessi
-                bindHotkeyCommands();
-                connWindow.Close();
-                refreshGUIonConnection();
-                this.ConnectionChecker = new Thread(() =>
-                {
-                    while (true)
-                    {
-                        // Detect if client disconnected
-                        try
-                        {
-                            bool bClosed = false;
-                            foreach (ServerEntity se in this.serverManger.selectedServers)
-                            {
-                                if (se.server == null) //questo ciclo serve a non testare connessione nel caso la pasword fosse sbagliata ( password sbagliata-> chiude server e lo setta a null)
-                                {
-                                    closeOnException("Password sbagliata");
-                                    MessageBox.Show("La connessione è stata interrotta");
-                                    break;
-                                }
-                                if (se.server.Client.Poll(0, SelectMode.SelectRead))
-                                {
-                                    byte[] buff = new byte[1];
-                                    if (se.server.Client.Receive(buff, SocketFlags.Peek) == 0)
-                                    {
-                                        // Client disconnected
-                                        bClosed = true;
-                                        MessageBox.Show("La connessione è stata interrotta");
-                                        closeOnException("Connessione interrotta");
-                                        return;
-                                    }
-                                }
-                            }
-
-                            Thread.Sleep(2000);
-                        }
-                        catch (SocketException se)
-                        {
-                            closeOnException(se.Message);
-                            MessageBox.Show("La connessione è stata interrotta");
-                            break;
-                        }
-                    }
-                }
-            );
-                this.ConnectionChecker.Start();
-
-            }
-        }
-
-        #region graphic interface refreshing methods
-        public void refreshGUIonConnection()
-        {
-            //aggiorno i pulsanti
-            btnConnect.IsEnabled = false;
-            btnRefreshServers.IsEnabled = false;
-            btnExit.IsEnabled = false;
-            lvComputers.IsEnabled = false;
-            String serverName = "";
-            if(this.serverManger.selectedServers.Count > 0 )
-                serverName = this.serverManger.selectedServers.ElementAt(this.serverManger.serverPointer).name; 
-            lblMessages.Dispatcher.Invoke(DispatcherPriority.Background,
-               new Action(() => { lblMessages.Content = "Connesso al server : " + serverName; }));
-            btnHelp.Dispatcher.Invoke(DispatcherPriority.Background,
-             new Action(() => { btnHelp.IsEnabled = false; }));
-        }
-        public void refreshGUIonClosing()
-        {
-            btnRefreshServers.Dispatcher.Invoke(DispatcherPriority.Background,
-                new Action(() => { btnRefreshServers.IsEnabled = true; }));
-            btnConnect.Dispatcher.Invoke(DispatcherPriority.Background,
-             new Action(() => { btnConnect.IsEnabled = true; }));
-            btnContinue.Dispatcher.Invoke(DispatcherPriority.Background,
-            new Action(() => { btnContinue.IsEnabled = false; }));
-            btnExit.Dispatcher.Invoke(DispatcherPriority.Background,
-            new Action(() => { btnExit.IsEnabled = true; }));
-            lvComputers.Dispatcher.Invoke(DispatcherPriority.Background,
-            new Action(() => { lvComputers.IsEnabled = true; }));
-            btnHelp.Dispatcher.Invoke(DispatcherPriority.Background,
-            new Action(() => { btnHelp.IsEnabled = true; }));
-            lblMessages.Dispatcher.Invoke(DispatcherPriority.Background,
-            new Action(() => { lblMessages.Content = ""; }));
-               btnHelp.Dispatcher.Invoke(DispatcherPriority.Background,
-             new Action(() => { btnHelp.IsEnabled = true;  }));
-        }
-        private void refreshGUIOnPause()
-        {
-            btnRefreshServers.Dispatcher.Invoke(DispatcherPriority.Background,
-                new Action(() => { btnRefreshServers.IsEnabled = false; }));
-            btnConnect.Dispatcher.Invoke(DispatcherPriority.Background,
-             new Action(() => { btnConnect.IsEnabled = false; }));
-            btnContinue.Dispatcher.Invoke(DispatcherPriority.Background,
-            new Action(() => { btnContinue.IsEnabled = true; }));
-            btnExit.Dispatcher.Invoke(DispatcherPriority.Background,
-            new Action(() => { btnExit.IsEnabled = false; }));
-            btnHelp.Dispatcher.Invoke(DispatcherPriority.Background,
-            new Action(() => { btnHelp.IsEnabled = false;  }));
-            lblMessages.Dispatcher.Invoke(DispatcherPriority.Background,
-            new Action(() => { lblMessages.IsEnabled =  false; }));
-           
-        }
-
-        private void refreshGUIOnContinue()
-        {
-            btnRefreshServers.Dispatcher.Invoke(DispatcherPriority.Background,
-                new Action(() => { btnRefreshServers.IsEnabled = false; }));
-            btnConnect.Dispatcher.Invoke(DispatcherPriority.Background,
-             new Action(() => { btnConnect.IsEnabled = false; }));
-            btnContinue.Dispatcher.Invoke(DispatcherPriority.Background,
-            new Action(() => { btnContinue.IsEnabled = false; }));
-            btnExit.Dispatcher.Invoke(DispatcherPriority.Background,
-            new Action(() => { btnExit.IsEnabled = false; }));
-            
-        }
-        #endregion
-
-        #region runtimeOperations
+        #region Core
         public void closeCommunication(object sender, ExecutedRoutedEventArgs e)
         {
             //Piccolo stratagemma x evitare che al server arrivino solo gli eventi KEYDOWN (che causerebberro problemi)
@@ -404,74 +89,35 @@ namespace HookerClient
             bindHotkeyCommands();
             refreshGUIOnContinue();
         }
-        
-        #endregion
-        private void btnRefreshServers_Click(object sender, RoutedEventArgs e)
+
+        public void closeOnException(String s)
         {
-            //TODO: CANCELLARE LA GRID
-            lvComputers.Items.Clear();
-            getAvailableServers();
+            //MessageBox.Show(s);
+            UnistallMouseAndKeyboard();
+            unbindHotkeyCommands(); //rimuovo vincoli su hotkeys
+            this.serverManger.disconnect();
+            refreshGUIonClosing();
         }
 
-
-      
-        public KeyEventHandler wnd_KeyDown { get; set; }
-
-        /*
-         * metodo che serve ad intercettare alcuni tasti come:
-         * ALT+F4 : non deve terminare il Client
-         * tasto windows
-         * Solamente la combinazione scelta (ctrl+alt+E) serve ad interrompere la comunicazione e tornare alla finestra principale
-        */
-
-
-
-        private void bindHotkeyCommands()
+        public static IEnumerable<T> FindVisualChildren<T>(DependencyObject depObj) where T : DependencyObject
         {
-            try
+            if (depObj != null)
             {
-                //aggancio CTRL+ALT+P con pauseCommunication
-                RoutedCommand pauseComm = new RoutedCommand();
-                pauseComm.InputGestures.Add(new KeyGesture(Key.P, ModifierKeys.Control | ModifierKeys.Alt));
-                CommandBindings.Add(new CommandBinding(pauseComm, pauseCommunication));
-                //aggancio CTRL+ALT+E con closeCommunication
-                RoutedCommand closeComm = new RoutedCommand();
-                closeComm.InputGestures.Add(new KeyGesture(Key.E, ModifierKeys.Control | ModifierKeys.Alt));
-                CommandBindings.Add(new CommandBinding(closeComm, closeCommunication));
-                //aggancio CTRL+ALT+N per next server
-                RoutedCommand nextServer = new RoutedCommand();
-                nextServer.InputGestures.Add(new KeyGesture(Key.N, ModifierKeys.Control | ModifierKeys.Alt));
-                CommandBindings.Add(new CommandBinding(nextServer, switchToNextServer));
-                //aggancio CTRL+ALT+X per inviare mia clipboard
-                RoutedCommand sendClipboardcmd = new RoutedCommand();
-                sendClipboardcmd.InputGestures.Add(new KeyGesture(Key.X, ModifierKeys.Control | ModifierKeys.Alt));
-                CommandBindings.Add(new CommandBinding(sendClipboardcmd, sendClipboard));
-                //aggancio CTRL+ALT+Z per ricevere la clipboard dal server
-                RoutedCommand gimmeClipboardcmd = new RoutedCommand();
-                gimmeClipboardcmd.InputGestures.Add(new KeyGesture(Key.Z, ModifierKeys.Control | ModifierKeys.Alt));
-                CommandBindings.Add(new CommandBinding(gimmeClipboardcmd, gimmeClipboard));
+                for (int i = 0; i < VisualTreeHelper.GetChildrenCount(depObj); i++)
+                {
+                    DependencyObject child = VisualTreeHelper.GetChild(depObj, i);
+                    if (child != null && child is T)
+                    {
+                        yield return (T)child;
+                    }
 
-            }
-            catch (Exception e)
-            {
-                //MessageBox.Show("bindHotKeyCommands: " + e.Message);
-                Application.Current.Shutdown();
+                    foreach (T childOfChild in FindVisualChildren<T>(child))
+                    {
+                        yield return childOfChild;
+                    }
+                }
             }
         }
-
-
-        private void unbindHotkeyCommands()
-        {
-            try
-            {
-                CommandBindings.Clear();
-            }
-            catch (Exception ex)
-            {
-                Console.WriteLine("Cannot unbind : " + ex.Message);
-            }
-        }
-
 
         private void gimmeClipboard(object sender, ExecutedRoutedEventArgs e)
         {
@@ -491,27 +137,8 @@ namespace HookerClient
             //aggiorno la label in base ai risultati effettivi dell'operazione
             lblMessages.Dispatcher.Invoke(DispatcherPriority.Background,
              new Action(() => { lblMessages.Content = "Connesso al server : " + this.serverManger.selectedServers.ElementAt(this.serverManger.serverPointer).name; }));
-         
-        }
 
-    
-        private void btnExit_Click(object sender, RoutedEventArgs e)
-        {
-            if (this.ConnectionChecker != null && this.ConnectionChecker.IsAlive)
-                this.ConnectionChecker.Abort();
-            Application.Current.Shutdown();
         }
-
-        private void btnContinue_Click(object sender, RoutedEventArgs e)
-        {
-            continueCommunication();
-        }
-
-        private void btnClipboardMonitor_Click(object sender, RoutedEventArgs e)
-        {
-            this.serverManger.sendClipBoardFaster(null);
-        }
-
         public void sendClipboard(object sender, ExecutedRoutedEventArgs e)
         {
             //Piccolo stratagemma x evitare che al server arrivino solo gli eventi KEYDOWN (che causerebberro problemi)
@@ -520,13 +147,87 @@ namespace HookerClient
             this.serverManger.sendMessage("K" + " " + (int)RamGecTools.KeyboardHook.VKeys.KEY_X + " " + "UP");
             this.serverManger.sendClipBoardFaster(this.serverManger.selectedServers.ElementAt(this.serverManger.serverPointer).CBClient);
         }
-        private void btnSetData_Click(object sender, RoutedEventArgs e)
+
+        public void getAvailableServers()
         {
-            //this.cbmgmt.setData(DataFormats.UnicodeText, "prova");
+            this.serverManger.availableServers.Clear();
+            this.serverManger.selectedServers.Clear();
+            int index = 1;
+            NetworkBrowser nw = new NetworkBrowser();
+            foreach (String computerName in nw.getNetworkComputers())
+            {
+                if (computerName != System.Environment.MachineName) ///*&& computer.Name != System.Environment.MachineName*
+                {
+                    Console.WriteLine("Found new computer : " + computerName);
+                    processFoundComputer(computerName, index);
+                    index++;
+
+
+                }
+
+            }
+            /*
+            foreach (DirectoryEntry computers in root.Children)
+            {
+                foreach (DirectoryEntry computer in computers.Children)
+                {
+                   
+                    if (computer.Name != "Schema" ) ///*&& computer.Name != System.Environment.MachineName*
+                    {
+                        Console.WriteLine("Found new computer : " + computer.Name);
+                        processFoundComputer(computer.Name, index);
+                        index++;
+                                           
+
+                    }
+                }
+            }
+           */
         }
 
+        private void processFoundComputer(string computerName, int index)
+        {
+            //aggiungo il server alla lista dei server disponibili
+            //costruisco server Entity
+            ServerEntity se = new ServerEntity(computerName);
+            se.setId(index);
+            this.serverManger.availableServers.Add(se);
 
-        #region dinGenEvents
+
+            this.lvComputers.Dispatcher.Invoke(DispatcherPriority.Background, new Action(() =>
+            {
+
+
+                Label l = new Label { Content = computerName };
+                layout.setComputerNameLabelLayout(l);
+
+                //create textbox for password
+                TextBox tbPwd = new TextBox() { Name = "k" + index }; //t for the passwords
+                tbPwd.TextChanged += tbPassword_Changed;
+                layout.setPasswordTextBoxLayout(tbPwd);
+
+                //create port field
+                TextBox tbPort = new TextBox() { Name = "p" + index }; //p for the ports
+                tbPort.TextChanged += tbPort_Changed;
+                layout.setPortTextBoxLayout(tbPort);
+
+                //create button checkin button
+                String cbname = "cb" + index;
+                CheckBox cbox = new CheckBox { Name = cbname };
+                cbox.Checked += checkbox_Checked; //ADD EVENT 
+                cbox.Unchecked += checkbox_Unchecked;
+                layout.setCheckBoxLayout(cbox);
+                //add elements to the window
+                this.lvComputers.Items.Add(new MyListViewItem(l, tbPwd, tbPort, cbox));
+
+            }));
+        }
+
+        
+        
+        #endregion
+      
+        #region Events
       
 
         private void checkbox_Checked(object sender, RoutedEventArgs e)
@@ -588,72 +289,137 @@ namespace HookerClient
             //if i'm here, no cb is setted then change connect button status
             btnConnect.IsEnabled = false;
         }
-        public static IEnumerable<T> FindVisualChildren<T>(DependencyObject depObj) where T : DependencyObject
-        {
-            if (depObj != null)
-            {
-                for (int i = 0; i < VisualTreeHelper.GetChildrenCount(depObj); i++)
-                {
-                    DependencyObject child = VisualTreeHelper.GetChild(depObj, i);
-                    if (child != null && child is T)
-                    {
-                        yield return (T)child;
-                    }
+       
+        #endregion
 
-                    foreach (T childOfChild in FindVisualChildren<T>(child))
+        #region Buttons
+        private void btnConnect_Click(object sender, RoutedEventArgs e)
+        {
+            Window connWindow = new Window() { Background = Brushes.Red, Foreground = Brushes.White, Width = 200, Height = 100, Content = "In connessione...", WindowStyle = WindowStyle.None, WindowStartupLocation = WindowStartupLocation.CenterScreen };
+            connWindow.Show();
+            Thread t = new Thread(() =>
+            {
+                Thread.CurrentThread.IsBackground = true;
+                //this.serverManger.connectToServer(this.serverManger.selectedServers.ElementAt(this.serverManger.serverPointer), "TODO");
+                this.serverManger.connect();
+            });
+            t.Start();
+            t.Join(); //aspetto che il thread delle connesioni termini
+
+            bool allConnected = true;
+            foreach (ServerEntity s in this.serverManger.selectedServers)
+            {
+                if (s.server == null)
+                {
+                    //almeno un server non è connesso 
+                    this.serverManger.disconnect();
+                    allConnected = false;
+                    connWindow.Close();
+                    MessageBox.Show("Non sono riuscito a connettermi a " + s.name);
+                    refreshGUIonClosing();
+                }
+            }
+            if (allConnected != false)
+            {
+                //se le connessioni sono andate a buon fine
+                InstallMouseAndKeyboard();
+                //Questo bind vale solo mentre si è connessi
+                bindHotkeyCommands();
+                connWindow.Close();
+                refreshGUIonConnection();
+                runConnectionChecker();
+                
+
+            }
+        }
+
+        private void runConnectionChecker()
+        {
+            this.ConnectionChecker = new Thread(() =>
+            {
+                while (true)
+                {
+                    // Detect if client disconnected
+                    try
                     {
-                        yield return childOfChild;
+                        bool bClosed = false;
+                        foreach (ServerEntity se in this.serverManger.selectedServers)
+                        {
+                            if (se.server == null) //questo ciclo serve a non testare connessione nel caso la pasword fosse sbagliata ( password sbagliata-> chiude server e lo setta a null)
+                            {
+                                closeOnException("Password sbagliata");
+                                MessageBox.Show("La connessione è stata interrotta");
+                                break;
+                            }
+                            if (se.server.Client.Poll(0, SelectMode.SelectRead))
+                            {
+                                byte[] buff = new byte[1];
+                                if (se.server.Client.Receive(buff, SocketFlags.Peek) == 0)
+                                {
+                                    // Client disconnected
+                                    bClosed = true;
+                                    MessageBox.Show("La connessione è stata interrotta");
+                                    closeOnException("Connessione interrotta");
+                                    return;
+                                }
+                                else
+                                {
+                                    Console.WriteLine("BZZZZ");
+                                }
+                            }
+
+                            /*
+                            IPGlobalProperties ipProperties = IPGlobalProperties.GetIPGlobalProperties();
+                            TcpConnectionInformation[] tcpConnections = ipProperties.GetActiveTcpConnections().Where(x => x.RemoteEndPoint.Equals(se.server.Client.RemoteEndPoint)).ToArray();
+                                
+                            if (tcpConnections != null && tcpConnections.Length > 0)
+                            {
+                                if (tcpConnections.First().State.Equals(TcpState.Established))
+                                {
+
+                                }
+                                else
+                                {
+                                    // Client disconnected
+                                    bClosed = true;
+                                    MessageBox.Show("La connessione è stata interrotta");
+                                    closeOnException("Connessione interrotta");
+                                    return;
+                                }
+                            }
+                            else
+                            {
+                                // Client disconnected
+                                bClosed = true;
+                                MessageBox.Show("La connessione è stata interrotta");
+                                closeOnException("Connessione interrotta");
+                                return;
+                            }
+                            */
+
+
+                        }
+
+                        Thread.Sleep(2000);
+                    }
+                    catch (SocketException se)
+                    {
+                        closeOnException(se.Message);
+                        //MessageBox.Show("La connessione è stata interrotta");
+                        break;
                     }
                 }
             }
+            );
+            this.ConnectionChecker.Start();
         }
-        #endregion
 
-        #region temporaryMethods
-        private void btnTemporaneo_Click(object sender, RoutedEventArgs e)
+        private void btnRefreshServers_Click(object sender, RoutedEventArgs e)
         {
-            this.serverManger.sendClipBoardFaster(new TcpClient());
+            //TODO: CANCELLARE LA GRID
+            lvComputers.Items.Clear();
+            getAvailableServers();
         }
-        public void addRandomPcToList()
-        {
-                    
-                    for(int i = 0 ; i< 10; i++){
-                        int index = lvComputers.Items.Count + 1;
-                        Label l = new Label { Content = "prova" };
-                        layout.setComputerNameLabelLayout(l);
-
-                        //create textbox for password
-                        TextBox tbPwd = new TextBox() { Name = "k" + index }; //t for the passwords
-                        layout.setPasswordTextBoxLayout(tbPwd);
-
-                        //create port field
-                        TextBox tbPort = new TextBox() { Name = "p" + index }; //p for the ports
-                        layout.setPortTextBoxLayout(tbPort);
-
-                        //create button checkin button
-                        String cbname = "cb" + index;
-                        CheckBox cbox = new CheckBox { Name = cbname };
-                        layout.setCheckBoxLayout(cbox);
-                        //add elements to the window
-                        this.lvComputers.Items.Add(new MyListViewItem(l, tbPwd, tbPort, cbox));
-                    }
-                   
-            
-        }
-
-        private void Button_Click(object sender, RoutedEventArgs e)
-        {
-            addRandomPcToList();
-        }
-        #endregion
-
-        private void Button_Click_1(object sender, RoutedEventArgs e)
-        {
-            this.serverManger.sendClipBoardFaster(null);
-        }
-
-      
-
         private void btnExit_IsEnabledChanged(object sender, DependencyPropertyChangedEventArgs e)
         {
 
@@ -670,7 +436,6 @@ namespace HookerClient
             }));
         }
 
-
         private void btnContinue_IsEnabledChanged(object sender, DependencyPropertyChangedEventArgs e)
         {
             this.btnConnect.Dispatcher.Invoke(DispatcherPriority.Background, new Action(() =>
@@ -684,12 +449,6 @@ namespace HookerClient
                     btnContinue.Background = new ImageBrush() { ImageSource = new BitmapImage(new Uri(@"icons/continue_disabled.png", UriKind.Relative)) };
                 }
             }));
-        }
-
-     
-        private void applySomeGeneralLayoutSettings()
-        {
-            return;
         }
 
         private void btnConnect_IsEnabledChanged(object sender, DependencyPropertyChangedEventArgs e)
@@ -748,9 +507,222 @@ namespace HookerClient
             w.Show();
                 
         }
+        private void btnExit_Click(object sender, RoutedEventArgs e)
+        {
+            if (this.ConnectionChecker != null && this.ConnectionChecker.IsAlive)
+                this.ConnectionChecker.Abort();
+            Application.Current.Shutdown();
+        }
+        private void btnContinue_Click(object sender, RoutedEventArgs e)
+        {
+            continueCommunication();
+        }
+
+        private void btnClipboardMonitor_Click(object sender, RoutedEventArgs e)
+        {
+            this.serverManger.sendClipBoardFaster(null);
+        }
+#endregion
+
+        #region Hooks
+        //TODO: passare un'oggetto al server in modo che questo possa eseguire azione
+        void keyboardHook_KeyPress(int op, RamGecTools.KeyboardHook.VKeys key)
+        {
+            try
+            {
+                if (op == 0)
+                {
+                    //key is down
+                    this.serverManger.sendMessage("K" + " " + (int)key + " " + "DOWN");
+
+                }
+                else
+                {
+                    //key is up
+                    this.serverManger.sendMessage("K" + " " + (int)key + " " + "UP");
+                }
+            }
+            catch (Exception ex)
+            {
+                closeOnException(ex.Message);
+                MessageBox.Show("La connessione si è interrotta");
+
+            }
+        }
+
+        /*
+         Questo metodo è stato creato per il seguente motivo: il keyboard hooker fa in modo che gli hotkeys tipo alt-tab, non vadano al sistema operativo 
+         * del client: in pratica è come se l'hooker si "mangiasse" gli eventi key_down, di conseguenza bisogna
+         * generarli "artificialmente" in questo modo, per far sì che il server li riceva
+         */
+        void keyboardHook_HotKeyPress(int virtualKeyCode)
+        {
+            this.serverManger.sendMessage("K" + " " + (int)virtualKeyCode + " " + "DOWN");
+        }
+
+        void mouseHook_MouseEvent(int type, RamGecTools.MouseHook.MSLLHOOKSTRUCT mouse, RamGecTools.MouseHook.MouseMessages move)
+        {
+            switch (type)
+            {
+                case 0:  //mouse click
+                    this.serverManger.sendMessage("C" + " " + move.ToString());
+
+                    break;
+                case 1: // Mouse movement
+                    double x = Math.Round((mouse.pt.x / System.Windows.SystemParameters.PrimaryScreenWidth), 4); //must send relative position REAL/RESOLUTION
+                    double y = Math.Round((mouse.pt.y / System.Windows.SystemParameters.PrimaryScreenHeight), 4);
+
+                    this.serverManger.sendMessage("M" + " " + x.ToString() + " " + y.ToString());
+                    break;
+                default:
+                    break;
+            }
+        }
+
+        private void MouseWheelEventHandler(object sender, MouseWheelEventArgs e)
+        {
+            this.serverManger.sendMessage("W" + " " + ((int)e.Delta / 120).ToString());
+        }
+        public KeyEventHandler wnd_KeyDown { get; set; }
+
+        private void InstallMouseAndKeyboard()
+        {
+            //Insatllo keyboard 
+            keyboardHook.KeyPress += new RamGecTools.KeyboardHook.myKeyboardHookCallback(keyboardHook_KeyPress);
+            //Questo qui sotto era un vecchio handler che usavo per i problemi degli shortcut, momentaneamente lascio commentato
+            //keyboardHook.HotKeyPress += new RamGecTools.KeyboardHook.myKeyboardHotkeyCallback(keyboardHook_HotKeyPress);
+            keyboardHook.Install();
+            //Installo Mouse
+            mouseHook.MouseEvent += new RamGecTools.MouseHook.myMouseHookCallback(mouseHook_MouseEvent);
+            mouseHook.Install();
+            this.MouseWheel += MouseWheelEventHandler;
+        }
+
+        private void UnistallMouseAndKeyboard()
+        {
+            keyboardHook.KeyPress -= new RamGecTools.KeyboardHook.myKeyboardHookCallback(keyboardHook_KeyPress);
+            mouseHook.MouseEvent -= new RamGecTools.MouseHook.myMouseHookCallback(mouseHook_MouseEvent);
+            keyboardHook.Uninstall();
+            mouseHook.Uninstall();
+            this.MouseWheel += MouseWheelEventHandler;
+
+        }
 
 
-       
+        private void bindHotkeyCommands()
+        {
+            try
+            {
+                //aggancio CTRL+ALT+P con pauseCommunication
+                RoutedCommand pauseComm = new RoutedCommand();
+                pauseComm.InputGestures.Add(new KeyGesture(Key.P, ModifierKeys.Control | ModifierKeys.Alt));
+                CommandBindings.Add(new CommandBinding(pauseComm, pauseCommunication));
+                //aggancio CTRL+ALT+E con closeCommunication
+                RoutedCommand closeComm = new RoutedCommand();
+                closeComm.InputGestures.Add(new KeyGesture(Key.E, ModifierKeys.Control | ModifierKeys.Alt));
+                CommandBindings.Add(new CommandBinding(closeComm, closeCommunication));
+                //aggancio CTRL+ALT+N per next server
+                RoutedCommand nextServer = new RoutedCommand();
+                nextServer.InputGestures.Add(new KeyGesture(Key.N, ModifierKeys.Control | ModifierKeys.Alt));
+                CommandBindings.Add(new CommandBinding(nextServer, switchToNextServer));
+                //aggancio CTRL+ALT+X per inviare mia clipboard
+                RoutedCommand sendClipboardcmd = new RoutedCommand();
+                sendClipboardcmd.InputGestures.Add(new KeyGesture(Key.X, ModifierKeys.Control | ModifierKeys.Alt));
+                CommandBindings.Add(new CommandBinding(sendClipboardcmd, sendClipboard));
+                //aggancio CTRL+ALT+Z per ricevere la clipboard dal server
+                RoutedCommand gimmeClipboardcmd = new RoutedCommand();
+                gimmeClipboardcmd.InputGestures.Add(new KeyGesture(Key.Z, ModifierKeys.Control | ModifierKeys.Alt));
+                CommandBindings.Add(new CommandBinding(gimmeClipboardcmd, gimmeClipboard));
+
+            }
+            catch (Exception e)
+            {
+                //MessageBox.Show("bindHotKeyCommands: " + e.Message);
+                Application.Current.Shutdown();
+            }
+        }
+
+        private void unbindHotkeyCommands()
+        {
+            try
+            {
+                CommandBindings.Clear();
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine("Cannot unbind : " + ex.Message);
+            }
+        }
+
+        #endregion
+
+        #region graphic interface refreshing methods
+
+        public void refreshGUIonConnection()
+        {
+            //aggiorno i pulsanti
+            btnConnect.IsEnabled = false;
+            btnRefreshServers.IsEnabled = false;
+            btnExit.IsEnabled = false;
+            lvComputers.IsEnabled = false;
+            String serverName = "";
+            if (this.serverManger.selectedServers.Count > 0)
+                serverName = this.serverManger.selectedServers.ElementAt(this.serverManger.serverPointer).name;
+            lblMessages.Dispatcher.Invoke(DispatcherPriority.Background,
+               new Action(() => { lblMessages.Content = "Connesso al server : " + serverName; }));
+            btnHelp.Dispatcher.Invoke(DispatcherPriority.Background,
+             new Action(() => { btnHelp.IsEnabled = false; }));
+        }
+        public void refreshGUIonClosing()
+        {
+            btnRefreshServers.Dispatcher.Invoke(DispatcherPriority.Background,
+                new Action(() => { btnRefreshServers.IsEnabled = true; }));
+            btnConnect.Dispatcher.Invoke(DispatcherPriority.Background,
+             new Action(() => { btnConnect.IsEnabled = true; }));
+            btnContinue.Dispatcher.Invoke(DispatcherPriority.Background,
+            new Action(() => { btnContinue.IsEnabled = false; }));
+            btnExit.Dispatcher.Invoke(DispatcherPriority.Background,
+            new Action(() => { btnExit.IsEnabled = true; }));
+            lvComputers.Dispatcher.Invoke(DispatcherPriority.Background,
+            new Action(() => { lvComputers.IsEnabled = true; }));
+            btnHelp.Dispatcher.Invoke(DispatcherPriority.Background,
+            new Action(() => { btnHelp.IsEnabled = true; }));
+            lblMessages.Dispatcher.Invoke(DispatcherPriority.Background,
+            new Action(() => { lblMessages.Content = ""; }));
+            btnHelp.Dispatcher.Invoke(DispatcherPriority.Background,
+          new Action(() => { btnHelp.IsEnabled = true; }));
+        }
+        private void refreshGUIOnPause()
+        {
+            btnRefreshServers.Dispatcher.Invoke(DispatcherPriority.Background,
+                new Action(() => { btnRefreshServers.IsEnabled = false; }));
+            btnConnect.Dispatcher.Invoke(DispatcherPriority.Background,
+             new Action(() => { btnConnect.IsEnabled = false; }));
+            btnContinue.Dispatcher.Invoke(DispatcherPriority.Background,
+            new Action(() => { btnContinue.IsEnabled = true; }));
+            btnExit.Dispatcher.Invoke(DispatcherPriority.Background,
+            new Action(() => { btnExit.IsEnabled = false; }));
+            btnHelp.Dispatcher.Invoke(DispatcherPriority.Background,
+            new Action(() => { btnHelp.IsEnabled = false; }));
+            lblMessages.Dispatcher.Invoke(DispatcherPriority.Background,
+            new Action(() => { lblMessages.IsEnabled = false; }));
+
+        }
+
+        private void refreshGUIOnContinue()
+        {
+            btnRefreshServers.Dispatcher.Invoke(DispatcherPriority.Background,
+                new Action(() => { btnRefreshServers.IsEnabled = false; }));
+            btnConnect.Dispatcher.Invoke(DispatcherPriority.Background,
+             new Action(() => { btnConnect.IsEnabled = false; }));
+            btnContinue.Dispatcher.Invoke(DispatcherPriority.Background,
+            new Action(() => { btnContinue.IsEnabled = false; }));
+            btnExit.Dispatcher.Invoke(DispatcherPriority.Background,
+            new Action(() => { btnExit.IsEnabled = false; }));
+
+        }
+        #endregion
+
     }
 
    
