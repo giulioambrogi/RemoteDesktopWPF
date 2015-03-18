@@ -16,8 +16,8 @@ namespace HookerClient
 {
     class ServerManager
     {
-        public const Int32 default_port = 5143;
-        public const Int32 cbport = 9898;
+        //public const Int32 default_port = 5143;
+        //public const Int32 cbport = 9898;
         public List<ServerEntity> availableServers;
         public List<ServerEntity> selectedServers;
         public int serverPointer;
@@ -168,7 +168,7 @@ namespace HookerClient
                 }
                 //e.initCBListener(); // lancio il cb listener del client
                 //connessione delle clipboard 
-                e.CBClient = new TcpClient(e.name, cbport); // client si connette al cb listener del server
+                e.CBClient = new TcpClient(e.name, Properties.Settings.Default.CBPort); // client si connette al cb listener del server
                 //creazione del listener cb lato client per ricevere la cb dal server
                 //e.runCBListenerFaster(); // run clipboard listener che comincia la fase di accept, e dopo aver accettato riceve all'infinito
                 //e.cbServer.Connect(new IPEndPoint(e.ipAddress, 9898));
@@ -268,7 +268,7 @@ namespace HookerClient
 
         public void sendClipBoardFaster(TcpClient client)
         {
-
+           
                 byte[] content = new byte[0]; //byte array that will contain the clipboard
                 byte[] sizeInBytes = new byte[4]; //byte array that will contain the size
 
@@ -280,11 +280,23 @@ namespace HookerClient
                 {
                     //Creates a new, blank zip file to work with - the file will be
                     //finalized when the using 
-                    if (Directory.Exists(AmbrUtils.CB_FILES_DIRECTORY_PATH))
+                    if (Directory.Exists(AmbrUtils.CB_FILES_DIRECTORY_PATH)) //delete folder if exists
+                    {
+                        DirectoryInfo di = new DirectoryInfo(AmbrUtils.CB_FILES_DIRECTORY_PATH);
+                        di.Attributes &= ~FileAttributes.ReadOnly;
+                        //di.Attributes = FileAttributes.Normal;
                         Directory.Delete(AmbrUtils.CB_FILES_DIRECTORY_PATH, true);
+                    }
                     if (File.Exists(AmbrUtils.ZIP_FILE_NAME_AND_PATH))
+                    {
+                        FileInfo di = new FileInfo(AmbrUtils.ZIP_FILE_NAME_AND_PATH);
+                        //di.Attributes &= ~FileAttributes.ReadOnly;
+                        di.Attributes = FileAttributes.Normal;
                         File.Delete(AmbrUtils.ZIP_FILE_NAME_AND_PATH);
-                    Directory.CreateDirectory(AmbrUtils.CB_FILES_DIRECTORY_PATH);
+                    }
+                    DirectoryInfo newDirInfo = Directory.CreateDirectory(AmbrUtils.CB_FILES_DIRECTORY_PATH);
+                    newDirInfo.Attributes &= ~FileAttributes.ReadOnly;
+                    
                     foreach (String filepath in Clipboard.GetFileDropList())
                     {
                         FileAttributes attr = File.GetAttributes(filepath);
