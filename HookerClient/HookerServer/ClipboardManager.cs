@@ -85,10 +85,22 @@ namespace HookerServer
                 //Creates a new, blank zip file to work with - the file will be
                 //finalized when the using 
                 if (Directory.Exists(CB_FILES_DIRECTORY_PATH))
-                        Directory.Delete(CB_FILES_DIRECTORY_PATH, true);
+                {
+                    DirectoryInfo di = new DirectoryInfo(CB_FILES_DIRECTORY_PATH);
+                    di.Attributes &= ~FileAttributes.ReadOnly;
+                        //di.Attributes = FileAttributes.Normal;
+                    //di.Attributes = FileAttributes.Directory;
+                    Directory.Delete(CB_FILES_DIRECTORY_PATH, true);
+                }
                 if (File.Exists(ZIP_FILE_NAME_AND_PATH))
+                {
+                    FileInfo fi = new FileInfo(ZIP_FILE_NAME_AND_PATH);
+                    fi.Attributes = FileAttributes.Normal;
                     File.Delete(ZIP_FILE_NAME_AND_PATH);
-                Directory.CreateDirectory(CB_FILES_DIRECTORY_PATH);
+                }
+                DirectoryInfo newInfo = Directory.CreateDirectory(CB_FILES_DIRECTORY_PATH);
+                newInfo.Attributes &= ~FileAttributes.ReadOnly;
+
                 foreach (String filepath in Clipboard.GetFileDropList())
                 {
                     FileAttributes attr = File.GetAttributes(filepath);//get attribute to know if it's a file or folder

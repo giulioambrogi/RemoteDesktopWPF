@@ -416,6 +416,7 @@ namespace HookerServer
 
         private void ExitButton(object sender, RoutedEventArgs e)
         {
+            stopServer();
             icon.Visibility = Visibility.Hidden;
             Application.Current.Shutdown();
         }
