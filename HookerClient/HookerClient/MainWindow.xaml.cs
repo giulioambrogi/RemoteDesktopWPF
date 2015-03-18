@@ -359,7 +359,7 @@ namespace HookerClient
             btnContinue.Dispatcher.Invoke(DispatcherPriority.Background,
             new Action(() => { btnContinue.IsEnabled = false; }));
             btnExit.Dispatcher.Invoke(DispatcherPriority.Background,
-            new Action(() => { btnExit.IsEnabled = true; }));
+            new Action(() => { btnExit.IsEnabled = false; }));
             
         }
         #endregion

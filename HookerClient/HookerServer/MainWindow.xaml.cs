@@ -25,7 +25,6 @@ using System.Windows.Threading;
 using WindowsInput;
 using WindowsInput.Native;
 
-
 namespace HookerServer
 {
     /// <summary>
@@ -434,8 +433,8 @@ namespace HookerServer
                   new Action(() =>
                   {
                       this.icon.ShowBalloonTip("Sever", "Esecuzione terminata.", Hardcodet.Wpf.TaskbarNotification.BalloonIcon.Info);
-                      ((MenuItem)this.icon.ContextMenu.Items.GetItemAt(0)).IsEnabled = true;
-                      ((MenuItem)this.icon.ContextMenu.Items.GetItemAt(1)).IsEnabled = false;
+                      //((MenuItem)this.icon.ContextMenu.Items.GetItemAt(0)).IsEnabled = true;
+                      //((MenuItem)this.icon.ContextMenu.Items.GetItemAt(1)).IsEnabled = false;
                   }));
         }
         
@@ -446,8 +445,8 @@ namespace HookerServer
                   new Action(() =>
                   {
                       this.icon.ShowBalloonTip("Sever", "Sotto controllo", Hardcodet.Wpf.TaskbarNotification.BalloonIcon.Info);
-                      ((MenuItem)this.icon.ContextMenu.Items.GetItemAt(0)).IsEnabled = false;
-                      ((MenuItem)this.icon.ContextMenu.Items.GetItemAt(1)).IsEnabled = true;
+                      //((MenuItem)this.icon.ContextMenu.Items.GetItemAt(0)).IsEnabled = false;
+                      //((MenuItem)this.icon.ContextMenu.Items.GetItemAt(1)).IsEnabled = true;
                   }));
         }
 
@@ -457,8 +456,8 @@ namespace HookerServer
                   new Action(() =>
                   {
                       this.icon.ShowBalloonTip("Sever", "In attesa di un client.", Hardcodet.Wpf.TaskbarNotification.BalloonIcon.Info);
-                      ((MenuItem)this.icon.ContextMenu.Items.GetItemAt(0)).IsEnabled = false;
-                      ((MenuItem)this.icon.ContextMenu.Items.GetItemAt(1)).IsEnabled = false;
+                      //((MenuItem)this.icon.ContextMenu.Items.GetItemAt(0)).IsEnabled = false;
+                      //((MenuItem)this.icon.ContextMenu.Items.GetItemAt(1)).IsEnabled = false;
                   }));
         }
 
@@ -470,8 +469,8 @@ namespace HookerServer
                   new Action(() =>
                   {
                       this.icon.ShowBalloonTip("Sever", "In attesa di un client.", Hardcodet.Wpf.TaskbarNotification.BalloonIcon.Info);
-                      ((MenuItem)this.icon.ContextMenu.Items.GetItemAt(0)).IsEnabled = false;
-                      ((MenuItem)this.icon.ContextMenu.Items.GetItemAt(1)).IsEnabled = true;
+                      //((MenuItem)this.icon.ContextMenu.Items.GetItemAt(0)).IsEnabled = false;
+                      //((MenuItem)this.icon.ContextMenu.Items.GetItemAt(1)).IsEnabled = true;
                   }));
 
         }

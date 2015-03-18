@@ -29,9 +29,9 @@
             </tb:TaskbarIcon.TrayToolTip>-->
             <tb:TaskbarIcon.ContextMenu>
                 <ContextMenu Background="AliceBlue">
-                    <MenuItem Header="Avvia Server" Click="reOpenMainWindow" />
+                    <!--<MenuItem Header="Avvia Server" Click="reOpenMainWindow" />
                     <MenuItem Header="Stop server" Click="killServer" />
-                    <Separator />
+                    <Separator /> -->
                     <MenuItem Header="Esci" Click="ExitButton" />
                 </ContextMenu>
             </tb:TaskbarIcon.ContextMenu>
