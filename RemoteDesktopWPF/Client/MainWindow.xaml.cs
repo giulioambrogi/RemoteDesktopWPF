@@ -28,12 +28,13 @@ namespace HookerClient
     /// </summary>
     public partial class MainWindow : Window
     {
+        #region GlobalVars
         RamGecTools.MouseHook mouseHook = new RamGecTools.MouseHook();
         RamGecTools.KeyboardHook keyboardHook = new RamGecTools.KeyboardHook();
         public Thread ConnectionChecker;
         private ServerManager serverManger;
         private LayoutManager layout;
-
+        #endregion
         public MainWindow()
         {
             Console.WriteLine("Screen resolution : "+(int)System.Windows.SystemParameters.PrimaryScreenWidth+" "+(int)System.Windows.SystemParameters.FullPrimaryScreenHeight);
@@ -64,11 +65,7 @@ namespace HookerClient
 
             lblMessages.Dispatcher.Invoke(DispatcherPriority.Background,
             new Action(() => { lblMessages.Content = ""; })); //aggiorno la label 
-            lvComputers.IsEnabled = true;
-            btnRefreshServers.IsEnabled = true;
-            btnConnect.IsEnabled = true;
-            btnContinue.IsEnabled = false;
-            btnExit.IsEnabled = true;
+            refreshGUIonClosing();
         }
 
         private void pauseCommunication(object sender , ExecutedRoutedEventArgs e)
@@ -222,6 +219,82 @@ namespace HookerClient
 
             }));
         }
+        private void runConnectionChecker()
+        {
+            this.ConnectionChecker = new Thread(() =>
+            {
+                while (true)
+                {
+                    // Detect if client disconnected
+                    try
+                    {
+                        bool bClosed = false;
+                        foreach (ServerEntity se in this.serverManger.selectedServers)
+                        {
+                            if (se.server == null) //questo ciclo serve a non testare connessione nel caso la pasword fosse sbagliata ( password sbagliata-> chiude server e lo setta a null)
+                            {
+                                closeOnException("Password sbagliata");
+                                MessageBox.Show("La connessione è stata interrotta");
+                                break;
+                            }
+                            if (se.server.Client.Poll(0, SelectMode.SelectRead))
+                            {
+                                byte[] buff = new byte[1];
+                                if (se.server.Client.Receive(buff, SocketFlags.Peek) == 0)
+                                {
+                                    // Client disconnected
+                                    bClosed = true;
+                                    MessageBox.Show("La connessione è stata interrotta");
+                                    closeOnException("Connessione interrotta");
+                                    return;
+                                }
+                            }
+
+                            /*
+                            IPGlobalProperties ipProperties = IPGlobalProperties.GetIPGlobalProperties();
+                            TcpConnectionInformation[] tcpConnections = ipProperties.GetActiveTcpConnections().Where(x => x.RemoteEndPoint.Equals(se.server.Client.RemoteEndPoint)).ToArray();
+                                
+                            if (tcpConnections != null && tcpConnections.Length > 0)
+                            {
+                                if (tcpConnections.First().State.Equals(TcpState.Established))
+                                {
+
+                                }
+                                else
+                                {
+                                    // Client disconnected
+                                    bClosed = true;
+                                    MessageBox.Show("La connessione è stata interrotta");
+                                    closeOnException("Connessione interrotta");
+                                    return;
+                                }
+                            }
+                            else
+                            {
+                                // Client disconnected
+                                bClosed = true;
+                                MessageBox.Show("La connessione è stata interrotta");
+                                closeOnException("Connessione interrotta");
+                                return;
+                            }
+                            */
+
+
+                        }
+
+                        Thread.Sleep(2000);
+                    }
+                    catch (SocketException se)
+                    {
+                        closeOnException(se.Message);
+                        //MessageBox.Show("La connessione è stata interrotta");
+                        break;
+                    }
+                }
+            }
+            );
+            this.ConnectionChecker.Start();
+        }
 
         
         
@@ -333,87 +406,7 @@ namespace HookerClient
             }
         }
 
-        private void runConnectionChecker()
-        {
-            this.ConnectionChecker = new Thread(() =>
-            {
-                while (true)
-                {
-                    // Detect if client disconnected
-                    try
-                    {
-                        bool bClosed = false;
-                        foreach (ServerEntity se in this.serverManger.selectedServers)
-                        {
-                            if (se.server == null) //questo ciclo serve a non testare connessione nel caso la pasword fosse sbagliata ( password sbagliata-> chiude server e lo setta a null)
-                            {
-                                closeOnException("Password sbagliata");
-                                MessageBox.Show("La connessione è stata interrotta");
-                                break;
-                            }
-                            if (se.server.Client.Poll(0, SelectMode.SelectRead))
-                            {
-                                byte[] buff = new byte[1];
-                                if (se.server.Client.Receive(buff, SocketFlags.Peek) == 0)
-                                {
-                                    // Client disconnected
-                                    bClosed = true;
-                                    MessageBox.Show("La connessione è stata interrotta");
-                                    closeOnException("Connessione interrotta");
-                                    return;
-                                }
-                                else
-                                {
-                                    Console.WriteLine("BZZZZ");
-                                }
-                            }
-
-                            /*
-                            IPGlobalProperties ipProperties = IPGlobalProperties.GetIPGlobalProperties();
-                            TcpConnectionInformation[] tcpConnections = ipProperties.GetActiveTcpConnections().Where(x => x.RemoteEndPoint.Equals(se.server.Client.RemoteEndPoint)).ToArray();
-                                
-                            if (tcpConnections != null && tcpConnections.Length > 0)
-                            {
-                                if (tcpConnections.First().State.Equals(TcpState.Established))
-                                {
-
-                                }
-                                else
-                                {
-                                    // Client disconnected
-                                    bClosed = true;
-                                    MessageBox.Show("La connessione è stata interrotta");
-                                    closeOnException("Connessione interrotta");
-                                    return;
-                                }
-                            }
-                            else
-                            {
-                                // Client disconnected
-                                bClosed = true;
-                                MessageBox.Show("La connessione è stata interrotta");
-                                closeOnException("Connessione interrotta");
-                                return;
-                            }
-                            */
-
-
-                        }
-
-                        Thread.Sleep(2000);
-                    }
-                    catch (SocketException se)
-                    {
-                        closeOnException(se.Message);
-                        //MessageBox.Show("La connessione è stata interrotta");
-                        break;
-                    }
-                }
-            }
-            );
-            this.ConnectionChecker.Start();
-        }
-
+       
         private void btnRefreshServers_Click(object sender, RoutedEventArgs e)
         {
             //TODO: CANCELLARE LA GRID
@@ -489,8 +482,7 @@ namespace HookerClient
             if (System.IO.File.Exists(filepath))
             {
                 w.Title = "Help";
-               
-                string[] content = System.IO.File.ReadAllLines(filepath, Encoding.ASCII);
+                string[] content = System.IO.File.ReadAllLines(filepath, Encoding.UTF8);
                 foreach (string s in content)
                 {
                     w.Content += s+"\n";
@@ -524,7 +516,7 @@ namespace HookerClient
         }
 #endregion
 
-        #region Hooks
+        #region HooksRelated
         //TODO: passare un'oggetto al server in modo che questo possa eseguire azione
         void keyboardHook_KeyPress(int op, RamGecTools.KeyboardHook.VKeys key)
         {
@@ -654,6 +646,10 @@ namespace HookerClient
             }
         }
 
+        private void wnd_Closing(object sender, CancelEventArgs e)
+        {
+            e.Cancel = true; //AVOID ALT F4
+        }
         #endregion
 
         #region graphic interface refreshing methods
@@ -722,6 +718,8 @@ namespace HookerClient
 
         }
         #endregion
+
+       
 
     }
 

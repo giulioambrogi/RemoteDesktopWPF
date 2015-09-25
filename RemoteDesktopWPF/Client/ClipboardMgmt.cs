@@ -49,7 +49,67 @@ namespace HookerClient
             hWndSource.RemoveHook(this.WinProc);
             isViewing = false;
         }
-        
+
+        public void setData()
+        {
+            Type t = this.content.GetType();
+            try
+            {
+                if (t == typeof(String))
+                {
+                    //setta il file di testo nella clipboard
+                    Clipboard.SetText((String)this.content);
+                }
+                else if (t == typeof(ZipArchive))
+                {
+                    //extraction  already been done
+                    Clipboard.Clear();
+                    System.Collections.Specialized.StringCollection files = getFileNames(AmbrUtils.ZIP_EXTRACTED_FOLDER + @"/CBFILES/"); //add all files to list
+                    foreach (DirectoryInfo dir in new DirectoryInfo(AmbrUtils.ZIP_EXTRACTED_FOLDER + @"/CBFILES/").GetDirectories())
+                    {
+                        files.Add(dir.FullName);
+                    }
+                    if (files != null && files.Count > 0)
+                    {
+                        Clipboard.SetFileDropList(files);
+                    }
+
+                }
+                else if (t == typeof(BitmapImage))
+                {
+                    Clipboard.SetImage((BitmapImage)content);
+                }
+                else if (t == typeof(Stream))
+                {
+                    Clipboard.SetAudio((Stream)content);
+                }
+                else
+                {
+                    Console.WriteLine("Non sono riuscito ad identificare il tipo");
+                }
+                int millis = 3000;
+                AmbrUtils.showPopUpMEssage("La clipboard è stata aggiornata!\n(Questa finestra si chiuderà in " + ((int)millis / 1000) + " secondi", millis);
+
+                Console.WriteLine("La clipboard è stata settata");
+
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine(ex.Message);
+            }
+        }
+
+        private System.Collections.Specialized.StringCollection getFileNames(string p)
+        {
+            string[] filenames = Directory.GetFiles(p);
+            System.Collections.Specialized.StringCollection sc = new System.Collections.Specialized.StringCollection();
+            foreach (string s in filenames)
+            {
+                sc.Add(System.IO.Path.GetFullPath(s));
+            }
+            return sc;
+        }
+
 
         #region operazioni per hooking
         public void DrawContent()
@@ -130,66 +190,6 @@ namespace HookerClient
         }
 
         #endregion
-
-        public void setData()
-        {
-            Type t = this.content.GetType();
-            try
-            {
-                if (t == typeof(String))
-                {
-                    //setta il file di testo nella clipboard
-                    Clipboard.SetText((String)this.content);
-                }
-                else if (t == typeof(ZipArchive))
-                {
-                    //extraction  already been done
-                    Clipboard.Clear();
-                    System.Collections.Specialized.StringCollection files = getFileNames(AmbrUtils.ZIP_EXTRACTED_FOLDER + @"/CBFILES/"); //add all files to list
-                    foreach (DirectoryInfo dir in new DirectoryInfo(AmbrUtils.ZIP_EXTRACTED_FOLDER + @"/CBFILES/").GetDirectories())
-                    {
-                        files.Add(dir.FullName);
-                    }
-                    if (files != null && files.Count > 0)
-                    {
-                        Clipboard.SetFileDropList(files);
-                    }
-                     
-                }
-                else if ( t == typeof(BitmapImage))
-                {
-                    Clipboard.SetImage((BitmapImage)content);
-                }
-                else if (t == typeof(Stream))
-                {
-                    Clipboard.SetAudio((Stream)content);
-                }
-                else
-                {
-                    Console.WriteLine("Non sono riuscito ad identificare il tipo");
-                }
-                int millis = 3000;
-                AmbrUtils.showPopUpMEssage("La clipboard è stata aggiornata!\n(Questa finestra si chiuderà in "+((int)millis/1000)+" secondi", millis);
-
-                Console.WriteLine("La clipboard è stata settata");
-
-            }
-            catch (Exception ex)
-            {
-                Console.WriteLine(ex.Message);
-            }
-        }
-
-        private System.Collections.Specialized.StringCollection getFileNames(string p)
-        {
-            string[] filenames = Directory.GetFiles(p);
-            System.Collections.Specialized.StringCollection sc = new System.Collections.Specialized.StringCollection();
-            foreach (string s in filenames)
-            {
-                sc.Add(System.IO.Path.GetFullPath(s));
-            }
-            return sc;
-        }
 
       
 

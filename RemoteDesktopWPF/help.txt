@@ -1,0 +1,23 @@
+PULSANTI
+1) Connetti : connettiti a uno o più server presenti nella lista
+2) Continua : riprendi una connessione messa in pausa
+3) Aggiorna : aggiorna la lista dei server
+4) Esci : termina l'applicazione
+
+SHORTCUT
+
+
+
+CTRL - ALT - E : interrompi le connessioni
+
+CTRL - ALT - P : metti in pausa le connssioni
+
+CTRL - ALT X : invia clipboard a server
+
+CTRL - ALT Z : ricevi clipboard da server (Sarà visualizzata una finestrella quanto la clipboard su client sarà aggiornata)
+
+CTRL - ALT - N : nel caso si fosse connessi a più server, prende il controllo del server successivo 
+(lista dei server connessi è modellata come un anello, dunque prima o poi si ripasserà per il server corrente)
+
+
+
